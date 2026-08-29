@@ -6,6 +6,10 @@
 
 실제 검증 환경: Go 1.24.11, Aseprite 1.3.18.2-arm64, macOS
 
+지원 기준: Aseprite 1.3.17.2 이상 (`app.apiVersion >= 39`)
+
+최신 검증 대상: Aseprite 1.3.18.3 (2026-08-25 공식 릴리스, 실제 검증 대기)
+
 ## 판단 기준
 
 - **공식 직접 지원**: Aseprite Lua API 또는 CLI가 기능을 직접 제공한다.
@@ -15,28 +19,74 @@
 공식 확인 자료:
 
 - [Aseprite Lua API](https://www.aseprite.org/api/)
+- [Aseprite API changes](https://github.com/aseprite/api/blob/main/Changes.md): `app.apiVersion`별 기능과 동작 변경을 제공한다.
+- [Aseprite releases](https://github.com/aseprite/aseprite/releases): 지원 최소/최신 패치 버전을 결정하는 기준이다.
 - [`app.transaction()`](https://www.aseprite.org/api/app/#apptransaction): 한 프로세스 안에서 변경을 하나의 undo/redo 단위로 묶는다.
 - [Cel API](https://www.aseprite.org/api/cel/)와 [Sprite API](https://www.aseprite.org/api/sprite/): cel 위치·이미지·프레임·태그·저장을 제공한다.
+- [Image API](https://www.aseprite.org/api/image/), [Palette API](https://www.aseprite.org/api/palette/), [`app.pixelColor`](https://www.aseprite.org/api/pixelcolor/): RGB/Grayscale/Indexed 픽셀과 palette index를 직접 다루는 기준이다.
+- [`ChangePixelFormat`](https://www.aseprite.org/api/command/ChangePixelFormat/), [`ColorQuantization`](https://www.aseprite.org/api/command/ColorQuantization/), [`FlattenLayers`](https://www.aseprite.org/api/command/FlattenLayers/): 색상 모드 변환, palette 생성, layer 병합을 공식 명령으로 제공한다.
 - [Aseprite CLI](https://www.aseprite.org/docs/cli/): batch 실행, Lua script, export와 metadata 출력을 제공한다.
 
 > 중요: pixel-mcp는 현재 도구 호출마다 별도 `aseprite --batch` 프로세스를 실행하고 파일을 저장한다. 따라서 `app.transaction()`의 native undo stack은 MCP 호출 사이의 복구 수단이 아니다. 호출 간 undo는 snapshot/restore 같은 파일 기반 정책이 필요하다.
+
+## 공식 지원 범위 검토 결과
+
+문서 검토일: 2026-08-30
+
+### 버전 정책
+
+- **최소 지원 버전**: Aseprite 1.3.17.2, `app.apiVersion >= 39`
+  - 현재 사용하는 핵심 pixel/cel/palette/save API는 더 오래된 버전에도 존재한다.
+  - 그러나 1.3.17은 스크립트 권한 재사용 보안 문제를 수정했으므로 운영 지원 하한은 API 존재 여부가 아니라 보안 기준으로 정한다.
+- **최신 검증 버전**: Aseprite 1.3.18.3
+  - 현재 실제 통합 검증은 1.3.18.2까지 완료했다.
+  - 1.3.18.3은 Lua API 변경 없이 decoder와 플랫폼 버그를 수정한 최신 공식 패치이며 다음 matrix 실행 대상이다.
+- **재현 전용 버전**: Aseprite 1.3.15.5
+  - upstream #16 보고 환경을 재현하는 데만 사용한다.
+  - 보안 하한보다 낮으므로 정상 지원 또는 릴리스 승인 대상으로 취급하지 않는다.
+- batch 실행에서는 `app.isUIAvailable == false`이므로 UI가 필요한 command/dialog 경로는 지원하지 않는다. 사용하는 command는 비대화형 옵션을 명시해야 한다.
+
+### 기능별 판정과 구현 경계
+
+| 기능 | 공식 지원 근거 | 판정 | pixel-mcp 구현 범위 |
+| --- | --- | --- | --- |
+| cel 좌표와 pixel 읽기/쓰기 | `Cel.position`, `Cel.bounds`, `Cel.image`, `Image:getPixel()`, `Image:drawPixel()` | 공식 직접 지원 | Image 좌표가 cel 기준 상대 좌표라는 규칙을 sprite 절대 좌표로 변환하고 범위 밖/no-cel 경로를 검증한다. |
+| RGB/Grayscale/Indexed pixel 해석 | `Image.colorMode`, `ImageSpec.transparentColor`, `Sprite.transparentColor`, `app.pixelColor`, `Palette` | 조합 구현 | 공식 API는 index와 palette primitive를 제공한다. RGBA→palette index 선택, transparent index 보존, palette 확장/제한 정책은 pixel-mcp가 결정한다. |
+| 색상 모드 변환과 quantization | `ChangePixelFormat`, `ColorQuantization`, `Palette:setColor()` | 조합 구현 | 변환 자체는 공식 명령을 사용한다. 알고리즘 선택, 색상 수, alpha, warning, 원본 보존과 결과 계약은 pixel-mcp 책임이다. |
+| layer 병합 | `Sprite:flatten()`, `FlattenLayers{visibleOnly}` | 공식 직접 지원 | 대상/visible-only 정책, destructive warning, dry-run과 snapshot 연계를 추가한다. |
+| 한 호출 안의 atomic 변경 | `app.transaction()` | 공식 직접 지원 | 한 Lua 실행 안의 변경을 transaction으로 묶고 오류 시 rollback한다. 저장 성공 여부와 프로세스 종료 실패는 별도로 처리한다. |
+| MCP 호출 간 undo | `app.undo()`와 `Sprite.undoHistory`는 열린 sprite/process 안에서만 유효 | pixel-mcp 책임 | 호출별 새 batch 프로세스에서는 native undo를 사용하지 않는다. snapshot ID와 operation history로 복구한다. |
+| snapshot/restore | `Sprite:saveCopyAs()`와 `Sprite:saveAs()` | 조합 구현 | 파일 복사는 공식 저장 API를 사용할 수 있다. UUID, atomic replace, 권한/symlink/path 검증, TTL/용량 제한은 Go 계층에서 구현한다. |
+| export와 metadata | Sprite/Image save API와 Aseprite CLI export 옵션 | 조합 구현 | frame/layer 선택과 렌더링은 공식 기능을 사용한다. 출력 이름, overwrite, 임시 파일, 결과 JSON과 오류 계약은 pixel-mcp가 관리한다. |
+| Aseprite capability 검사 | `app.version`, `app.apiVersion` | 공식 직접 지원 | health 응답에 두 값을 노출하고 최소 버전/API 미달을 Lua 실행 전 명시적 오류로 반환한다. |
+| warning, dry-run, operation history | 완성형 공식 API 없음 | pixel-mcp 책임 | MCP output schema, 임시 복사본 실행, redaction, 보존/정리 정책을 구현한다. |
+| 동일 파일 동시 수정과 cross-process 복구 | 완성형 공식 API 없음 | pixel-mcp 책임 | canonical path lock, timeout/cancel, 임시 파일과 atomic rename/fallback을 Go 계층에서 구현한다. |
+
+### 확정된 구현 순서
+
+1. 지원 버전/API capability를 health와 공통 preflight에 추가한다.
+2. indexed primitive를 공통 helper로 통합하고 transparent index 불변식을 테스트한다.
+3. destructive 도구에 warning과 snapshot precondition을 추가한다.
+4. dry-run은 원본 대신 임시 복사본에서 동일 Lua 경로를 실행한다.
+5. snapshot/restore 이후 operation history와 호출 간 undo를 구현한다.
+6. per-file lock과 atomic save/restore fault test를 추가한다.
 
 ## P0 — 다음 릴리스 전에 처리
 
 ### CI를 실제 필수 검사로 만들기
 
-현재 PR 브랜치에는 GitHub check가 보고되지 않는다. 코드가 로컬에서 통과해도 병합 전 자동 회귀 검증이 없는 상태다.
+`develop`과 `main`에 필수 `test` check가 적용됐고 PR #1에서도 통과했다. 남은 범위는 전역 설정 의존 제거와 실행 버전 기록이다.
 
-- [ ] 포크 저장소에서 GitHub Actions 실행 여부와 권한을 확인한다.
-- [ ] PR마다 `go test -race ./...`, `go vet ./...`, integration test가 표시되게 한다.
-- [ ] CI의 `willibrandon/pixel-mcp-ci` 고정 이미지 이름을 포크에서도 안전한 이름으로 변경한다.
+- [x] 포크 저장소에서 GitHub Actions 실행 여부와 권한을 확인한다.
+- [x] PR마다 unit/race/coverage와 integration test가 `test` check로 표시되게 한다.
+- [x] CI image는 포크 전용 `smrgd88/pixel-mcp-ci`를 우선 사용하고 공식 upstream image를 fallback으로 사용한다.
 - [ ] CI 설정을 `PIXEL_MCP_CONFIG` 기반 임시 파일로 전환해 `/root/.config` 의존성을 제거한다.
 - [ ] Aseprite와 Go 버전을 CI 로그와 artifact에 남긴다.
-- [ ] unit/integration 실패 로그와 재현 명령을 확인할 수 있게 한다.
+- [x] unit/integration 실패 로그와 재현 명령을 GitHub Actions에서 확인할 수 있게 한다.
 
 완료 조건:
 
-- [ ] PR 화면에 unit, vet, integration check가 나타나고 모두 통과한다.
+- [x] PR 화면에 필수 `test` check가 나타나고 unit/race/coverage와 integration이 모두 통과한다.
 - [ ] 전역 사용자 설정 없이 CI가 재현된다.
 
 ### indexed auto shading 색상 반전 수정
@@ -151,10 +201,10 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 ### 공식 API capability와 버전 검사
 
 - [ ] health output에 `app.version`과 `app.apiVersion`을 포함한다.
-- [ ] 최소 지원 Aseprite 버전을 문서에 명시한다.
-- [ ] 사용하는 Lua API별 최소 버전을 표로 관리한다.
+- [x] 최소 지원 Aseprite 버전을 1.3.17.2/API 39로 문서에 명시한다.
+- [x] 사용하는 기능별 공식 API와 pixel-mcp 구현 경계를 표로 관리한다.
 - [ ] 미지원 API는 실행 중 Lua 오류가 아니라 사전 capability 오류로 반환한다.
-- [ ] Aseprite API changes 문서를 릴리스 체크리스트에서 확인한다.
+- [x] Aseprite API changes와 공식 release를 릴리스 체크리스트의 근거로 연결한다.
 
 ### cross-platform native launcher
 
@@ -198,7 +248,7 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 ## 이번 PR 병합 전 확인
 
-- [ ] PR #1에 자동 check가 없다는 사실을 확인하고 병합 정책을 결정한다.
+- [x] PR #1에 필수 `test` check가 나타나고 최신 `develop` 기준으로 통과했다.
 - [ ] 리뷰어가 config 우선순위와 기본 동작 호환성을 확인한다.
 - [ ] 리뷰어가 `draw_pixels`의 full-image normalization과 indexed transparent index 처리를 확인한다.
 - [ ] Aseprite 1.3.17.2 검증 여부를 PR 미검증 범위에 명시한다.
