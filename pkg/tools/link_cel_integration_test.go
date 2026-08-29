@@ -127,11 +127,20 @@ func TestIntegration_LinkCel_BackwardsFrameOrder(t *testing.T) {
 	setup := `local spr = app.activeSprite
 local layer = spr.layers[1]
 layer.name = "Layer 1"
-spr:newEmptyFrame()
+local frame2 = spr:newEmptyFrame(2)
+local frame3 = spr:newEmptyFrame(3)
 local source = layer:cel(spr.frames[1])
-source.frame = spr.frames[2]
+source.frame = frame2
 source.position = Point(5, 6)
+source.opacity = 123
+source.zIndex = 7
+source.data = "source-data"
 source.image:drawPixel(0, 0, Color(255, 128, 0, 255))
+app.range.layers = { layer }
+app.range.frames = { frame2, frame3 }
+app.command.LinkCels()
+local tag = spr:newTag(1, 3)
+tag.name = "all"
 spr:saveAs(spr.filename)`
 	if _, err := client.ExecuteLua(ctx, setup, spritePath); err != nil {
 		t.Fatalf("set up later source: %v", err)
@@ -143,14 +152,24 @@ spr:saveAs(spr.filename)`
 local layer = spr.layers[1]
 local target = layer:cel(spr.frames[1])
 local source = layer:cel(spr.frames[2])
-print(string.format("%s|%d,%d", tostring(source.image == target.image), target.position.x, target.position.y))`
+local sibling = layer:cel(spr.frames[3])
+local tag = spr.tags[1]
+print(string.format("%s|%s|%d|%d|%d|%d|%d|%d|%s|%s|%s|%d,%d|%d|%d,%d", tostring(source.image == target.image), tostring(source.image == sibling.image), target.opacity, source.opacity, sibling.opacity, target.zIndex, source.zIndex, sibling.zIndex, target.data, source.data, sibling.data, target.position.x, target.position.y, #spr.frames, tag.fromFrame.frameNumber, tag.toFrame.frameNumber))`
 	output, err := client.ExecuteLua(ctx, inspect, spritePath)
 	if err != nil {
 		t.Fatalf("inspect backwards link: %v", err)
 	}
-	if got := strings.TrimSpace(output); got != "true|5,6" {
-		t.Fatalf("backwards link = %s, want true|5,6", got)
+	if got := strings.TrimSpace(output); got != "true|true|123|123|123|7|7|7|source-data|source-data|source-data|5,6|3|1,3" {
+		t.Fatalf("backwards link did not preserve the linked group and metadata: %s", got)
 	}
+
+	mutateTarget := `local spr = app.activeSprite
+spr.layers[1]:cel(spr.frames[1]).image:drawPixel(2, 2, Color(0, 255, 255, 255))
+spr:saveAs(spr.filename)`
+	if _, err := client.ExecuteLua(ctx, mutateTarget, spritePath); err != nil {
+		t.Fatalf("mutate backwards target: %v", err)
+	}
+	assertPixelValue(t, ctx, client, spritePath, 3, 2, 2, appRGBA(0, 255, 255, 255))
 }
 
 func assertPixelValue(t *testing.T, ctx context.Context, client *aseprite.Client, spritePath string, frame, x, y int, want string) {

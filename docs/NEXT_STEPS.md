@@ -83,8 +83,9 @@
 - [x] 공식 `app.command.LinkCels`가 UI 전용 명령이 아니며 `app.range.layers/frames` 선택으로 batch mode에서 동작함을 확인한다.
 - [x] save/reopen 뒤 source/target cel의 `image` identity와 cel 위치 보존을 검증한다.
 - [x] source와 target 어느 쪽의 픽셀을 수정해도 다른 프레임에 반영되는 회귀 테스트를 추가한다.
+- [x] 역방향 링크에서도 source의 기존 linked group, opacity와 user data를 보존한다.
 - [x] invalid layer/source frame/target frame, 기존 target cel 거부와 실패 시 원본 보존을 검증한다.
-- [x] Aseprite 1.3.17.2와 1.3.18.3에서 전체 검증을 완료한다 (`pkg/tools` integration 각각 72.251초, 76.218초).
+- [x] Aseprite 1.3.17.2와 1.3.18.3에서 전체 검증을 완료한다 (`pkg/tools` integration 각각 60.172초, 56.541초).
 
 완료 조건:
 

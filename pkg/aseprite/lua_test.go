@@ -1285,6 +1285,12 @@ func TestLuaGenerator_LinkCel(t *testing.T) {
 		t.Error("script must not use Sprite:newCel as the final link operation")
 	}
 
+	if !strings.Contains(script, "spr:newEmptyFrame(#spr.frames + 1)") ||
+		!strings.Contains(script, "linkedCel.frame = tgtFrame") ||
+		!strings.Contains(script, "spr:deleteFrame(tempFrame)") {
+		t.Error("script missing backwards-link preservation path")
+	}
+
 	if !strings.Contains(script, "Cel linked successfully") {
 		t.Error("script missing success message")
 	}

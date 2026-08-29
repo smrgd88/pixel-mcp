@@ -286,18 +286,28 @@ if layer:cel(tgtFrame) then
 end
 
 -- LinkCels uses the first populated selected frame as its source. For a
--- backwards link, seed the earlier target with a copy, then let LinkCels make
--- both cels share that image natively. The file is saved only after all
--- postconditions pass, so any command failure leaves the on-disk sprite intact.
+-- backwards link, create a temporary frame after the source, link into it,
+-- move that linked cel to the target, and remove the temporary frame. This
+-- preserves the source CelData and any existing native linked-cel group.
 if srcFrame.frameNumber > tgtFrame.frameNumber then
-	app.transaction(function()
-		spr:newCel(layer, tgtFrame, Image(srcCel.image), srcCel.position)
-	end)
-end
+	local tempFrame = spr:newEmptyFrame(#spr.frames + 1)
+	app.range.layers = { layer }
+	app.range.frames = { srcFrame, tempFrame }
+	app.command.LinkCels()
 
-app.range.layers = { layer }
-app.range.frames = { srcFrame, tgtFrame }
-app.command.LinkCels()
+	local linkedCel = layer:cel(tempFrame)
+	if not linkedCel or linkedCel.image ~= srcCel.image then
+		error("Aseprite LinkCels command did not create a temporary native linked cel")
+	end
+
+	app.range:clear()
+	linkedCel.frame = tgtFrame
+	spr:deleteFrame(tempFrame)
+else
+	app.range.layers = { layer }
+	app.range.frames = { srcFrame, tgtFrame }
+	app.command.LinkCels()
+end
 
 srcCel = layer:cel(srcFrame)
 local tgtCel = layer:cel(tgtFrame)
