@@ -168,6 +168,26 @@ func TestLuaGenerator_DrawPixels(t *testing.T) {
 	}
 }
 
+func TestLuaGenerator_DrawPixelsNormalizesCelCoordinates(t *testing.T) {
+	gen := NewLuaGenerator()
+	script := gen.DrawPixels("Layer 1", 1, []Pixel{{
+		Point: Point{X: 3, Y: 4},
+		Color: Color{R: 1, G: 2, B: 3, A: 255},
+	}}, false)
+
+	for _, want := range []string{
+		"Image(spr.spec)",
+		"fullImage:clear(spr.transparentColor)",
+		"fullImage:drawImage(cel.image, cel.position)",
+		"cel.position = Point(0, 0)",
+		"spr:newCel(layer, frame, fullImage, Point(0, 0))",
+	} {
+		if !strings.Contains(script, want) {
+			t.Errorf("generated script missing %q", want)
+		}
+	}
+}
+
 func TestLuaGenerator_ExportSprite(t *testing.T) {
 	gen := NewLuaGenerator()
 

@@ -59,10 +59,33 @@ if not frame then
 	error("Frame not found: %d")
 end
 
+local function createFullImage()
+	local fullImage = Image(spr.spec)
+	if spr.colorMode == ColorMode.INDEXED then
+		fullImage:clear(spr.transparentColor)
+	else
+		fullImage:clear(Color(0, 0, 0, 0))
+	end
+	return fullImage
+end
+
 app.transaction(function()
 	local cel = layer:cel(frame)
 	if not cel then
-		cel = spr:newCel(layer, frame)
+		local fullImage = createFullImage()
+		cel = spr:newCel(layer, frame, fullImage, Point(0, 0))
+	elseif not cel.image then
+		cel.image = createFullImage()
+		cel.position = Point(0, 0)
+	elseif cel.position.x ~= 0 or cel.position.y ~= 0 or
+		cel.image.width ~= spr.width or cel.image.height ~= spr.height then
+		-- putPixel uses image-local coordinates, while draw_pixels accepts
+		-- sprite coordinates. Preserve the existing cel at its sprite position
+		-- in a full-canvas image so the coordinates below map exactly.
+		local fullImage = createFullImage()
+		fullImage:drawImage(cel.image, cel.position)
+		cel.image = fullImage
+		cel.position = Point(0, 0)
 	end
 
 	local img = cel.image
