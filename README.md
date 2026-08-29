@@ -50,7 +50,7 @@ pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprit
 
 `add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`
 
-프레임, 재생 시간, 태그와 연결된 cel을 관리합니다.
+프레임, 재생 시간, 태그와 Aseprite native linked cel을 관리합니다. `link_cel`은 저장 후에도 source/target이 같은 image를 공유하며, 데이터 보호를 위해 target cel이 이미 있으면 실패합니다.
 
 ### 조회와 파일 입출력
 

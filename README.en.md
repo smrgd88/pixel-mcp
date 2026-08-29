@@ -50,7 +50,7 @@ Transform, resize, crop, and outline sprites.
 
 `add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`
 
-Manage frames, timing, tags, and linked cels.
+Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserves shared image identity after saving and rejects an already occupied target cel to protect its data.
 
 ### Inspection and file operations
 

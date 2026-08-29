@@ -245,6 +245,7 @@ print(%d + 1)`, sourceFrame, sourceFrame, insertAfter, insertAfter, insertAfter)
 //   - The source frame is not found
 //   - The target frame is not found
 //   - No cel exists in the source frame
+//   - A cel already exists in the target frame
 func (g *LuaGenerator) LinkCel(layerName string, sourceFrame, targetFrame int) string {
 	escapedName := EscapeString(layerName)
 	return fmt.Sprintf(`local spr = app.activeSprite
@@ -280,15 +281,38 @@ if not srcCel then
 	error("Source cel not found in frame %d")
 end
 
-app.transaction(function()
-	-- Create linked cel by copying with same image reference
-	spr:newCel(layer, tgtFrame, srcCel.image, srcCel.position)
-end)
+if layer:cel(tgtFrame) then
+	error("Target cel already exists in frame %d")
+end
+
+-- LinkCels uses the first populated selected frame as its source. For a
+-- backwards link, seed the earlier target with a copy, then let LinkCels make
+-- both cels share that image natively. The file is saved only after all
+-- postconditions pass, so any command failure leaves the on-disk sprite intact.
+if srcFrame.frameNumber > tgtFrame.frameNumber then
+	app.transaction(function()
+		spr:newCel(layer, tgtFrame, Image(srcCel.image), srcCel.position)
+	end)
+end
+
+app.range.layers = { layer }
+app.range.frames = { srcFrame, tgtFrame }
+app.command.LinkCels()
+
+srcCel = layer:cel(srcFrame)
+local tgtCel = layer:cel(tgtFrame)
+if not srcCel or not tgtCel or srcCel.image ~= tgtCel.image then
+	error("Aseprite LinkCels command did not create a native linked cel")
+end
+
+if tgtCel.position.x ~= srcCel.position.x or tgtCel.position.y ~= srcCel.position.y then
+	error("Linked cel position was not preserved")
+end
 
 spr:saveAs(spr.filename)
 print("Cel linked successfully")`,
 		escapedName, escapedName,
 		sourceFrame, sourceFrame,
 		targetFrame, targetFrame,
-		sourceFrame)
+		sourceFrame, targetFrame)
 }

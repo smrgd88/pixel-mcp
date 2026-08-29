@@ -102,6 +102,16 @@ make docker-test-all
 
 This runs both unit and integration tests in the CI container with Aseprite pre-built.
 
+Build and run the supported Aseprite version matrix explicitly:
+```bash
+docker build -f Dockerfile.ci --build-arg ASEPRITE_VERSION=v1.3.17.2 -t pixel-mcp-ci:aseprite-1.3.17.2 .
+docker build -f Dockerfile.ci --build-arg ASEPRITE_VERSION=v1.3.18.3 -t pixel-mcp-ci:aseprite-1.3.18.3 .
+```
+
+For `link_cel`, integration coverage verifies native image identity after save/reopen,
+pixel propagation in both directions, cel position preservation, invalid inputs, occupied
+targets, and original-file preservation on failure.
+
 ## Manual Testing
 
 Test server manually:
