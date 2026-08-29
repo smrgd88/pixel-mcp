@@ -58,6 +58,11 @@ Manage frames, timing, tags, and linked cels.
 
 Verify pixels and work with PNG, GIF, JPG, BMP, spritesheets, and Aseprite files.
 
+## Requirements
+
+- Go 1.25+
+- Aseprite 1.3.17.2+ (1.3.18.3 recommended)
+
 ## Configuration
 
 ```json
