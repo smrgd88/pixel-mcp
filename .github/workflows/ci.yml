@@ -2,19 +2,82 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main, develop]
+
+permissions:
+  contents: read
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: willibrandon/pixel-mcp-ci
+  IMAGE_NAME: ${{ github.repository_owner }}/pixel-mcp-ci
 
 jobs:
-  build-or-pull-image:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.image-tag.outputs.tag }}
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect CI image changes
+        id: dockerfile
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ -n "$BASE_SHA" ]] && git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null \
+            && git diff --quiet "$BASE_SHA" HEAD -- Dockerfile.ci; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to GitHub Container Registry
+        if: steps.dockerfile.outputs.changed == 'false'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull cached CI image
+        if: steps.dockerfile.outputs.changed == 'false'
+        id: pull-image
+        continue-on-error: true
+        run: docker pull "${REGISTRY}/${IMAGE_NAME}:latest"
+
+      - name: Build CI image
+        if: steps.dockerfile.outputs.changed == 'true' || steps.pull-image.outcome == 'failure'
+        run: docker build -f Dockerfile.ci -t "${REGISTRY}/${IMAGE_NAME}:latest" .
+
+      - name: Run unit tests
+        run: |
+          docker run --rm -v "${GITHUB_WORKSPACE}:/workspace" \
+            "${REGISTRY}/${IMAGE_NAME}:latest" \
+            bash -c 'mkdir -p /root/.config/pixel-mcp && \
+              printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > /root/.config/pixel-mcp/config.json && \
+              cd /workspace && \
+              go test -v -race -cover ./...'
+
+      - name: Run integration tests
+        run: |
+          docker run --rm -v "${GITHUB_WORKSPACE}:/workspace" \
+            "${REGISTRY}/${IMAGE_NAME}:latest" \
+            bash -c 'mkdir -p /root/.config/pixel-mcp && \
+              printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > /root/.config/pixel-mcp/config.json && \
+              cd /workspace && \
+              go test -tags=integration -v ./...'
+
+  publish-ci-image:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -25,104 +88,34 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check if Dockerfile.ci changed
-        id: dockerfile-changed
+      - name: Detect CI image changes
+        id: dockerfile
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
-          # Check if this is first run or Dockerfile changed
-          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          elif git diff --name-only HEAD^ HEAD | grep -q "^Dockerfile.ci$"; then
-            echo "changed=true" >> $GITHUB_OUTPUT
+          if [[ -n "$BEFORE_SHA" ]] && git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null \
+            && git diff --quiet "$BEFORE_SHA" HEAD -- Dockerfile.ci; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set image tag
-        id: image-tag
-        run: |
-          if [[ "${{ steps.dockerfile-changed.outputs.changed }}" == "true" ]]; then
-            echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Log in to GitHub Container Registry
-        if: steps.dockerfile-changed.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
-        if: steps.dockerfile-changed.outputs.changed == 'true'
-        run: |
-          docker build -f Dockerfile.ci -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-      - name: Pull existing image
-        if: steps.dockerfile-changed.outputs.changed == 'false'
-        id: pull-image
+      - name: Check cached CI image
+        id: cached-image
         continue-on-error: true
+        run: docker manifest inspect "${REGISTRY}/${IMAGE_NAME}:latest"
+
+      - name: Build and publish CI image
+        if: steps.dockerfile.outputs.changed == 'true' || steps.cached-image.outcome == 'failure'
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-      - name: Build image if pull failed
-        if: steps.dockerfile-changed.outputs.changed == 'false' && steps.pull-image.outcome == 'failure'
-        run: |
-          docker build -f Dockerfile.ci -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
-
-      - name: Log in to push fallback image
-        if: steps.dockerfile-changed.outputs.changed == 'false' && steps.pull-image.outcome == 'failure'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push fallback image
-        if: steps.dockerfile-changed.outputs.changed == 'false' && steps.pull-image.outcome == 'failure'
-        run: |
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-  test:
-    needs: build-or-pull-image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull CI image
-        run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-or-pull-image.outputs.image-tag }}
-
-      - name: Run unit tests
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-or-pull-image.outputs.image-tag }} \
-            bash -c 'mkdir -p /root/.config/pixel-mcp && \
-              printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > /root/.config/pixel-mcp/config.json && \
-              cd /workspace && \
-              go test -v -race -cover ./...'
-
-      - name: Run integration tests
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-or-pull-image.outputs.image-tag }} \
-            bash -c 'mkdir -p /root/.config/pixel-mcp && \
-              printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > /root/.config/pixel-mcp/config.json && \
-              cd /workspace && \
-              go test -tags=integration -v ./...'
+          docker build -f Dockerfile.ci -t "${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}" .
+          docker tag "${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}" "${REGISTRY}/${IMAGE_NAME}:latest"
+          docker push "${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
+          docker push "${REGISTRY}/${IMAGE_NAME}:latest"
