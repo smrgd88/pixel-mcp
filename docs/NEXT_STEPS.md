@@ -249,7 +249,7 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 ## 이번 PR 병합 전 확인
 
 - [x] PR #1에 필수 `test` check가 나타나고 최신 `develop` 기준으로 통과했다.
-- [ ] 리뷰어가 config 우선순위와 기본 동작 호환성을 확인한다.
-- [ ] 리뷰어가 `draw_pixels`의 full-image normalization과 indexed transparent index 처리를 확인한다.
+- [x] 리뷰어가 config 우선순위와 기본 동작 호환성을 확인한다.
+- [x] 리뷰어가 `draw_pixels`의 cel bounds 확장, local 좌표 변환과 indexed transparent index 처리를 확인한다.
 - [ ] Aseprite 1.3.17.2 검증 여부를 PR 미검증 범위에 명시한다.
-- [ ] push/PR에는 Downloads의 생성 이미지나 로컬 임시 파일이 포함되지 않았는지 확인한다.
+- [x] push/PR에는 Downloads의 생성 이미지나 로컬 임시 파일이 포함되지 않았는지 확인한다.

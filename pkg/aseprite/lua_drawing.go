@@ -25,10 +25,25 @@ import (
 //   - No sprite is active
 //   - The layer is not found
 //   - The frame number is invalid
+//   - A pixel coordinate is outside the sprite bounds
 func (g *LuaGenerator) DrawPixels(layerName string, frameNumber int, pixels []Pixel, usePalette bool) string {
 	var sb strings.Builder
 
 	escapedName := EscapeString(layerName)
+	hasPixels := len(pixels) > 0
+	requestedLeft, requestedTop, requestedRight, requestedBottom := 0, 0, 0, 0
+	if hasPixels {
+		requestedLeft = pixels[0].X
+		requestedTop = pixels[0].Y
+		requestedRight = pixels[0].X
+		requestedBottom = pixels[0].Y
+		for _, pixel := range pixels[1:] {
+			requestedLeft = min(requestedLeft, pixel.X)
+			requestedTop = min(requestedTop, pixel.Y)
+			requestedRight = max(requestedRight, pixel.X)
+			requestedBottom = max(requestedBottom, pixel.Y)
+		}
+	}
 
 	// Add palette snapper helper if needed
 	if usePalette {
@@ -59,41 +74,70 @@ if not frame then
 	error("Frame not found: %d")
 end
 
-local function createFullImage()
-	local fullImage = Image(spr.spec)
+local function createImage(width, height)
+	local imageSpec = spr.spec
+	imageSpec.width = width
+	imageSpec.height = height
+	local image = Image(imageSpec)
 	if spr.colorMode == ColorMode.INDEXED then
-		fullImage:clear(spr.transparentColor)
+		image:clear(spr.transparentColor)
 	else
-		fullImage:clear(Color(0, 0, 0, 0))
+		image:clear(Color(0, 0, 0, 0))
 	end
-	return fullImage
+	return image
+end
+
+local hasPixels = %t
+local requestedLeft = %d
+local requestedTop = %d
+local requestedRight = %d
+local requestedBottom = %d
+
+if hasPixels and (requestedLeft < 0 or requestedTop < 0 or
+	requestedRight >= spr.width or requestedBottom >= spr.height) then
+	error("Pixel coordinates must be within sprite bounds")
 end
 
 app.transaction(function()
 	local cel = layer:cel(frame)
 	if not cel then
-		local fullImage = createFullImage()
+		local fullImage = createImage(spr.width, spr.height)
 		cel = spr:newCel(layer, frame, fullImage, Point(0, 0))
 	elseif not cel.image then
-		cel.image = createFullImage()
+		cel.image = createImage(spr.width, spr.height)
 		cel.position = Point(0, 0)
-	elseif cel.position.x ~= 0 or cel.position.y ~= 0 or
-		cel.image.width ~= spr.width or cel.image.height ~= spr.height then
-		-- putPixel uses image-local coordinates, while draw_pixels accepts
-		-- sprite coordinates. Preserve the existing cel at its sprite position
-		-- in a full-canvas image so the coordinates below map exactly.
-		local fullImage = createFullImage()
-		fullImage:drawImage(cel.image, cel.position)
-		cel.image = fullImage
-		cel.position = Point(0, 0)
+	elseif hasPixels then
+		local celLeft = cel.position.x
+		local celTop = cel.position.y
+		local celRight = celLeft + cel.image.width - 1
+		local celBottom = celTop + cel.image.height - 1
+		local expandedLeft = math.min(celLeft, requestedLeft)
+		local expandedTop = math.min(celTop, requestedTop)
+		local expandedRight = math.max(celRight, requestedRight)
+		local expandedBottom = math.max(celBottom, requestedBottom)
+
+		if expandedLeft ~= celLeft or expandedTop ~= celTop or
+			expandedRight ~= celRight or expandedBottom ~= celBottom then
+			-- Keep every existing pixel, including content outside the sprite,
+			-- while expanding the cel just enough to include requested points.
+			local expandedImage = createImage(
+				expandedRight - expandedLeft + 1,
+				expandedBottom - expandedTop + 1)
+			expandedImage:drawImage(
+				cel.image,
+				Point(celLeft - expandedLeft, celTop - expandedTop))
+			cel.image = expandedImage
+			cel.position = Point(expandedLeft, expandedTop)
+		end
 	end
 
 	local img = cel.image
-`, escapedName, escapedName, frameNumber, frameNumber))
+`, escapedName, escapedName, frameNumber, frameNumber,
+		hasPixels, requestedLeft, requestedTop, requestedRight, requestedBottom))
 
 	// Add pixel drawing commands
 	for _, p := range pixels {
-		sb.WriteString(fmt.Sprintf("\timg:putPixel(%d, %d, %s)\n", p.X, p.Y, FormatColorWithPalette(p.Color, usePalette)))
+		sb.WriteString(fmt.Sprintf("\timg:putPixel(%d - cel.position.x, %d - cel.position.y, %s)\n", p.X, p.Y, FormatColorWithPalette(p.Color, usePalette)))
 	}
 
 	sb.WriteString(`end)

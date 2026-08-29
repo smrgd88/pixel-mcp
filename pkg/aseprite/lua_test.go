@@ -159,16 +159,16 @@ func TestLuaGenerator_DrawPixels(t *testing.T) {
 		t.Error("script missing layer iteration")
 	}
 
-	if !strings.Contains(script, "img:putPixel(0, 0, Color(255, 0, 0, 255))") {
+	if !strings.Contains(script, "img:putPixel(0 - cel.position.x, 0 - cel.position.y, Color(255, 0, 0, 255))") {
 		t.Error("script missing first pixel")
 	}
 
-	if !strings.Contains(script, "img:putPixel(1, 1, Color(0, 255, 0, 255))") {
+	if !strings.Contains(script, "img:putPixel(1 - cel.position.x, 1 - cel.position.y, Color(0, 255, 0, 255))") {
 		t.Error("script missing second pixel")
 	}
 }
 
-func TestLuaGenerator_DrawPixelsNormalizesCelCoordinates(t *testing.T) {
+func TestLuaGenerator_DrawPixelsExpandsCelCoordinates(t *testing.T) {
 	gen := NewLuaGenerator()
 	script := gen.DrawPixels("Layer 1", 1, []Pixel{{
 		Point: Point{X: 3, Y: 4},
@@ -176,11 +176,15 @@ func TestLuaGenerator_DrawPixelsNormalizesCelCoordinates(t *testing.T) {
 	}}, false)
 
 	for _, want := range []string{
-		"Image(spr.spec)",
-		"fullImage:clear(spr.transparentColor)",
-		"fullImage:drawImage(cel.image, cel.position)",
-		"cel.position = Point(0, 0)",
+		"local imageSpec = spr.spec",
+		"image:clear(spr.transparentColor)",
+		"requestedRight >= spr.width",
+		"local expandedLeft = math.min(celLeft, requestedLeft)",
+		"expandedImage:drawImage(",
+		"Point(celLeft - expandedLeft, celTop - expandedTop)",
+		"cel.position = Point(expandedLeft, expandedTop)",
 		"spr:newCel(layer, frame, fullImage, Point(0, 0))",
+		"img:putPixel(3 - cel.position.x, 4 - cel.position.y, Color(1, 2, 3, 255))",
 	} {
 		if !strings.Contains(script, want) {
 			t.Errorf("generated script missing %q", want)
