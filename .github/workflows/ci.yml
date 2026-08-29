@@ -12,6 +12,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/pixel-mcp-ci
+  UPSTREAM_IMAGE_NAME: willibrandon/pixel-mcp-ci
 
 jobs:
   test:
@@ -50,7 +51,11 @@ jobs:
         if: steps.dockerfile.outputs.changed == 'false'
         id: pull-image
         continue-on-error: true
-        run: docker pull "${REGISTRY}/${IMAGE_NAME}:latest"
+        run: |
+          docker pull "${REGISTRY}/${IMAGE_NAME}:latest" || {
+            docker pull "${REGISTRY}/${UPSTREAM_IMAGE_NAME}:latest"
+            docker tag "${REGISTRY}/${UPSTREAM_IMAGE_NAME}:latest" "${REGISTRY}/${IMAGE_NAME}:latest"
+          }
 
       - name: Build CI image
         if: steps.dockerfile.outputs.changed == 'true' || steps.pull-image.outcome == 'failure'
