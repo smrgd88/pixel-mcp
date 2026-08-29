@@ -29,8 +29,8 @@ A Model Context Protocol (MCP) server that exposes Aseprite's pixel art and anim
 
 ## Requirements
 
-- Go 1.23+
-- Aseprite 1.3.0+ (1.3.10+ recommended)
+- Go 1.25+
+- Aseprite 1.3.17.2+ (1.3.18.3 recommended)
 
 ## Quick Start
 
