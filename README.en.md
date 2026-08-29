@@ -36,9 +36,9 @@ Selection and clipboard state persists across consecutive MCP calls.
 
 ### Pixel art and palettes
 
-`analyze_reference`, `draw_with_dither`, `downsample_image`, `get_palette`, `set_palette`, `set_palette_color`, `add_palette_color`, `sort_palette`, `apply_shading`, `analyze_palette_harmonies`, `suggest_antialiasing`
+`analyze_reference`, `draw_with_dither`, `downsample_image`, `quantize_palette`, `get_palette`, `set_palette`, `set_palette_color`, `add_palette_color`, `sort_palette`, `apply_shading`, `apply_auto_shading`, `analyze_palette_harmonies`, `suggest_antialiasing`
 
-Analyze references, apply dithering, downsample images, edit palettes, shade, and antialias artwork.
+Analyze references, apply dithering, downsample images, quantize colors, edit palettes, shade automatically, and antialias artwork.
 
 ### Transform
 

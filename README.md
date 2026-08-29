@@ -36,9 +36,9 @@ pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprit
 
 ### 픽셀 아트와 팔레트
 
-`analyze_reference`, `draw_with_dither`, `downsample_image`, `get_palette`, `set_palette`, `set_palette_color`, `add_palette_color`, `sort_palette`, `apply_shading`, `analyze_palette_harmonies`, `suggest_antialiasing`
+`analyze_reference`, `draw_with_dither`, `downsample_image`, `quantize_palette`, `get_palette`, `set_palette`, `set_palette_color`, `add_palette_color`, `sort_palette`, `apply_shading`, `apply_auto_shading`, `analyze_palette_harmonies`, `suggest_antialiasing`
 
-레퍼런스 분석, 디더링, 다운샘플링, 팔레트 편집, 셰이딩과 안티앨리어싱을 제공합니다.
+레퍼런스 분석, 디더링, 다운샘플링, 색상 양자화, 팔레트 편집, 자동 셰이딩과 안티앨리어싱을 제공합니다.
 
 ### 변형
 
