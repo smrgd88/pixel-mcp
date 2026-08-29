@@ -47,7 +47,8 @@ make build
 
 ### 2. Configure
 
-Create `~/.config/pixel-mcp/config.json`:
+Create a configuration file. The existing default location remains
+`~/.config/pixel-mcp/config.json`:
 
 ```json
 {
@@ -60,8 +61,14 @@ Create `~/.config/pixel-mcp/config.json`:
 }
 ```
 
+Configuration paths are resolved in this order:
+
+1. `--config <path>` command-line flag
+2. `PIXEL_MCP_CONFIG` environment variable
+3. `~/.config/pixel-mcp/config.json`
+
 **Configuration options:**
-- `aseprite_path` (required): Absolute path to Aseprite executable. No automatic discovery or environment variables.
+- `aseprite_path` (required): Absolute path to Aseprite executable.
 - `temp_dir` (optional): Directory for temporary files. Defaults to `/tmp/pixel-mcp`.
 - `timeout` (optional): Command timeout in seconds. Defaults to 30.
 - `log_level` (optional): Logging verbosity (`debug`, `info`, `warn`, `error`). Defaults to `info`.
@@ -77,6 +84,12 @@ Create `~/.config/pixel-mcp/config.json`:
 # Check health
 ./bin/pixel-mcp --health
 
+# Use an isolated configuration file
+./bin/pixel-mcp --config /absolute/path/to/config.json --health
+
+# Or select a configuration for this process and its child processes
+PIXEL_MCP_CONFIG=/absolute/path/to/config.json ./bin/pixel-mcp --health
+
 # Enable debug logging
 ./bin/pixel-mcp --debug
 ```
@@ -89,7 +102,8 @@ Add to your Claude Desktop config:
 {
   "mcpServers": {
     "aseprite": {
-      "command": "/absolute/path/to/pixel-mcp"
+      "command": "/absolute/path/to/pixel-mcp",
+      "args": ["--config", "/absolute/path/to/config.json"]
     }
   }
 }
@@ -221,6 +235,13 @@ make clean
 ```
 
 ### Using Go CLI
+
+Tests that execute Aseprite can use an isolated configuration without changing
+the user-level default:
+
+```bash
+export PIXEL_MCP_CONFIG=/absolute/path/to/test-config.json
+```
 
 ```bash
 # Build (development)

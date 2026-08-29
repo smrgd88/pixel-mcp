@@ -2,9 +2,11 @@
 
 ## Prerequisites
 
-ALL tests require a real Aseprite installation with configuration file.
+Pure unit tests do not require a user-level configuration file. Tests that execute
+Aseprite require a real installation and a configuration file. The test configuration
+can live anywhere; setting `PIXEL_MCP_CONFIG` keeps it isolated from the user's default.
 
-Create `~/.config/pixel-mcp/config.json`:
+Create a test configuration file, for example `/tmp/pixel-mcp-test-config.json`:
 
 **macOS:**
 ```json
@@ -44,26 +46,31 @@ Create `~/.config/pixel-mcp/config.json`:
 
 ## Unit Tests
 
-Run unit tests (requires config file with real Aseprite):
+Run pure configuration unit tests without Aseprite or a global configuration:
 ```bash
-go test ./...
+go test ./pkg/config
+```
+
+To run the full suite, select the isolated test configuration:
+```bash
+PIXEL_MCP_CONFIG=/tmp/pixel-mcp-test-config.json go test ./...
 ```
 
 Run with verbose output:
 ```bash
-go test -v ./...
+PIXEL_MCP_CONFIG=/tmp/pixel-mcp-test-config.json go test -v ./...
 ```
 
 ## Integration Tests
 
 Run integration tests (requires config file with real Aseprite):
 ```bash
-go test -tags=integration ./...
+PIXEL_MCP_CONFIG=/tmp/pixel-mcp-test-config.json go test -tags=integration ./...
 ```
 
 Run integration tests with verbose output:
 ```bash
-go test -tags=integration -v ./pkg/aseprite
+PIXEL_MCP_CONFIG=/tmp/pixel-mcp-test-config.json go test -tags=integration -v ./pkg/aseprite
 ```
 
 ## Coverage
@@ -78,7 +85,8 @@ open coverage.html
 
 - **Unit tests**: `*_test.go` files (no build tags)
   - Test pure Go logic, Lua script generation, string escaping
-  - Do NOT mock Aseprite - use real executable
+  - Configuration package tests use temporary files and do not need Aseprite
+  - Some behavior tests execute a real Aseprite process
 
 - **Integration tests**: `integration_test.go` files with `//go:build integration`
   - Test actual Aseprite execution
@@ -98,7 +106,10 @@ This runs both unit and integration tests in the CI container with Aseprite pre-
 
 Test server manually:
 ```bash
-go run ./cmd/pixel-mcp
+go run ./cmd/pixel-mcp --config /tmp/pixel-mcp-test-config.json
+
+# Validate the same isolated configuration and Aseprite installation
+go run ./cmd/pixel-mcp --config /tmp/pixel-mcp-test-config.json --health
 ```
 
 Test server via Docker:
@@ -108,7 +119,7 @@ make docker-run-full
 
 ## Testing Philosophy
 
-All tests use a real Aseprite executable to ensure:
+Integration and Aseprite behavior tests use a real executable to ensure:
 - Tests accurately reflect Aseprite's actual behavior
 - Changes in Aseprite's API are detected immediately
 - Integration issues are discovered during development
@@ -117,7 +128,8 @@ All tests use a real Aseprite executable to ensure:
 ## Troubleshooting
 
 **Error: "config file not found"**
-- Create `~/.config/pixel-mcp/config.json` with valid `aseprite_path`
+- Pass `--config <path>`, set `PIXEL_MCP_CONFIG`, or create
+  `~/.config/pixel-mcp/config.json`
 
 **Error: "aseprite executable not found"**
 - Verify the path in config.json points to a real Aseprite binary

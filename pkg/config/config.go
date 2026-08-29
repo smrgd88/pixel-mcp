@@ -1,8 +1,7 @@
 // Package config provides configuration management for the Aseprite MCP server.
 //
-// Configuration is loaded exclusively from a JSON file at ~/.config/pixel-mcp/config.json.
-// No environment variables or auto-discovery mechanisms are used - all paths must be
-// explicitly configured.
+// Configuration is loaded from an explicit path, PIXEL_MCP_CONFIG, or the default
+// ~/.config/pixel-mcp/config.json path, in that order.
 //
 // Example config file:
 //
@@ -72,12 +71,23 @@ const (
 
 	// DefaultLogLevel is the default logging verbosity ("info")
 	DefaultLogLevel = "info"
+
+	// ConfigPathEnv is the environment variable used to override the default
+	// configuration file path.
+	ConfigPathEnv = "PIXEL_MCP_CONFIG"
 )
 
-// Load loads configuration from the default config file at ~/.config/pixel-mcp/config.json.
+// Load loads configuration from PIXEL_MCP_CONFIG when set, otherwise from the
+// legacy ~/.config/pixel-mcp/config.json location.
+func Load() (*Config, error) {
+	return LoadFromPath("")
+}
+
+// LoadFromPath loads configuration from a JSON file. An explicit path takes
+// precedence over PIXEL_MCP_CONFIG. If both are empty, the legacy
+// ~/.config/pixel-mcp/config.json path is used.
 //
 // The config file MUST exist and MUST contain an explicit aseprite_path field.
-// No environment variables or auto-discovery mechanisms are used.
 //
 // Returns an error if:
 //   - Config file doesn't exist
@@ -85,18 +95,22 @@ const (
 //   - aseprite_path is not set
 //   - aseprite_path doesn't point to a real executable
 //   - Validation fails for any other field
-func Load() (*Config, error) {
+func LoadFromPath(explicitPath string) (*Config, error) {
+	configPath, err := ResolvePath(explicitPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve config file path: %w", err)
+	}
+
 	cfg := &Config{
 		Timeout:  DefaultTimeout,
 		LogLevel: DefaultLogLevel,
 	}
 
-	// Try to load from config file
-	if err := cfg.loadFromFile(); err != nil {
+	if err := cfg.loadFromFile(configPath); err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("config file not found at %s: %w\nPlease create config file with aseprite_path configured", getConfigFilePath(), err)
+			return nil, fmt.Errorf("config file not found at %s: %w\nPlease create config file with aseprite_path configured", configPath, err)
 		}
-		return nil, fmt.Errorf("failed to load config file: %w", err)
+		return nil, fmt.Errorf("failed to load config file %s: %w", configPath, err)
 	}
 
 	// Set defaults for unset values
@@ -112,6 +126,25 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+// ResolvePath returns the configuration path selected by the supported precedence:
+// explicit CLI path, PIXEL_MCP_CONFIG, then the legacy user-home default.
+func ResolvePath(explicitPath string) (string, error) {
+	if explicitPath != "" {
+		return explicitPath, nil
+	}
+
+	if envPath := os.Getenv(ConfigPathEnv); envPath != "" {
+		return envPath, nil
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("determine user home directory: %w", err)
+	}
+
+	return filepath.Join(homeDir, ".config", "pixel-mcp", "config.json"), nil
+}
+
 // configJSON is a temporary struct for unmarshaling JSON with timeout as int (seconds)
 type configJSON struct {
 	AsepritePath string `json:"aseprite_path"`
@@ -122,10 +155,8 @@ type configJSON struct {
 	EnableTiming bool   `json:"enable_timing"`
 }
 
-// loadFromFile loads configuration from the default config file location.
-func (c *Config) loadFromFile() error {
-	configPath := getConfigFilePath()
-
+// loadFromFile loads configuration from configPath.
+func (c *Config) loadFromFile(configPath string) error {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return err
@@ -228,11 +259,4 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
-}
-
-// getConfigFilePath is a function variable that returns the default config file path.
-// Can be overridden in tests.
-var getConfigFilePath = func() string {
-	homeDir, _ := os.UserHomeDir()
-	return filepath.Join(homeDir, ".config", "pixel-mcp", "config.json")
 }

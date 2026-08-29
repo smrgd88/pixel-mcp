@@ -28,6 +28,7 @@ func main() {
 		showVersion = flag.Bool("version", false, "Show version information")
 		showHealth  = flag.Bool("health", false, "Check health and exit")
 		debugMode   = flag.Bool("debug", false, "Enable debug logging")
+		configPath  = flag.String("config", "", "Path to configuration file (overrides PIXEL_MCP_CONFIG)")
 	)
 	flag.Parse()
 
@@ -38,10 +39,10 @@ func main() {
 	}
 
 	// Load configuration
-	cfg, err := config.Load()
+	cfg, err := config.LoadFromPath(*configPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
-		fmt.Fprintf(os.Stderr, "\nPlease create a config file at ~/.config/pixel-mcp/config.json:\n")
+		fmt.Fprintf(os.Stderr, "\nProvide --config <path>, set %s, or create ~/.config/pixel-mcp/config.json:\n", config.ConfigPathEnv)
 		fmt.Fprintf(os.Stderr, "{\n")
 		fmt.Fprintf(os.Stderr, "  \"aseprite_path\": \"/path/to/aseprite\",\n")
 		fmt.Fprintf(os.Stderr, "  \"temp_dir\": \"/tmp/pixel-mcp\",\n")
