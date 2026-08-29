@@ -1,7 +1,9 @@
 # Multi-stage build for pixel-mcp server
 
 # Stage 1: Build the Go binary
-FROM golang:1.24.1-alpine AS builder
+FROM golang:1.25.14-alpine AS builder
+
+ENV GOTOOLCHAIN=local
 
 WORKDIR /build
 
