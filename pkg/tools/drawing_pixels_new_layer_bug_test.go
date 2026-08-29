@@ -121,4 +121,8 @@ func TestIntegration_DrawPixels_NewLayer_Bug(t *testing.T) {
 	if greenCount != 16 {
 		t.Errorf("Expected 16 GREEN pixels, got %d", greenCount)
 	}
+
+	// Creating a full-canvas image for a new indexed cel must initialize
+	// untouched pixels with the sprite's transparent palette index.
+	assertIndexedPixelTransparent(t, ctx, client, spritePath, "Test Layer", 1, 20, 20)
 }
