@@ -2,13 +2,13 @@
 
 작성일: 2026-08-30
 
-현재 기준: `feature/shared-pixel-mcp-hardening`, [PR #1](https://github.com/smrgd88/pixel-mcp/pull/1)
+현재 기준: `develop`의 `b1204b878ccc9e50e8ac1384266b626d8604bc8d` ([PR #1](https://github.com/smrgd88/pixel-mcp/pull/1) 병합 완료)
 
-실제 검증 환경: Go 1.24.11, Aseprite 1.3.18.2-arm64, macOS
+실제 검증 환경: Go 1.25.14, Aseprite 1.3.17.2 및 1.3.18.3, Linux amd64 Docker
 
 지원 기준: Aseprite 1.3.17.2 이상 (`app.apiVersion >= 39`)
 
-최신 검증 대상: Aseprite 1.3.18.3 (2026-08-25 공식 릴리스, 실제 검증 대기)
+최신 검증 버전: Aseprite 1.3.18.3 (2026-08-25 공식 릴리스, 전체 Docker 검증 완료)
 
 ## 판단 기준
 
@@ -23,6 +23,7 @@
 - [Aseprite releases](https://github.com/aseprite/aseprite/releases): 지원 최소/최신 패치 버전을 결정하는 기준이다.
 - [`app.transaction()`](https://www.aseprite.org/api/app/#apptransaction): 한 프로세스 안에서 변경을 하나의 undo/redo 단위로 묶는다.
 - [Cel API](https://www.aseprite.org/api/cel/)와 [Sprite API](https://www.aseprite.org/api/sprite/): cel 위치·이미지·프레임·태그·저장을 제공한다.
+- [`app.command.LinkCels`](https://www.aseprite.org/api/app_command)와 [`app.range`](https://www.aseprite.org/api/range/): timeline 선택 범위의 cel을 Aseprite native link로 연결한다.
 - [Image API](https://www.aseprite.org/api/image/), [Palette API](https://www.aseprite.org/api/palette/), [`app.pixelColor`](https://www.aseprite.org/api/pixelcolor/): RGB/Grayscale/Indexed 픽셀과 palette index를 직접 다루는 기준이다.
 - [`ChangePixelFormat`](https://www.aseprite.org/api/command/ChangePixelFormat/), [`ColorQuantization`](https://www.aseprite.org/api/command/ColorQuantization/), [`FlattenLayers`](https://www.aseprite.org/api/command/FlattenLayers/): 색상 모드 변환, palette 생성, layer 병합을 공식 명령으로 제공한다.
 - [Aseprite CLI](https://www.aseprite.org/docs/cli/): batch 실행, Lua script, export와 metadata 출력을 제공한다.
@@ -38,9 +39,10 @@
 - **최소 지원 버전**: Aseprite 1.3.17.2, `app.apiVersion >= 39`
   - 현재 사용하는 핵심 pixel/cel/palette/save API는 더 오래된 버전에도 존재한다.
   - 그러나 1.3.17은 스크립트 권한 재사용 보안 문제를 수정했으므로 운영 지원 하한은 API 존재 여부가 아니라 보안 기준으로 정한다.
+  - 태그 커밋 `793fb6526540b4c6f5cf8381ae189241cb003fdf`로 Docker build, `go vet`, unit/race/coverage와 전체 integration을 검증했다. `pkg/tools` integration은 58.912초였다.
 - **최신 검증 버전**: Aseprite 1.3.18.3
-  - 현재 실제 통합 검증은 1.3.18.2까지 완료했다.
-  - 1.3.18.3은 Lua API 변경 없이 decoder와 플랫폼 버그를 수정한 최신 공식 패치이며 다음 matrix 실행 대상이다.
+  - 1.3.18.3은 Lua API 변경 없이 decoder와 플랫폼 버그를 수정한 최신 공식 패치다.
+  - Docker build, `go vet`, unit/race/coverage와 전체 integration 검증을 완료했다.
 - **재현 전용 버전**: Aseprite 1.3.15.5
   - upstream #16 보고 환경을 재현하는 데만 사용한다.
   - 보안 하한보다 낮으므로 정상 지원 또는 릴리스 승인 대상으로 취급하지 않는다.
@@ -72,6 +74,23 @@
 6. per-file lock과 atomic save/restore fault test를 추가한다.
 
 ## P0 — 다음 릴리스 전에 처리
+
+### link_cel native linked cel 수정
+
+현재 작업: `[SHARED][FIX] link_cel native link 수정`
+
+- [x] `Sprite:newCel(..., srcCel.image, ...)`가 저장 후 독립 image 복사본을 만드는 문제를 재현한다.
+- [x] 공식 `app.command.LinkCels`가 UI 전용 명령이 아니며 `app.range.layers/frames` 선택으로 batch mode에서 동작함을 확인한다.
+- [x] save/reopen 뒤 source/target cel의 `image` identity와 cel 위치 보존을 검증한다.
+- [x] source와 target 어느 쪽의 픽셀을 수정해도 다른 프레임에 반영되는 회귀 테스트를 추가한다.
+- [x] 역방향 링크에서도 source의 기존 linked group, opacity와 user data를 보존한다.
+- [x] invalid layer/source frame/target frame, 기존 target cel 거부와 실패 시 원본 보존을 검증한다.
+- [x] Aseprite 1.3.17.2와 1.3.18.3에서 전체 검증을 완료한다 (`pkg/tools` integration 각각 60.172초, 56.541초).
+
+완료 조건:
+
+- [x] 두 지원 검증 버전에서 native link 회귀 테스트와 전체 integration이 통과한다.
+- [x] build, `go vet`, unit/race/coverage가 통과하고 관련 변경만 커밋한다.
 
 ### CI를 실제 필수 검사로 만들기
 
@@ -128,12 +147,12 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 - [x] asymmetric non-zero cel 위치 `(10,6)` 회귀 테스트를 추가했다.
 - [x] cel 바깥 좌표와 새 레이어/no-cel 경로를 검증했다.
 - [x] Aseprite 1.3.18.2에서 전체 `pkg/tools` integration suite가 통과했다.
-- [ ] 이슈 보고 환경인 Aseprite 1.3.17.2에서도 회귀 테스트를 실행한다.
+- [x] 이슈 보고 환경인 Aseprite 1.3.17.2에서도 회귀 테스트를 실행한다.
 - [ ] upstream 제출 범위에서 설정 격리와 좌표 수정을 분리할지 결정한다.
 
 완료 조건:
 
-- [ ] 지원 최소 버전과 최신 검증 버전에서 요청 좌표와 실제 RGBA가 일치한다.
+- [x] 지원 최소 버전과 최신 검증 버전에서 요청 좌표와 실제 RGBA가 일치한다.
 
 ## P1 — 안전한 MCP 작업 흐름
 
@@ -221,7 +240,7 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 ### 테스트 matrix 확대
 
 - [ ] macOS arm64 외에 Linux와 Windows smoke test를 추가한다.
-- [ ] 최소 지원 버전과 최신 Aseprite 버전을 모두 검증한다.
+- [x] 최소 지원 버전과 최신 Aseprite 버전을 모두 검증한다.
 - [ ] RGB, grayscale, indexed 각각에 공통 drawing/export contract test를 적용한다.
 - [ ] palette index 0과 transparent index를 별도 축으로 테스트한다.
 - [ ] non-zero cel, linked cel, group layer, hidden layer, multi-frame 조합을 추가한다.
@@ -246,10 +265,11 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 8. [ ] cross-platform launcher #18
 9. [ ] 버전 capability 및 테스트 matrix 확대
 
-## 이번 PR 병합 전 확인
+## PR #1 병합 결과
 
 - [x] PR #1에 필수 `test` check가 나타나고 최신 `develop` 기준으로 통과했다.
 - [x] 리뷰어가 config 우선순위와 기본 동작 호환성을 확인한다.
 - [x] 리뷰어가 `draw_pixels`의 cel bounds 확장, local 좌표 변환과 indexed transparent index 처리를 확인한다.
-- [ ] Aseprite 1.3.17.2 검증 여부를 PR 미검증 범위에 명시한다.
+- [x] Aseprite 1.3.17.2에서 Go 1.25.14, `go vet`, unit/race/coverage와 전체 integration을 검증한다.
+- [x] PR #1을 `develop`의 `b1204b878ccc9e50e8ac1384266b626d8604bc8d`로 병합한다.
 - [x] push/PR에는 Downloads의 생성 이미지나 로컬 임시 파일이 포함되지 않았는지 확인한다.

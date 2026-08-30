@@ -404,9 +404,13 @@ func TestIntegration_LinkCel(t *testing.T) {
 		t.Fatalf("Failed to add layer: %v", err)
 	}
 
-	// Add 2 more frames
+	// Add 2 empty target frames. AddFrame duplicates cels and would make the
+	// targets occupied, which LinkCel intentionally rejects to protect data.
 	for i := 0; i < 2; i++ {
-		addFrameScript := gen.AddFrame(100)
+		addFrameScript := `local spr = app.activeSprite
+local frame = spr:newEmptyFrame()
+frame.duration = 0.1
+spr:saveAs(spr.filename)`
 		_, err := client.ExecuteLua(ctx, addFrameScript, spritePath)
 		if err != nil {
 			t.Fatalf("Failed to add frame: %v", err)
@@ -512,6 +516,12 @@ func TestIntegration_LinkCel_InvalidFrame(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to add layer: %v", err)
 	}
+	if _, err = client.ExecuteLua(ctx, gen.DrawPixels("Layer 1", 1, []aseprite.Pixel{{
+		Point: aseprite.Point{X: 2, Y: 3},
+		Color: aseprite.Color{R: 255, G: 0, B: 0, A: 255},
+	}}, false), spritePath); err != nil {
+		t.Fatalf("Failed to create source cel: %v", err)
+	}
 
 	// Try to link cel with invalid source frame
 	script := gen.LinkCel("Layer 1", 99, 1)
@@ -520,7 +530,14 @@ func TestIntegration_LinkCel_InvalidFrame(t *testing.T) {
 		t.Error("Expected error for invalid source frame, got nil")
 	}
 
-	t.Logf("✓ Correctly rejected invalid source frame")
+	// Try to link cel with invalid target frame.
+	script = gen.LinkCel("Layer 1", 1, 99)
+	_, err = client.ExecuteLua(ctx, script, spritePath)
+	if err == nil {
+		t.Error("Expected error for invalid target frame, got nil")
+	}
+
+	t.Logf("✓ Correctly rejected invalid source and target frames")
 }
 
 func TestIntegration_DeleteTag(t *testing.T) {

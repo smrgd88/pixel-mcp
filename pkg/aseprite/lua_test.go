@@ -1277,8 +1277,18 @@ func TestLuaGenerator_LinkCel(t *testing.T) {
 		t.Error("script missing source cel reference")
 	}
 
-	if !strings.Contains(script, "spr:newCel(layer, tgtFrame, srcCel.image, srcCel.position)") {
-		t.Error("script missing linked cel creation")
+	if !strings.Contains(script, "app.command.LinkCels()") {
+		t.Error("script missing native linked cel command")
+	}
+
+	if strings.Contains(script, "spr:newCel(layer, tgtFrame, srcCel.image, srcCel.position)") {
+		t.Error("script must not use Sprite:newCel as the final link operation")
+	}
+
+	if !strings.Contains(script, "spr:newEmptyFrame(#spr.frames + 1)") ||
+		!strings.Contains(script, "linkedCel.frame = tgtFrame") ||
+		!strings.Contains(script, "spr:deleteFrame(tempFrame)") {
+		t.Error("script missing backwards-link preservation path")
 	}
 
 	if !strings.Contains(script, "Cel linked successfully") {

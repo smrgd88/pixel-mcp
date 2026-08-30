@@ -588,8 +588,10 @@ func TestLinkCel_ViaMCP(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(cfg.TempDir + "/test-link.aseprite")
 
-	// Add a second frame first
-	addFrameScript := gen.AddFrame(100)
+	// LinkCel requires an empty target so existing cel data cannot be overwritten.
+	addFrameScript := `local spr = app.activeSprite
+spr:newEmptyFrame()
+spr:saveAs(spr.filename)`
 	_, err = client.ExecuteLua(context.Background(), addFrameScript, cfg.TempDir+"/test-link.aseprite")
 	require.NoError(t, err)
 
