@@ -79,15 +79,15 @@ func ApplyAutoShading(img image.Image, lightDir string, intensity float64, style
 
 	// Generate color ramps for each unique base color
 	colorRamps := make(map[string][]string)
-	baseColors := make(map[string]color.Color)
+	colorOrder := make([]string, 0)
 
 	for _, region := range regions {
 		r, g, b, a := region.BaseColor.RGBA()
 		key := fmt.Sprintf("#%02X%02X%02X%02X", uint8(r>>8), uint8(g>>8), uint8(b>>8), uint8(a>>8))
 		if _, exists := colorRamps[key]; !exists {
-			ramp, colors := generateColorRamp(region.BaseColor, intensity, hueShift)
+			ramp, _ := generateColorRamp(region.BaseColor, intensity, hueShift)
 			colorRamps[key] = ramp
-			baseColors[key] = colors
+			colorOrder = append(colorOrder, key)
 		}
 	}
 
@@ -136,8 +136,8 @@ func ApplyAutoShading(img image.Image, lightDir string, intensity float64, style
 
 	// Collect all generated colors for palette
 	generatedColors := []string{}
-	for _, ramp := range colorRamps {
-		generatedColors = append(generatedColors, ramp...)
+	for _, key := range colorOrder {
+		generatedColors = append(generatedColors, colorRamps[key]...)
 	}
 
 	return result, generatedColors, regionsShadedCount, nil
