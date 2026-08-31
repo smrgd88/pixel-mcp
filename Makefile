@@ -72,23 +72,20 @@ docker-build-ci:
 	docker build -f Dockerfile.ci -t $(DOCKER_IMAGE_CI) .
 
 docker-test:
-	@docker run --rm -v $(PWD):/workspace $(DOCKER_IMAGE_CI) bash -c '\
-		mkdir -p /root/.config/pixel-mcp && \
-		printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > /root/.config/pixel-mcp/config.json && \
+	@docker run --rm -e PIXEL_MCP_CONFIG=/tmp/pixel-mcp-ci-config.json -v $(PWD):/workspace $(DOCKER_IMAGE_CI) bash -c '\
+		printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > "$$PIXEL_MCP_CONFIG" && \
 		cd /workspace && \
 		go test -v -race -cover ./...'
 
 docker-test-integration:
-	@docker run --rm -v $(PWD):/workspace $(DOCKER_IMAGE_CI) bash -c '\
-		mkdir -p /root/.config/pixel-mcp && \
-		printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > /root/.config/pixel-mcp/config.json && \
+	@docker run --rm -e PIXEL_MCP_CONFIG=/tmp/pixel-mcp-ci-config.json -v $(PWD):/workspace $(DOCKER_IMAGE_CI) bash -c '\
+		printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > "$$PIXEL_MCP_CONFIG" && \
 		cd /workspace && \
 		go test -tags=integration -v ./...'
 
 docker-test-all:
-	@docker run --rm -v $(PWD):/workspace $(DOCKER_IMAGE_CI) bash -c '\
-		mkdir -p /root/.config/pixel-mcp && \
-		printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > /root/.config/pixel-mcp/config.json && \
+	@docker run --rm -e PIXEL_MCP_CONFIG=/tmp/pixel-mcp-ci-config.json -v $(PWD):/workspace $(DOCKER_IMAGE_CI) bash -c '\
+		printf "{\"aseprite_path\":\"/build/aseprite/build/bin/aseprite\",\"temp_dir\":\"/tmp/pixel-mcp\",\"timeout\":30,\"log_level\":\"info\"}" > "$$PIXEL_MCP_CONFIG" && \
 		cd /workspace && \
 		go test -v -race -cover ./... && \
 		go test -tags=integration -v ./...'

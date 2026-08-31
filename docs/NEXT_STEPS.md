@@ -1,8 +1,8 @@
 # pixel-mcp 다음 작업 체크리스트
 
-작성일: 2026-08-30
+작성일: 2026-08-31
 
-현재 기준: `develop`의 `b1204b878ccc9e50e8ac1384266b626d8604bc8d` ([PR #1](https://github.com/smrgd88/pixel-mcp/pull/1) 병합 완료)
+현재 기준: `develop`의 `941fe34ec1cab20d7fda9c42b11aca73af665bb1` ([PR #6](https://github.com/smrgd88/pixel-mcp/pull/6) 병합 완료)
 
 실제 검증 환경: Go 1.25.14, Aseprite 1.3.17.2 및 1.3.18.3, Linux amd64 Docker
 
@@ -94,19 +94,19 @@
 
 ### CI를 실제 필수 검사로 만들기
 
-`develop`과 `main`에 필수 `test` check가 적용됐고 PR #1에서도 통과했다. 남은 범위는 전역 설정 의존 제거와 실행 버전 기록이다.
+`develop`과 `main`에 필수 `test` check가 적용됐고 PR #1과 PR #6에서 통과했다. 남은 범위는 실행 버전 artifact 기록이다.
 
 - [x] 포크 저장소에서 GitHub Actions 실행 여부와 권한을 확인한다.
 - [x] PR마다 unit/race/coverage와 integration test가 `test` check로 표시되게 한다.
 - [x] CI image는 포크 전용 `smrgd88/pixel-mcp-ci`를 우선 사용하고 공식 upstream image를 fallback으로 사용한다.
-- [ ] CI 설정을 `PIXEL_MCP_CONFIG` 기반 임시 파일로 전환해 `/root/.config` 의존성을 제거한다.
+- [x] CI 설정을 `PIXEL_MCP_CONFIG` 기반 임시 파일로 전환해 `/root/.config` 의존성을 제거한다.
 - [ ] Aseprite와 Go 버전을 CI 로그와 artifact에 남긴다.
 - [x] unit/integration 실패 로그와 재현 명령을 GitHub Actions에서 확인할 수 있게 한다.
 
 완료 조건:
 
 - [x] PR 화면에 필수 `test` check가 나타나고 unit/race/coverage와 integration이 모두 통과한다.
-- [ ] 전역 사용자 설정 없이 CI가 재현된다.
+- [x] 전역 사용자 설정 없이 CI가 재현된다.
 
 ### indexed auto shading 색상 반전 수정
 
@@ -255,7 +255,7 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 ## 권장 실행 순서
 
-1. [ ] CI check 활성화 및 격리 설정 적용
+1. [x] CI check 활성화 및 격리 설정 적용
 2. [ ] indexed auto shading 버그 #11
 3. [ ] indexed 검은 이미지 #16 재현과 수정
 4. [ ] warning output #15
