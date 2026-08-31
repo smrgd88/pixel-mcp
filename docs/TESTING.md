@@ -101,8 +101,11 @@ make docker-test-all
 ```
 
 This runs both unit and integration tests in the CI container with Aseprite pre-built.
+The Docker test helpers create `/tmp/pixel-mcp-ci-config.json` inside the disposable
+container and select it with `PIXEL_MCP_CONFIG`; they do not read or write a user-level
+`~/.config/pixel-mcp/config.json`.
 
-Build and run the supported Aseprite version matrix explicitly:
+Build the supported Aseprite version images explicitly:
 ```bash
 docker build -f Dockerfile.ci --build-arg ASEPRITE_VERSION=v1.3.17.2 -t pixel-mcp-ci:aseprite-1.3.17.2 .
 docker build -f Dockerfile.ci --build-arg ASEPRITE_VERSION=v1.3.18.3 -t pixel-mcp-ci:aseprite-1.3.18.3 .
