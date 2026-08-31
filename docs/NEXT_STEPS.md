@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31
 
-현재 기준: `develop`의 `941fe34ec1cab20d7fda9c42b11aca73af665bb1` ([PR #6](https://github.com/smrgd88/pixel-mcp/pull/6) 병합 완료)
+현재 기준: `develop`의 `5b2e23e44980a0171064b55f4231838511c57a4b` ([PR #7](https://github.com/smrgd88/pixel-mcp/pull/7) 병합 완료)
 
 실제 검증 환경: Go 1.25.14, Aseprite 1.3.17.2 및 1.3.18.3, Linux amd64 Docker
 
@@ -94,7 +94,7 @@
 
 ### CI를 실제 필수 검사로 만들기
 
-`develop`과 `main`에 필수 `test` check가 적용됐고 PR #1과 PR #6에서 통과했다. 남은 범위는 실행 버전 artifact 기록이다.
+`develop`과 `main`에 필수 `test` check가 적용됐고 PR #1, PR #6, PR #7에서 통과했다. 남은 범위는 실행 버전 artifact 기록이다.
 
 - [x] 포크 저장소에서 GitHub Actions 실행 여부와 권한을 확인한다.
 - [x] PR마다 unit/race/coverage와 integration test가 `test` check로 표시되게 한다.
@@ -114,16 +114,18 @@
 
 Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를 indexed image에 합성할 때의 palette index 보존 정책은 pixel-mcp가 명시해야 한다.
 
-- [ ] 기존 palette index와 픽셀 의미가 뒤바뀌는 재현 테스트를 먼저 추가한다.
-- [ ] 원본 영역별 색상 계열을 보존하는 index mapping 정책을 결정한다.
-- [ ] 새 shading 색상을 palette에 추가할지, 기존 색으로 제한할지 입력 계약에 명시한다.
-- [ ] indexed mode와 transparent index가 유지되는지 검증한다.
-- [ ] RGB 모드 결과와 indexed 모드 결과를 각각 실제 Aseprite로 검증한다.
+정책: 기존 palette index와 transparent index는 변경하지 않는다. 중복되지 않는 생성 색상은 palette에 여유가 있을 때만 뒤에 추가하고, 더 추가할 수 없을 때 non-exact shade는 원본 pixel index를 유지한다.
+
+- [x] 기존 palette index와 픽셀 의미가 뒤바뀌는 재현 테스트를 먼저 추가한다.
+- [x] 원본 영역별 색상 계열을 보존하는 index mapping 정책을 결정한다.
+- [x] 새 shading 색상을 palette에 추가할지, 기존 색으로 제한할지 입력 계약에 명시한다.
+- [x] indexed mode와 transparent index가 유지되는지 검증한다.
+- [x] RGB 모드 결과와 indexed 모드 결과를 각각 실제 Aseprite로 검증한다.
 
 완료 조건:
 
-- [ ] 나무의 줄기/잎처럼 서로 다른 색상 영역이 shading 뒤에도 뒤바뀌지 않는다.
-- [ ] `get_pixels`와 export PNG 양쪽에서 예상 RGBA가 일치한다.
+- [x] 나무의 줄기/잎처럼 서로 다른 색상 영역이 shading 뒤에도 뒤바뀌지 않는다.
+- [x] `get_pixels`와 export PNG 양쪽에서 예상 RGBA가 일치한다.
 
 ### indexed 기본 작업의 검은 이미지 문제 재현
 
@@ -256,7 +258,7 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 ## 권장 실행 순서
 
 1. [x] CI check 활성화 및 격리 설정 적용
-2. [ ] indexed auto shading 버그 #11
+2. [x] indexed auto shading 버그 #11
 3. [ ] indexed 검은 이미지 #16 재현과 수정
 4. [ ] warning output #15
 5. [ ] dry-run #12
