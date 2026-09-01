@@ -73,14 +73,116 @@ if not cel then
 	error("No cel found at frame " .. %d)
 end
 
+local palette = spr.palettes[1]
+if not palette then
+	error("No palette found")
+end
+
+local generatedColors = %s
+local colorsAdded = 0
+local paletteCapacityExhausted = (#palette >= 256)
+
+local function colorsEqual(a, b)
+	return a.red == b.red and a.green == b.green and a.blue == b.blue and a.alpha == b.alpha
+end
+
+local function findExactPaletteIndex(color)
+	for i = 0, #palette - 1 do
+		if (spr.colorMode ~= ColorMode.INDEXED or i ~= spr.transparentColor) and colorsEqual(palette:getColor(i), color) then
+			return i
+		end
+	end
+	return nil
+end
+
+local function addGeneratedColor(color)
+	local existingIndex = findExactPaletteIndex(color)
+	if existingIndex then
+		return existingIndex
+	end
+
+	local newIndex = #palette
+	if spr.colorMode == ColorMode.INDEXED and newIndex == spr.transparentColor then
+		newIndex = newIndex + 1
+	end
+	if newIndex >= 256 then
+		paletteCapacityExhausted = true
+		return nil
+	end
+
+	palette:resize(newIndex + 1)
+	palette:setColor(newIndex, color)
+	colorsAdded = colorsAdded + 1
+	return newIndex
+end
+
+local function findNearestPaletteIndex(r, g, b, a, originalIndex)
+	if a == 0 then
+		return spr.transparentColor
+	end
+
+	local nearestIndex = nil
+	local minDistance = math.huge
+	for i = 0, #palette - 1 do
+		if i ~= spr.transparentColor then
+			local color = palette:getColor(i)
+			local dr = r - color.red
+			local dg = g - color.green
+			local db = b - color.blue
+			local da = a - color.alpha
+			local distance = dr*dr + dg*dg + db*db + da*da
+			if distance < minDistance then
+				minDistance = distance
+				nearestIndex = i
+			end
+		end
+	end
+
+	if paletteCapacityExhausted and minDistance > 0 and
+		originalIndex ~= nil and originalIndex >= 0 and originalIndex < #palette and
+		originalIndex ~= spr.transparentColor then
+		return originalIndex
+	end
+
+	return nearestIndex or spr.transparentColor
+end
+
+-- Preserve every existing palette index. Add only distinct generated colors;
+-- if the palette is full, non-exact shades retain their original pixel index.
+for _, color in ipairs(generatedColors) do
+	addGeneratedColor(color)
+end
+
 -- Create new image with shaded content
 app.transaction(function()
 	local finalImg = shadedImg
 
-	-- Convert color mode if needed
-	if shadedImg.colorMode ~= spr.colorMode then
+	if spr.colorMode == ColorMode.INDEXED then
+		finalImg = Image(shadedImg.width, shadedImg.height, ColorMode.INDEXED)
+		finalImg:clear(spr.transparentColor)
+		local paletteIndexCache = {}
+		for y = 0, shadedImg.height - 1 do
+			for x = 0, shadedImg.width - 1 do
+				local pixel = shadedImg:getPixel(x, y)
+				local originalIndex = cel.image:getPixel(x, y)
+				local cacheKey = pixel
+				if paletteCapacityExhausted then
+					cacheKey = tostring(pixel) .. ":" .. tostring(originalIndex)
+				end
+				local paletteIndex = paletteIndexCache[cacheKey]
+				if paletteIndex == nil then
+					local r = app.pixelColor.rgbaR(pixel)
+					local g = app.pixelColor.rgbaG(pixel)
+					local b = app.pixelColor.rgbaB(pixel)
+					local a = app.pixelColor.rgbaA(pixel)
+					paletteIndex = findNearestPaletteIndex(r, g, b, a, originalIndex)
+					paletteIndexCache[cacheKey] = paletteIndex
+				end
+				finalImg:drawPixel(x, y, paletteIndex)
+			end
+		end
+	elseif shadedImg.colorMode ~= spr.colorMode then
 		finalImg = Image(shadedImg.width, shadedImg.height, spr.colorMode)
-		-- Use SRC blend mode to properly convert colors
 		finalImg:drawImage(shadedImg, Point(0, 0), 255, BlendMode.SRC)
 	end
 
@@ -90,21 +192,6 @@ app.transaction(function()
 	spr:deleteCel(cel)
 	spr:newCel(targetLayer, %d, finalImg, celX, celY)
 end)
-
--- Add generated colors to palette
-local palette = spr.palettes[1]
-if palette then
-	local generatedColors = %s
-	local currentSize = #palette
-
-	-- Extend palette to fit new colors
-	if currentSize + #generatedColors <= 256 then
-		palette:resize(currentSize + #generatedColors)
-		for i, color in ipairs(generatedColors) do
-			palette:setColor(currentSize + i - 1, color)
-		end
-	end
-end
 
 -- Build final palette for JSON output
 local paletteHex = {}
@@ -116,10 +203,10 @@ end
 -- Build JSON output
 local json = string.format([[{
 	"success": true,
-	"colors_added": %d,
+	"colors_added": %%d,
 	"palette": [%%s],
 	"regions_shaded": %d
-}]], '"' .. table.concat(paletteHex, '", "') .. '"')
+}]], colorsAdded, '"' .. table.concat(paletteHex, '", "') .. '"')
 
 -- Save sprite
 spr:saveAs(spr.filename)
@@ -131,8 +218,7 @@ print(json)`,
 		tempImagePath,           // shaded image path
 		frameNumber,             // frame number for cel lookup
 		frameNumber,             // frame number for error message
-		frameNumber,             // frame number for newCel
 		colorList,               // generated colors
-		len(generatedColors),    // colors_added
+		frameNumber,             // frame number for newCel
 		regionsShadedCount)      // regions_shaded
 }

@@ -39,7 +39,7 @@ func RegisterAutoShadingTools(server *mcp.Server, client *aseprite.Client, gen *
 		server,
 		&mcp.Tool{
 			Name:        "apply_auto_shading",
-			Description: "Automatically add shading to sprite based on light direction. Analyzes sprite geometry to identify surfaces/regions, determines which surfaces face toward/away from light, generates shadow and highlight colors for each base color (with optional hue shifting), and applies shading pixels with smooth transitions. Supports three styles: cell (hard-edged 2-3 bands), smooth (gradient with dithering), soft (subtle gradient). Essential for adding depth and dimension to pixel art automatically.",
+			Description: "Automatically add shading to sprite based on light direction. Analyzes sprite geometry to identify surfaces/regions, determines which surfaces face toward/away from light, generates shadow and highlight colors for each base color (with optional hue shifting), and applies shading pixels with smooth transitions. Supports three styles: cell (hard-edged 2-3 bands), smooth (gradient with dithering), soft (subtle gradient). Indexed sprites preserve existing palette indices and the transparent index; distinct generated colors are appended when capacity allows, otherwise non-exact shades retain the original pixel index.",
 		},
 		maybeWrapWithTiming("apply_auto_shading", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input ApplyAutoShadingInput) (*mcp.CallToolResult, *ApplyAutoShadingOutput, error) {
 			opLogger := logger.WithContext(ctx)

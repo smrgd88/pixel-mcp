@@ -40,6 +40,8 @@ Selection and clipboard state persists across consecutive MCP calls.
 
 Analyze references, apply dithering, downsample images, quantize colors, edit palettes, shade automatically, and antialias artwork.
 
+For indexed sprites, `apply_auto_shading` preserves existing palette indices and the transparent index. New shade colors are appended only when capacity allows; otherwise non-exact shades retain their original pixel indices.
+
 ### Transform
 
 `flip_sprite`, `rotate_sprite`, `scale_sprite`, `crop_sprite`, `resize_canvas`, `apply_outline`

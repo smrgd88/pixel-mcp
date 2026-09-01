@@ -40,6 +40,8 @@ pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprit
 
 레퍼런스 분석, 디더링, 다운샘플링, 색상 양자화, 팔레트 편집, 자동 셰이딩과 안티앨리어싱을 제공합니다.
 
+Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent index를 보존합니다. 새 shade 색상은 palette에 여유가 있을 때만 추가하며, 더 추가할 수 없으면 원본 pixel index를 유지합니다.
+
 ### 변형
 
 `flip_sprite`, `rotate_sprite`, `scale_sprite`, `crop_sprite`, `resize_canvas`, `apply_outline`
