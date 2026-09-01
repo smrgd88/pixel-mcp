@@ -2,9 +2,11 @@
 
 작성일: 2026-08-31
 
-현재 기준: `develop`의 `5b2e23e44980a0171064b55f4231838511c57a4b` ([PR #7](https://github.com/smrgd88/pixel-mcp/pull/7) 병합 완료)
+현재 기준: `develop`의 `b444ff003e187aae8c18fbf04e51548ffbaa3370` ([PR #8](https://github.com/smrgd88/pixel-mcp/pull/8) 병합 완료)
 
-실제 검증 환경: Go 1.25.14, Aseprite 1.3.17.2 및 1.3.18.3, Linux amd64 Docker
+일상 검증 환경: Go 1.25.14, Aseprite 1.3.18.3, Linux amd64 Docker 순차 실행
+
+하한 검증 이력: Aseprite 1.3.17.2 전체 검증 완료. 릴리스 직전 또는 명시적 요청이 없으면 반복 실행하지 않는다.
 
 지원 기준: Aseprite 1.3.17.2 이상 (`app.apiVersion >= 39`)
 
@@ -32,7 +34,7 @@
 
 ## 공식 지원 범위 검토 결과
 
-문서 검토일: 2026-08-30
+문서 검토일: 2026-09-01
 
 ### 버전 정책
 
@@ -94,7 +96,7 @@
 
 ### CI를 실제 필수 검사로 만들기
 
-`develop`과 `main`에 필수 `test` check가 적용됐고 PR #1, PR #6, PR #7에서 통과했다. 남은 범위는 실행 버전 artifact 기록이다.
+`develop`과 `main`에 필수 `test` check가 적용됐고 PR #1, PR #6, PR #7, PR #8에서 통과했다. 남은 범위는 실행 버전 artifact 기록이다.
 
 - [x] 포크 저장소에서 GitHub Actions 실행 여부와 권한을 확인한다.
 - [x] PR마다 unit/race/coverage와 integration test가 `test` check로 표시되게 한다.
@@ -131,8 +133,10 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 대상: [upstream #16](https://github.com/willibrandon/pixel-mcp/issues/16)
 
+상태: **보류**. 보고 버전 1.3.15.5가 지원 하한보다 낮으므로 지원 버전에서 같은 문제가 확인되거나 릴리스 검증에 필요할 때 재개한다.
+
 - [ ] 보고 환경 Aseprite 1.3.15.5에서 `create_canvas(indexed) → draw_circle → export`를 재현한다.
-- [ ] 현재 기준 1.3.18.2와 결과를 비교한다.
+- [ ] 현재 권장 버전 Aseprite 1.3.18.3과 결과를 비교한다.
 - [ ] palette index 0, `transparentColor`, shape tool의 색상 변환을 각각 기록한다.
 - [ ] `get_pixels` 결과와 최종 PNG를 함께 검증한다.
 - [ ] MCP 클라이언트 차이와 무관하게 동일한 raw tool call로 재현되는지 확인한다.
@@ -257,17 +261,21 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 ## 권장 실행 순서
 
+현재 다음 작업: `[SHARED][FEATURE] 위험 작업 warning 반환` ([upstream #15](https://github.com/willibrandon/pixel-mcp/issues/15))
+
 1. [x] CI check 활성화 및 격리 설정 적용
 2. [x] indexed auto shading 버그 #11
-3. [ ] indexed 검은 이미지 #16 재현과 수정
-4. [ ] warning output #15
-5. [ ] dry-run #12
-6. [ ] snapshot/restore #13
-7. [ ] operation history #14
-8. [ ] cross-platform launcher #18
-9. [ ] 버전 capability 및 테스트 matrix 확대
+3. [ ] warning output #15
+4. [ ] dry-run #12
+5. [ ] snapshot/restore #13
+6. [ ] operation history #14
+7. [ ] 동일 sprite 동시 수정 보호
+8. [ ] 공식 API capability와 버전 검사
+9. [ ] cross-platform launcher #18
+10. [ ] 테스트 matrix 확대
+11. [ ] indexed 검은 이미지 #16 재현과 수정 — 지원 하한 미만 보고라 보류
 
-## PR #1 병합 결과
+## 병합 검증 이력
 
 - [x] PR #1에 필수 `test` check가 나타나고 최신 `develop` 기준으로 통과했다.
 - [x] 리뷰어가 config 우선순위와 기본 동작 호환성을 확인한다.
@@ -275,3 +283,7 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 - [x] Aseprite 1.3.17.2에서 Go 1.25.14, `go vet`, unit/race/coverage와 전체 integration을 검증한다.
 - [x] PR #1을 `develop`의 `b1204b878ccc9e50e8ac1384266b626d8604bc8d`로 병합한다.
 - [x] push/PR에는 Downloads의 생성 이미지나 로컬 임시 파일이 포함되지 않았는지 확인한다.
+- [x] PR #6의 native `link_cel` 회귀 테스트와 필수 `test` check가 통과했다.
+- [x] PR #7에서 CI 설정을 `PIXEL_MCP_CONFIG` 기반 임시 파일로 격리했다.
+- [x] PR #8에서 indexed auto shading의 palette/transparent index, RGB 비회귀와 deterministic shade 순서를 검증했다.
+- [x] PR #8을 `develop`의 `b444ff003e187aae8c18fbf04e51548ffbaa3370`으로 squash merge했다.
