@@ -101,7 +101,8 @@
 - [x] PR마다 unit/race/coverage와 integration test가 `test` check로 표시되게 한다.
 - [x] CI image는 포크 전용 `smrgd88/pixel-mcp-ci`를 우선 사용하고 공식 upstream image를 fallback으로 사용한다.
 - [x] CI 설정을 `PIXEL_MCP_CONFIG` 기반 임시 파일로 전환해 `/root/.config` 의존성을 제거한다.
-- [ ] Aseprite와 Go 버전을 CI 로그와 artifact에 남긴다.
+- [x] Aseprite와 Go 버전을 CI 로그에 남긴다 (`Report tool versions`).
+- [ ] Aseprite와 Go 버전 기록을 CI artifact로 보존한다 (OPS-01).
 - [x] unit/integration 실패 로그와 재현 명령을 GitHub Actions에서 확인할 수 있게 한다.
 
 완료 조건:

@@ -110,7 +110,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-03 | snapshot/restore | 예정 | 파일 저장 primitive + ID·보존·복원 정책, R2 |
 | SAFE-04 | operation history·undo | 예정 | SAFE-03 의존, R2. 호출마다 프로세스가 달라 native undo를 호출 간 복구로 사용하지 않음 |
 | SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | 예정 | canonical path lock·atomic 교체·fault test, R2 |
-| OPS-01 | CI 실행 버전 artifact | 예정 | 기존 필수 test check와 별개, R0 |
+| OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
 | OPS-03 | 오류·request ID·로그 계약 통일 | 예정 | 기존 로깅과 timeout 처리는 존재, 전체 응답 표준화는 R1/R2 |
 
