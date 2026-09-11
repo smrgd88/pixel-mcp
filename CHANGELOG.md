@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+These entries describe fork changes after the local `v0.5.0` tag; no new release is declared.
+
+### Added
+
+- Explicit configuration selection via `--config` and `PIXEL_MCP_CONFIG`, with the existing user config path as fallback (#1).
+- Capability inventory for all 50 MCP tools, tag provenance, known limitations, and a phased roadmap in `docs/CAPABILITIES.md` and `docs/ROADMAP.md`.
+
+### Changed
+
+- Go baseline updated to 1.25 and MCP Go SDK to 1.4.1 (#5).
+- Documented Aseprite support floor of 1.3.17.2/API 39, with recorded validation on 1.3.17.2 and 1.3.18.3. Runtime capability enforcement is still planned.
+- CI configuration isolated through `PIXEL_MCP_CONFIG` (#7).
+
+### Fixed
+
+- `draw_pixels` maps sprite coordinates into offset cel images and expands bounds, including missing-cel paths (#1).
+- `link_cel` creates native linked cels that remain linked after save/reopen and rejects occupied targets (#6).
+- Indexed `apply_auto_shading` preserves existing palette and transparent indices, appends new shades only when space permits, and preserves original indices when no exact shade can be added (#8).
+
 ## [0.5.0] - 2025-10-18
 
 ### Added
