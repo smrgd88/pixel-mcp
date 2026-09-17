@@ -114,19 +114,19 @@ func TestBehavior_SelectionMaskAndCombination(t *testing.T) {
 				f.call("select_rectangle", args)
 			}
 			if kind == "empty" {
-				f.lua(p, `assert(app.activeSprite.data=="")`)
+				f.lua(p, `assert(app.activeSprite.data=="" and app.activeSprite.properties("pixel-mcp/selection").mask==nil)`)
 				return
 			}
 			f.call("copy_selection", map[string]any{"sprite_path": p})
 			switch kind {
 			case "all":
-				f.lua(p, `local s=app.activeSprite;local d=json.decode(s.data);assert(d.selection.w==16 and d.selection.h==16);assert(s.layers[2]:cel(1).image.width==16)`)
+				f.lua(p, `local s=app.activeSprite;local d={selection=s.properties("pixel-mcp/selection").mask};assert(d.selection.w==16 and d.selection.h==16);assert(s.layers[2]:cel(1).image.width==16)`)
 			case "ellipse", "move-negative":
-				f.lua(p, `local s=app.activeSprite;local d=json.decode(s.data);assert(d.selection.w==6 and d.selection.h==6);local i=s.layers[2]:cel(1).image;assert(app.pixelColor.rgbaA(i:getPixel(0,0))==0);assert(app.pixelColor.rgbaA(i:getPixel(3,3))==255)`)
+				f.lua(p, `local s=app.activeSprite;local d={selection=s.properties("pixel-mcp/selection").mask};assert(d.selection.w==6 and d.selection.h==6);local i=s.layers[2]:cel(1).image;assert(app.pixelColor.rgbaA(i:getPixel(0,0))==0);assert(app.pixelColor.rgbaA(i:getPixel(3,3))==255)`)
 			case "subtract":
-				f.lua(p, `local d=json.decode(app.activeSprite.data);assert(d.selection.x==5 and d.selection.w==3)`)
+				f.lua(p, `local d={selection=app.activeSprite.properties("pixel-mcp/selection").mask};assert(d.selection.x==5 and d.selection.w==3)`)
 			case "intersect":
-				f.lua(p, `local d=json.decode(app.activeSprite.data);assert(d.selection.x==2 and d.selection.w==3)`)
+				f.lua(p, `local d={selection=app.activeSprite.properties("pixel-mcp/selection").mask};assert(d.selection.x==2 and d.selection.w==3)`)
 			}
 		})
 	}

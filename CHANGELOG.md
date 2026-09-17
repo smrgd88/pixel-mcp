@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Review preservation fixes (unreleased)
+
+- Preserve nested groups and cel data/zIndex/color/extension properties during frame duplication, with correct requested placement and tag-boundary behavior.
+- Persist selection masks in an extension-owned namespace without rewriting user sprite.data, preserving JSON nulls, empty objects, arrays and large integers exactly.
+- Read legacy masks without resurrecting them after explicit deselect; add saved-file regression coverage for the review findings.
+
 ## Functional behavior repair (unreleased)
 
 - Resolve indexed draw_pixels colors against the sprite palette even when use_palette is omitted.

@@ -1247,8 +1247,8 @@ func TestLuaGenerator_DuplicateFrame(t *testing.T) {
 		t.Error("script missing newFrame at position")
 	}
 
-	if !strings.Contains(script, "Image(cel.image)") {
-		t.Error("script missing image reference")
+	if !strings.Contains(script, "spr:newFrame(sourceIndex)") {
+		t.Error("script missing native frame clone")
 	}
 
 	if !strings.Contains(script, "print(newFrame.frameNumber)") {

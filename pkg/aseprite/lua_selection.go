@@ -4,27 +4,35 @@ import (
 	"fmt"
 )
 
-// selectionStateLua shares mask persistence between batch processes. Bounds remain
-// readable by older clients; runs preserve holes and non-rectangular masks.
+// selectionStateLua persists exact masks in an extension-owned property namespace.
+// Legacy sprite.data bounds/runs remain readable, but user data is never rewritten.
 const selectionStateLua = `local spr = app.activeSprite
 if not spr then error("No active sprite") end
--- Aseprite json.decode returns JsonValue userdata, not native Lua tables.
-local function plain(value)
-    if type(value) ~= "userdata" and type(value) ~= "table" then return value end
-    local result = {}
-    for key, item in pairs(value) do result[key] = plain(item) end
-    -- JsonValue arrays expose ipairs but no pairs entries.
-    for key, item in ipairs(value) do result[key] = plain(item) end
-    return result
-end
+-- Keep user sprite.data byte-for-byte intact. Selection state is private,
+-- versioned extension data; the version marker also records an explicit clear.
+local store = spr.properties("pixel-mcp/selection")
 local state = {}
-if spr.data ~= "" then
-    local ok, decoded = pcall(function() return plain(json.decode(spr.data)) end)
-    if ok and type(decoded) == "table" and (#decoded == 0) then
-        state = decoded
-    else
-        state = { _pixel_mcp_original_data = spr.data }
-    end
+if store.version == 1 then
+    state.selection = store.mask
+elseif spr.data ~= "" then
+    -- Read old bounds/runs without rewriting or converting unrelated JSON data.
+    local ok, mask = pcall(function()
+        local saved = json.decode(spr.data).selection
+        if type(saved) ~= "table" and type(saved) ~= "userdata" then return nil end
+        if type(saved.x) ~= "number" or type(saved.y) ~= "number" or
+           type(saved.w) ~= "number" or type(saved.h) ~= "number" then return nil end
+        local result = {x=saved.x,y=saved.y,w=saved.w,h=saved.h}
+        if saved.runs then
+            if type(saved.runs) ~= "table" and type(saved.runs) ~= "userdata" then return nil end
+            result.runs = {}
+            for _,run in ipairs(saved.runs) do
+                if type(run.x) ~= "number" or type(run.y) ~= "number" or type(run.w) ~= "number" then return nil end
+                table.insert(result.runs,{x=run.x,y=run.y,w=run.w})
+            end
+        end
+        return result
+    end)
+    if ok then state.selection = mask end
 end
 local function restoreSelection()
     local saved = state.selection
@@ -57,10 +65,8 @@ local function persistSelection()
         end
         state.selection = saved
     end
-    if not state.selection and state._pixel_mcp_original_data then
-        spr.data = state._pixel_mcp_original_data
-    elseif next(state) == nil then spr.data = ""
-    else spr.data = json.encode(state) end
+    store.version = 1
+    store.mask = state.selection
 end
 local function combineSelection(sel, mode)
     restoreSelection()
@@ -119,7 +125,7 @@ end
 //   - "subtract": removes rectangle from current selection
 //   - "intersect": keeps only the intersection of current and new selection
 //
-// The selection is persisted to sprite.data as JSON and restored across operations.
+// The selection is persisted in extension properties and restored across operations.
 // The sprite is saved after the selection is created.
 //
 // Prints "Rectangle selection created successfully" on success.
@@ -149,7 +155,7 @@ print("Rectangle selection created successfully")`, x, y, width, height, EscapeS
 //   - "subtract": removes ellipse from current selection
 //   - "intersect": keeps only the intersection of current and new selection
 //
-// The selection is persisted to sprite.data as JSON and restored across operations.
+// The selection is persisted in extension properties and restored across operations.
 // The sprite is saved after the selection is created.
 //
 // Prints "Ellipse selection created successfully" on success.
@@ -174,7 +180,7 @@ print("Ellipse selection created successfully")`, x, y, width, height, EscapeStr
 // (sprite.width, sprite.height). This is useful before copy/cut operations
 // or to quickly select all content for transformations.
 //
-// The selection is persisted to sprite.data as JSON and restored across operations.
+// The selection is persisted in extension properties and restored across operations.
 // The sprite is saved after the selection is created.
 //
 // Prints "Select all completed successfully" on success.
@@ -192,7 +198,7 @@ print("Select all completed successfully")`
 // Removes the current selection mask, allowing operations to affect the entire
 // canvas again. This is the opposite of SelectAll.
 //
-// The persisted selection state in sprite.data is cleared and the sprite is saved.
+// The persisted selection state in extension properties is cleared and the sprite is saved.
 //
 // Prints "Deselect completed successfully" on success.
 // Returns an error if no sprite is active.

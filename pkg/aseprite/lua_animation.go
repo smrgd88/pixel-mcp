@@ -173,21 +173,28 @@ if not srcFrame then error("Source frame not found") end
 local insertAfter = %d
 if insertAfter > #spr.frames then error("Insert position exceeds sprite frames") end
 local target = insertAfter == 0 and #spr.frames + 1 or insertAfter + 1
--- Capture independent images before insertion can change frame indices.
-local copies = {}
-for _,layer in ipairs(spr.layers) do
- local cel = layer:cel(srcFrame)
- if cel then table.insert(copies,{layer=layer,image=Image(cel.image),position=Point(cel.position.x,cel.position.y),opacity=cel.opacity}) end
-end
-local duration = srcFrame.duration
 local newFrame
 app.transaction(function()
- newFrame = spr:newEmptyFrame(target)
- newFrame.duration = duration
- for _,copy in ipairs(copies) do
-  local cel = spr:newCel(copy.layer,newFrame,copy.image,copy.position)
-  cel.opacity = copy.opacity
+ -- Apply insertion at its final position first, so tag ranges follow normal insertion semantics.
+ -- Native duplication then retains nested layers and all cel user-data namespaces.
+ local sourceIndex = srcFrame.frameNumber
+ spr:newEmptyFrame(target)
+ if target <= sourceIndex then sourceIndex = sourceIndex + 1 end
+ local clone = spr:newFrame(sourceIndex)
+ local cloneIndex = clone.frameNumber
+ local destination = target
+ if cloneIndex <= destination then destination = destination + 1 end
+ local duration = clone.duration
+ local cels = {}
+ for _,cel in ipairs(spr.cels) do
+  if cel.frameNumber == cloneIndex then table.insert(cels,cel) end
  end
+ for _,cel in ipairs(cels) do cel.frameNumber = destination end
+ spr.frames[destination].duration = duration
+ -- Delete the temporary clone at the same index it was inserted, undoing its
+ -- structural shifts while leaving the moved cels at the requested destination.
+ spr:deleteFrame(cloneIndex)
+ newFrame = spr.frames[target]
 end)
 spr:saveAs(spr.filename)
 print(newFrame.frameNumber)`, sourceFrame, insertAfter)
