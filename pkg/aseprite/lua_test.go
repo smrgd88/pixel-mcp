@@ -363,7 +363,7 @@ func TestLuaGenerator_SelectRectangle(t *testing.T) {
 			t.Error("script missing rectangle coordinates")
 		}
 
-		if !strings.Contains(script, `if "replace" == "replace"`) {
+		if !strings.Contains(script, `combineSelection(sel, "replace")`) {
 			t.Error("script missing replace mode check")
 		}
 
@@ -375,7 +375,7 @@ func TestLuaGenerator_SelectRectangle(t *testing.T) {
 	t.Run("add mode", func(t *testing.T) {
 		script := gen.SelectRectangle(5, 5, 10, 10, "add")
 
-		if !strings.Contains(script, `if "add" == "replace"`) {
+		if !strings.Contains(script, `combineSelection(sel, "add")`) {
 			t.Error("script missing mode check")
 		}
 	})
@@ -387,11 +387,11 @@ func TestLuaGenerator_SelectEllipse(t *testing.T) {
 	script := gen.SelectEllipse(10, 10, 50, 30, "replace")
 
 	// Check that it uses width/height for radii calculation
-	if !strings.Contains(script, "local rx = 50 / 2") {
+	if !strings.Contains(script, "local x,y,w,h = 10,10,50,30") {
 		t.Error("script missing rx calculation")
 	}
 
-	if !strings.Contains(script, "local ry = 30 / 2") {
+	if !strings.Contains(script, "(py+0.5-y-h/2)/(h/2)") {
 		t.Error("script missing ry calculation")
 	}
 
@@ -441,11 +441,11 @@ func TestLuaGenerator_MoveSelection(t *testing.T) {
 		t.Error("script missing empty selection check")
 	}
 
-	if !strings.Contains(script, "bounds.x + 15") {
+	if !strings.Contains(script, "local dx,dy = 15,-10") {
 		t.Error("script missing dx offset")
 	}
 
-	if !strings.Contains(script, "bounds.y + -10") {
+	if !strings.Contains(script, "Rectangle(x+dx,y+dy,1,1)") {
 		t.Error("script missing dy offset")
 	}
 
@@ -1243,15 +1243,15 @@ func TestLuaGenerator_DuplicateFrame(t *testing.T) {
 		t.Error("script missing source frame reference")
 	}
 
-	if !strings.Contains(script, "spr:newFrame(3 + 1)") && !strings.Contains(script, "spr:newFrame(4)") {
+	if !strings.Contains(script, "local insertAfter = 3") || !strings.Contains(script, "spr:newEmptyFrame(target)") {
 		t.Error("script missing newFrame at position")
 	}
 
-	if !strings.Contains(script, "srcCel.image") {
+	if !strings.Contains(script, "Image(cel.image)") {
 		t.Error("script missing image reference")
 	}
 
-	if !strings.Contains(script, "print(3 + 1)") && !strings.Contains(script, "print(4)") {
+	if !strings.Contains(script, "print(newFrame.frameNumber)") {
 		t.Error("script missing frame number output")
 	}
 }
@@ -1645,7 +1645,7 @@ func TestLuaGenerator_DuplicateFrame_EdgeCases(t *testing.T) {
 				t.Error("DuplicateFrame() generated empty script")
 			}
 
-			if !strings.Contains(script, "spr:newFrame") {
+			if !strings.Contains(script, "spr:newEmptyFrame") {
 				t.Error("DuplicateFrame() missing newFrame operation")
 			}
 		})

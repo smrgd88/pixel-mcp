@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Functional behavior repair (unreleased)
+
+- Resolve indexed draw_pixels colors against the sprite palette even when use_palette is omitted.
+- Normalize binary dithering matrices by their actual value range, retaining both colors at density 0.5.
+- Persist complete selection masks between batch processes, correctly combine/move/clear them, and preserve existing sprite metadata.
+- Copy and cut in canvas coordinates for positioned cels; preserve the selection mask and expand paste targets without clipping.
+- Parse transparent quantization colors with alpha, reserve transparency within target_colors, allow octree reduction down to the requested size, and report the actual color mode.
+- Append duplicate_frame at the requested position using independent images, preserving frame order, duration and cel opacity.
+- Add real MCP/Aseprite regressions for saved pixels, selections, clipboard, transparent palettes and repeated frame duplication.
+
 ## [Unreleased]
 
 These entries describe fork changes after the local `v0.5.0` tag; no new release is declared.

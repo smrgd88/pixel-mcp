@@ -166,59 +166,31 @@ print("Tag deleted successfully")`, escapedName, escapedName)
 //   - The source frame is not found
 //   - The insert position exceeds the sprite's frame count (when insertAfter > 0)
 func (g *LuaGenerator) DuplicateFrame(sourceFrame int, insertAfter int) string {
-	if insertAfter == 0 {
-		// Insert at end
-		return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
-local srcFrame = spr.frames[%d]
-if not srcFrame then
-	error("Source frame not found: %d")
-end
-
-local newFrame
-app.transaction(function()
-	newFrame = spr:newFrame(srcFrame)
-	newFrame.duration = srcFrame.duration
-end)
-
-spr:saveAs(spr.filename)
-print(#spr.frames)`, sourceFrame, sourceFrame)
-	}
-
-	// Insert after specific frame
 	return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
+if not spr then error("No active sprite") end
 local srcFrame = spr.frames[%d]
-if not srcFrame then
-	error("Source frame not found: %d")
+if not srcFrame then error("Source frame not found") end
+local insertAfter = %d
+if insertAfter > #spr.frames then error("Insert position exceeds sprite frames") end
+local target = insertAfter == 0 and #spr.frames + 1 or insertAfter + 1
+-- Capture independent images before insertion can change frame indices.
+local copies = {}
+for _,layer in ipairs(spr.layers) do
+ local cel = layer:cel(srcFrame)
+ if cel then table.insert(copies,{layer=layer,image=Image(cel.image),position=Point(cel.position.x,cel.position.y),opacity=cel.opacity}) end
 end
-
-if #spr.frames < %d then
-	error("Insert position exceeds sprite frames")
-end
-
+local duration = srcFrame.duration
 local newFrame
 app.transaction(function()
-	newFrame = spr:newFrame(%d + 1)
-	newFrame.duration = srcFrame.duration
-
-	-- Copy cels from source frame to new frame
-	for _, layer in ipairs(spr.layers) do
-		local srcCel = layer:cel(srcFrame)
-		if srcCel then
-			local newCel = spr:newCel(layer, newFrame, srcCel.image, srcCel.position)
-		end
-	end
+ newFrame = spr:newEmptyFrame(target)
+ newFrame.duration = duration
+ for _,copy in ipairs(copies) do
+  local cel = spr:newCel(copy.layer,newFrame,copy.image,copy.position)
+  cel.opacity = copy.opacity
+ end
 end)
-
 spr:saveAs(spr.filename)
-print(%d + 1)`, sourceFrame, sourceFrame, insertAfter, insertAfter, insertAfter)
+print(newFrame.frameNumber)`, sourceFrame, insertAfter)
 }
 
 // LinkCel generates a Lua script to create a linked cel.
