@@ -46,10 +46,8 @@ func (g *LuaGenerator) DrawPixels(layerName string, frameNumber int, pixels []Pi
 	}
 
 	// Add palette snapper helper if needed
-	if usePalette {
-		sb.WriteString(GeneratePaletteSnapperHelper())
-		sb.WriteString("\n")
-	}
+	sb.WriteString(GeneratePaletteSnapperHelper())
+	sb.WriteString("\n")
 
 	sb.WriteString(fmt.Sprintf(`local spr = app.activeSprite
 if not spr then
@@ -137,7 +135,13 @@ app.transaction(function()
 
 	// Add pixel drawing commands
 	for _, p := range pixels {
+		if !usePalette {
+			sb.WriteString(fmt.Sprintf("\tif spr.colorMode == ColorMode.INDEXED then\n\timg:putPixel(%d - cel.position.x, %d - cel.position.y, %s)\n\telse\n", p.X, p.Y, FormatColorWithPalette(p.Color, true)))
+		}
 		sb.WriteString(fmt.Sprintf("\timg:putPixel(%d - cel.position.x, %d - cel.position.y, %s)\n", p.X, p.Y, FormatColorWithPalette(p.Color, usePalette)))
+		if !usePalette {
+			sb.WriteString("\tend\n")
+		}
 	}
 
 	sb.WriteString(`end)
@@ -848,7 +852,11 @@ end
 %s
 
 -- Dithering threshold (based on density)
-local threshold = %f * (matrixSize * matrixSize)
+local levels = 0
+for _, row in ipairs(matrix) do
+    for _, value in ipairs(row) do levels = math.max(levels, value + 1) end
+end
+local threshold = %f * levels
 
 -- Apply dithering pattern
 app.transaction(function()

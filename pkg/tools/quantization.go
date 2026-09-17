@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	colorful "github.com/lucasb-eyer/go-colorful"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog/core"
 	"github.com/willibrandon/pixel-mcp/pkg/aseprite"
@@ -138,12 +137,11 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 				// Convert hex palette to color.Color slice
 				paletteColors := make([]color.Color, len(palette))
 				for i, hexColor := range palette {
-					c, err := colorful.Hex(hexColor)
-					if err != nil {
+					var c aseprite.Color
+					if err := c.FromHex(hexColor); err != nil {
 						return nil, nil, fmt.Errorf("invalid palette color %s: %w", hexColor, err)
 					}
-					r, g, b := c.RGB255()
-					paletteColors[i] = color.RGBA{R: r, G: g, B: b, A: 255}
+					paletteColors[i] = color.NRGBA{R: c.R, G: c.G, B: c.B, A: c.A}
 				}
 
 				// Remap image with dithering
