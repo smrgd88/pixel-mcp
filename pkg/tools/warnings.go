@@ -8,7 +8,7 @@ type ToolWarning struct {
 	Message string `json:"message" jsonschema:"Human-readable description of the operation's potential effect"`
 }
 
-func quantizationWarnings(convertToIndexed bool) []ToolWarning {
+func quantizationWarnings(convertToIndexed, dither bool) []ToolWarning {
 	warnings := []ToolWarning{{
 		Code:    "palette_quantization",
 		Message: "Quantization replaces the palette and may discard color information. Keep a backup to preserve the original colors.",
@@ -18,6 +18,10 @@ func quantizationWarnings(convertToIndexed bool) []ToolWarning {
 			Code:    "color_mode_conversion",
 			Message: "Indexed color conversion was requested and may change color or transparency representation. Keep a backup to preserve the original representation.",
 		})
+	}
+	if dither {
+		// ReplaceWithImage flattens the sprite before replacing the first cel.
+		warnings = append(warnings, flattenWarnings()...)
 	}
 	return warnings
 }

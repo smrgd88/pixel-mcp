@@ -63,6 +63,8 @@ func TestOperationWarningsViaMCP(t *testing.T) {
 		{"flatten", "flatten_layers", map[string]any{}, []string{"layer_flattening"}},
 		{"quantize default conversion", "quantize_palette", map[string]any{"target_colors": 2, "algorithm": "", "dither": false}, []string{"palette_quantization", "color_mode_conversion"}},
 		{"quantize keep mode", "quantize_palette", map[string]any{"target_colors": 2, "convert_to_indexed": false, "algorithm": "median_cut", "dither": false}, []string{"palette_quantization"}},
+		{"quantize dither conversion", "quantize_palette", map[string]any{"target_colors": 2, "algorithm": "median_cut", "dither": true}, []string{"palette_quantization", "color_mode_conversion", "layer_flattening"}},
+		{"quantize dither keep mode", "quantize_palette", map[string]any{"target_colors": 2, "algorithm": "median_cut", "dither": true, "convert_to_indexed": false}, []string{"palette_quantization", "layer_flattening"}},
 		{"scale default", "scale_sprite", map[string]any{"scale_x": 2, "scale_y": 2, "algorithm": ""}, nil},
 		{"scale nearest", "scale_sprite", map[string]any{"scale_x": 2, "scale_y": 2, "algorithm": "nearest"}, nil},
 		{"scale bilinear", "scale_sprite", map[string]any{"scale_x": 2, "scale_y": 2, "algorithm": "bilinear"}, []string{"resampling"}},
@@ -75,6 +77,13 @@ func TestOperationWarningsViaMCP(t *testing.T) {
 			require.NoError(t, err)
 			_, err = client.ExecuteLua(ctx, gen.DrawRectangle("Layer 1", 1, 0, 0, 8, 8, aseprite.Color{R: 255, A: 255}, true, false), path)
 			require.NoError(t, err)
+			if tt.tool == "quantize_palette" {
+				_, err = client.ExecuteLua(ctx, `local spr = app.activeSprite
+spr:newLayer().name = "Extra"
+spr:saveAs(spr.filename)
+assert(#spr.layers == 2)`, path)
+				require.NoError(t, err)
+			}
 			tt.args["sprite_path"] = path
 			result, err := session.CallTool(ctx, &mcp.CallToolParams{Name: tt.tool, Arguments: tt.args})
 			require.NoError(t, err)
@@ -88,6 +97,17 @@ func TestOperationWarningsViaMCP(t *testing.T) {
 			}
 			require.NoError(t, json.Unmarshal(structured, &response))
 			require.True(t, response.Success)
+			if tt.tool == "quantize_palette" {
+				info, err := client.ExecuteLua(ctx, gen.GetSpriteInfo(), path)
+				require.NoError(t, err)
+				var sprite GetSpriteInfoOutput
+				require.NoError(t, parseJSON(info, &sprite))
+				if tt.args["dither"] == true {
+					require.Equal(t, 1, sprite.LayerCount)
+				} else {
+					require.Equal(t, 2, sprite.LayerCount)
+				}
+			}
 			var codes []string
 			for _, warning := range response.Warnings {
 				codes = append(codes, warning.Code)

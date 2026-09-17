@@ -200,7 +200,7 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 				"color_mode", result.ColorMode,
 				"algorithm", result.AlgorithmUsed)
 
-			result.Warnings = quantizationWarnings(*input.ConvertToIndexed)
+			result.Warnings = quantizationWarnings(*input.ConvertToIndexed, input.Dither)
 			return nil, &result, nil
 		}),
 	)

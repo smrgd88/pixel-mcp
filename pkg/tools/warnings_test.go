@@ -13,8 +13,10 @@ func TestOperationWarningConditions(t *testing.T) {
 		warnings []ToolWarning
 		codes    []string
 	}{
-		{"quantization without conversion", quantizationWarnings(false), []string{"palette_quantization"}},
-		{"quantization with conversion", quantizationWarnings(true), []string{"palette_quantization", "color_mode_conversion"}},
+		{"quantization without conversion", quantizationWarnings(false, false), []string{"palette_quantization"}},
+		{"quantization with conversion", quantizationWarnings(true, false), []string{"palette_quantization", "color_mode_conversion"}},
+		{"dither without conversion", quantizationWarnings(false, true), []string{"palette_quantization", "layer_flattening"}},
+		{"dither with conversion", quantizationWarnings(true, true), []string{"palette_quantization", "color_mode_conversion", "layer_flattening"}},
 		{"flatten", flattenWarnings(), []string{"layer_flattening"}},
 		{"nearest", scaleWarnings("nearest", 2, 2), nil},
 		{"default", scaleWarnings("", 2, 2), nil},

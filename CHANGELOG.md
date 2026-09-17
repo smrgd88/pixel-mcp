@@ -11,7 +11,7 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
-- Optional structured `warnings` for palette quantization, indexed conversion requests, layer flattening, and non-nearest scaling. Existing fields remain unchanged; warnings describe potential effects after successful execution (see `docs/WARNINGS.md`).
+- Optional structured `warnings` for palette quantization, indexed conversion requests, layer flattening (including quantization with dithering), and non-nearest scaling. Existing fields remain unchanged; warnings describe potential effects after successful execution (see `docs/WARNINGS.md`).
 
 - Explicit configuration selection via `--config` and `PIXEL_MCP_CONFIG`, with the existing user config path as fallback (#1).
 - Capability inventory for all 50 MCP tools, tag provenance, known limitations, and a phased roadmap in `docs/CAPABILITIES.md` and `docs/ROADMAP.md`.

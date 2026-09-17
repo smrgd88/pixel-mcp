@@ -30,10 +30,12 @@
 | --- | --- | --- | --- |
 | `palette_quantization` | `quantize_palette` | 성공한 모든 감색 요청 | 팔레트 대체와 색상 정보 손실 가능성 |
 | `color_mode_conversion` | `quantize_palette` | `convert_to_indexed=true` (생략 시 true) | indexed 변환 요청에 따른 색상·투명도 표현 변경 가능성. 이미 indexed인 경우도 요청 기준으로 반환 |
-| `layer_flattening` | `flatten_layers` | 성공한 모든 병합 요청 | 편집 가능한 레이어 구조 손실 가능성. 단일 레이어에서도 작업 종류 기준으로 반환 |
+| `layer_flattening` | `flatten_layers`, `quantize_palette` | 모든 flatten 요청 및 `dither=true` 감색 요청 | 편집 가능한 레이어 구조 손실 가능성. 단일 레이어에서도 작업 종류 기준으로 반환 |
 | `resampling` | `scale_sprite` | `algorithm=bilinear` 또는 `rotsprite`, X/Y 중 하나라도 배율이 1이 아님 | 픽셀 색·경계 패턴 변경 가능성 |
 
-`scale_sprite`의 알고리즘 빈 문자열/nearest 및 배율 1×1은 resampling 경고가 없다. 현재 MCP 입력 schema는 algorithm 키를 필수로 요구하며 빈 문자열은 nearest로 처리한다. 실제 정수 출력 크기가 반올림 등으로 같아지는 경우도 입력 배율 기준이다. 감색 경고 순서는 palette_quantization, color_mode_conversion이며 동일 코드는 중복 반환하지 않는다.
+`scale_sprite`의 알고리즘 빈 문자열/nearest 및 배율 1×1은 resampling 경고가 없다. 현재 MCP 입력 schema는 algorithm 키를 필수로 요구하며 빈 문자열은 nearest로 처리한다. 실제 정수 출력 크기가 반올림 등으로 같아지는 경우도 입력 배율 기준이다. 감색 경고 순서는 palette_quantization, color_mode_conversion(변환 요청 시), layer_flattening(dither 사용 시)이며 동일 코드는 중복 반환하지 않는다.
+
+`quantize_palette(dither=true)`는 현재 내부 `ReplaceWithImage` 경로에서 레이어를 병합하고 첫 프레임 cel을 대체한다. indexed 변환 옵션과 무관하게 layer_flattening 경고를 반환한다. `dither=false`에서는 이 경고를 추가하지 않는다.
 
 범용 색상 모드 전환 도구는 아직 없다. 이번 색상 모드 경고는 기존 quantize_palette의 indexed 변환 옵션에 적용한다.
 
