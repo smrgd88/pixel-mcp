@@ -1,6 +1,6 @@
 # pixel-mcp
 
-[Capability inventory and roadmap](docs/CAPABILITIES.md) · [Roadmap](docs/ROADMAP.md) · [Changelog](CHANGELOG.md)
+[Capability inventory and roadmap](docs/CAPABILITIES.md) · [Roadmap](docs/ROADMAP.md) · [Changelog](CHANGELOG.md) · [Operation warning contract](docs/WARNINGS.md)
 
 [한국어](README.md) · [Original README backup](README.original.md)
 
