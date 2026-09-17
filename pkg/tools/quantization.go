@@ -28,12 +28,13 @@ type QuantizePaletteInput struct {
 
 // QuantizePaletteOutput defines the output for the quantize_palette tool.
 type QuantizePaletteOutput struct {
-	Success         bool     `json:"success" jsonschema:"Whether the operation succeeded"`
-	OriginalColors  int      `json:"original_colors" jsonschema:"Number of unique colors in original sprite"`
-	QuantizedColors int      `json:"quantized_colors" jsonschema:"Number of colors in quantized palette"`
-	ColorMode       string   `json:"color_mode" jsonschema:"Color mode after quantization (indexed or rgb)"`
-	Palette         []string `json:"palette" jsonschema:"Array of hex colors in the quantized palette"`
-	AlgorithmUsed   string   `json:"algorithm_used" jsonschema:"Quantization algorithm that was used"`
+	Warnings        []ToolWarning `json:"warnings,omitempty" jsonschema:"Potentially destructive effects of this completed operation; omitted when none apply"`
+	Success         bool          `json:"success" jsonschema:"Whether the operation succeeded"`
+	OriginalColors  int           `json:"original_colors" jsonschema:"Number of unique colors in original sprite"`
+	QuantizedColors int           `json:"quantized_colors" jsonschema:"Number of colors in quantized palette"`
+	ColorMode       string        `json:"color_mode" jsonschema:"Color mode after quantization (indexed or rgb)"`
+	Palette         []string      `json:"palette" jsonschema:"Array of hex colors in the quantized palette"`
+	AlgorithmUsed   string        `json:"algorithm_used" jsonschema:"Quantization algorithm that was used"`
 }
 
 // RegisterQuantizationTools registers the quantize_palette tool with the MCP server.
@@ -199,6 +200,7 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 				"color_mode", result.ColorMode,
 				"algorithm", result.AlgorithmUsed)
 
+			result.Warnings = quantizationWarnings(*input.ConvertToIndexed, input.Dither)
 			return nil, &result, nil
 		}),
 	)

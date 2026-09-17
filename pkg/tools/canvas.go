@@ -346,7 +346,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 
 			opLogger.Information("Layers flattened successfully", "sprite", input.SpritePath)
 
-			return nil, &FlattenLayersOutput{Success: true}, nil
+			return nil, &FlattenLayersOutput{Success: true, Warnings: flattenWarnings()}, nil
 		}),
 	)
 }
@@ -384,7 +384,8 @@ type FlattenLayersInput struct {
 //
 // Indicates whether the layers were successfully flattened.
 type FlattenLayersOutput struct {
-	Success bool `json:"success" jsonschema:"Whether the layers were flattened successfully"` // True if the layers were flattened successfully
+	Warnings []ToolWarning `json:"warnings,omitempty" jsonschema:"Potentially destructive effects of this completed operation; omitted when none apply"`
+	Success  bool          `json:"success" jsonschema:"Whether the layers were flattened successfully"` // True if the layers were flattened successfully
 }
 
 // generateTimestamp returns a Unix timestamp in nanoseconds suitable for unique filenames.
