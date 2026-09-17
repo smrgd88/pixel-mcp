@@ -1,5 +1,7 @@
 # pixel-mcp
 
+[기능 지원 현황 · 로드맵](docs/CAPABILITIES.md) · [Roadmap](docs/ROADMAP.md) · [Changelog](CHANGELOG.md)
+
 [English](README.en.md) · [기존 README 백업](README.original.md)
 
 pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprite를 제어할 수 있게 해주는 로컬 MCP 서버입니다.

@@ -1,8 +1,12 @@
 # pixel-mcp 다음 작업 체크리스트
 
-작성일: 2026-08-31
+작성일: 2026-08-31 · 현황 동기화: 2026-09-11
 
-현재 기준: `develop`의 `b444ff003e187aae8c18fbf04e51548ffbaa3370` ([PR #8](https://github.com/smrgd88/pixel-mcp/pull/8) 병합 완료)
+현재 기준: `develop`의 `1076166edf99f60e92bfd7fc4def261264930dcb` (PR #9까지 반영)
+
+[기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
+
+이 문서는 상세 실행 체크리스트와 검증 이력을 유지한다. 우선순위·의존성은 ROADMAP, 실제 도구 지원 상태는 CAPABILITIES를 기준으로 한다. 아래 P0/P1/P2 분류는 기존 항목의 분류이며 전체 착수 순서를 뜻하지 않는다.
 
 일상 검증 환경: Go 1.25.14, Aseprite 1.3.18.3, Linux amd64 Docker 순차 실행
 
@@ -66,20 +70,15 @@
 | warning, dry-run, operation history | 완성형 공식 API 없음 | pixel-mcp 책임 | MCP output schema, 임시 복사본 실행, redaction, 보존/정리 정책을 구현한다. |
 | 동일 파일 동시 수정과 cross-process 복구 | 완성형 공식 API 없음 | pixel-mcp 책임 | canonical path lock, timeout/cancel, 임시 파일과 atomic rename/fallback을 Go 계층에서 구현한다. |
 
-### 확정된 구현 순서
+### 구현 순서 기준
 
-1. 지원 버전/API capability를 health와 공통 preflight에 추가한다.
-2. indexed primitive를 공통 helper로 통합하고 transparent index 불변식을 테스트한다.
-3. destructive 도구에 warning과 snapshot precondition을 추가한다.
-4. dry-run은 원본 대신 임시 복사본에서 동일 Lua 경로를 실행한다.
-5. snapshot/restore 이후 operation history와 호출 간 undo를 구현한다.
-6. per-file lock과 atomic save/restore fault test를 추가한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. 다음 기능 작업은 warnings(SAFE-01)이며 capability(GAP-10)는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## P0 — 다음 릴리스 전에 처리
 
 ### link_cel native linked cel 수정
 
-현재 작업: `[SHARED][FIX] link_cel native link 수정`
+완료된 작업: `[SHARED][FIX] link_cel native link 수정` (PR #6, develop 반영; 수정은 Unreleased)
 
 - [x] `Sprite:newCel(..., srcCel.image, ...)`가 저장 후 독립 image 복사본을 만드는 문제를 재현한다.
 - [x] 공식 `app.command.LinkCels`가 UI 전용 명령이 아니며 `app.range.layers/frames` 선택으로 batch mode에서 동작함을 확인한다.
@@ -102,7 +101,8 @@
 - [x] PR마다 unit/race/coverage와 integration test가 `test` check로 표시되게 한다.
 - [x] CI image는 포크 전용 `smrgd88/pixel-mcp-ci`를 우선 사용하고 공식 upstream image를 fallback으로 사용한다.
 - [x] CI 설정을 `PIXEL_MCP_CONFIG` 기반 임시 파일로 전환해 `/root/.config` 의존성을 제거한다.
-- [ ] Aseprite와 Go 버전을 CI 로그와 artifact에 남긴다.
+- [x] Aseprite와 Go 버전을 CI 로그에 남긴다 (`Report tool versions`).
+- [ ] Aseprite와 Go 버전 기록을 CI artifact로 보존한다 (OPS-01).
 - [x] unit/integration 실패 로그와 재현 명령을 GitHub Actions에서 확인할 수 있게 한다.
 
 완료 조건:
@@ -261,19 +261,12 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 ## 권장 실행 순서
 
-현재 다음 작업: `[SHARED][FEATURE] 위험 작업 warning 반환` ([upstream #15](https://github.com/willibrandon/pixel-mcp/issues/15))
+중복된 순서 목록 대신 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 관리한다.
 
-1. [x] CI check 활성화 및 격리 설정 적용
-2. [x] indexed auto shading 버그 #11
-3. [ ] warning output #15
-4. [ ] dry-run #12
-5. [ ] snapshot/restore #13
-6. [ ] operation history #14
-7. [ ] 동일 sprite 동시 수정 보호
-8. [ ] 공식 API capability와 버전 검사
-9. [ ] cross-platform launcher #18
-10. [ ] 테스트 matrix 확대
-11. [ ] indexed 검은 이미지 #16 재현과 수정 — 지원 하한 미만 보고라 보류
+- 다음 기능 작업: `[SHARED][FEATURE] 위험 작업 warning 반환` (SAFE-01, upstream #15).
+- 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
+- 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
+- indexed #16은 기존 보류 조건을 유지한다.
 
 ## 병합 검증 이력
 
