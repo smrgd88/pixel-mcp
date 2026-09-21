@@ -1,6 +1,6 @@
 # pixel-mcp
 
-[기능 지원 현황 · 로드맵](docs/CAPABILITIES.md) · [Roadmap](docs/ROADMAP.md) · [Changelog](CHANGELOG.md) · [위험 작업 경고 계약](docs/WARNINGS.md)
+[기능 지원 현황 · 로드맵](docs/CAPABILITIES.md) · [Roadmap](docs/ROADMAP.md) · [Changelog](CHANGELOG.md) · [실행 환경 검사](docs/CAPABILITIES.md#실행-환경-사전-검사-gap-10) · [위험 작업 경고 계약](docs/WARNINGS.md)
 
 [English](README.en.md) · [기존 README 백업](README.original.md)
 

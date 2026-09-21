@@ -99,6 +99,30 @@ func (c *Client) ExecuteCommand(ctx context.Context, args []string) (string, err
 //
 // Returns the stdout output from Aseprite, or an error if execution fails.
 func (c *Client) ExecuteLua(ctx context.Context, script string, spritePath string) (string, error) {
+	return c.executeLuaWithRequirements(ctx, script, spritePath, MinimumVersion, MinimumAPIVersion)
+}
+
+func (c *Client) executeLuaWithRequirements(ctx context.Context, script, spritePath, minimum string, minimumAPI int) (string, error) {
+	// The same deadline covers both probe and tool execution; no cached runtime state.
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+	if spritePath != "" {
+		if _, err := os.Stat(spritePath); os.IsNotExist(err) {
+			return "", fmt.Errorf("sprite file not found: %s", spritePath)
+		}
+	}
+	caps, err := c.GetCapabilities(ctx)
+	if err != nil {
+		return "", err
+	}
+	if err := validateCapabilities(caps, minimum, minimumAPI); err != nil {
+		return "", err
+	}
+	return c.executeLuaUnchecked(ctx, script, spritePath)
+}
+
+// executeLuaUnchecked is private so tool handlers cannot bypass capability validation.
+func (c *Client) executeLuaUnchecked(ctx context.Context, script string, spritePath string) (string, error) {
 	// Create temporary script file
 	scriptPath, cleanup, err := c.createTempScript(script)
 	if err != nil {
