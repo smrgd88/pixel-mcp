@@ -69,7 +69,11 @@ func (c *Client) ExecuteCommand(ctx context.Context, args []string) (string, err
 	if err != nil {
 		// Check if it was a timeout
 		if ctx.Err() == context.DeadlineExceeded {
-			return "", fmt.Errorf("aseprite command timed out after %v", c.timeout)
+			return "", fmt.Errorf("aseprite command timed out: %w", ctx.Err())
+		}
+
+		if ctx.Err() == context.Canceled {
+			return "", fmt.Errorf("aseprite command canceled: %w", ctx.Err())
 		}
 
 		// Include stderr in error message

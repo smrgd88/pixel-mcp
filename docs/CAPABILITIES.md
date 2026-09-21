@@ -150,7 +150,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | `unsupported_aseprite` | 유효한 응답이지만 버전 또는 API가 지원 하한 미달 |
 | `capability_probe_failed` | 프로세스 실행·timeout·취소·임시 script 생성·응답 형식 검사 실패 |
 
-Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. health는 `error_code`/`error` 필드로 노출한다. MCP tool 호출은 기존 IsError/text 오류 형식을 유지하며 메시지에 해당 코드가 포함된다. 지원 통과 뒤 발생하는 실제 도구 Lua 오류는 기존 오류 계약을 유지한다.
+Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 취소/timeout은 이 오류로 감싸져도 `errors.Is(err, context.Canceled/DeadlineExceeded)`로 구분한다. 실제 Lua 작업 중 취소/timeout도 같은 context 원인을 보존한다. health는 `error_code`/`error` 필드로 노출한다. MCP tool 호출은 기존 IsError/text 오류 형식을 유지하며 메시지에 해당 코드가 포함된다. 지원 통과 뒤 발생하는 실제 도구 Lua 오류는 기존 오류 계약을 유지한다.
 
 ### 검증 범위
 

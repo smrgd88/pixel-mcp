@@ -77,10 +77,51 @@ func TestIntegrationCapabilitiesConcurrentAndCancel(t *testing.T) {
 	var ce *CapabilityError
 	require.ErrorAs(t, err, &ce)
 	require.Equal(t, "capability_probe_failed", ce.Code)
+	require.ErrorIs(t, err, context.Canceled)
 	c.timeout = time.Nanosecond
 	_, err = c.CheckCapabilities(context.Background())
 	require.ErrorAs(t, err, &ce)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
 	files, err := os.ReadDir(c.tempDir)
 	require.NoError(t, err)
 	require.Empty(t, files)
+}
+
+func TestIntegrationCapabilitiesRunningCancel(t *testing.T) {
+	cfg := testutil.LoadTestConfig(t)
+	c := NewClient(cfg.AsepritePath, t.TempDir(), cfg.Timeout)
+	marker := filepath.Join(t.TempDir(), "started.aseprite")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() {
+		_, err := c.ExecuteLua(ctx, NewLuaGenerator().CreateCanvas(1, 1, ColorModeRGB, marker)+"\nwhile true do end", "")
+		done <- err
+	}()
+	// Wait for the real payload to start, then cancel a running process.
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case err := <-done:
+			t.Fatalf("payload exited before cancellation: %v", err)
+		case <-ctx.Done():
+			t.Fatal("payload did not start before test deadline")
+		case <-ticker.C:
+			if _, err := os.Stat(marker); err != nil {
+				continue
+			}
+			cancel()
+			select {
+			case err := <-done:
+				require.ErrorIs(t, err, context.Canceled)
+			case <-time.After(5 * time.Second):
+				t.Fatal("canceled process did not exit")
+			}
+			files, err := os.ReadDir(c.tempDir)
+			require.NoError(t, err)
+			require.Empty(t, files)
+			return
+		}
+	}
 }
