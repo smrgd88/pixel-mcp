@@ -94,9 +94,9 @@ func TestDrawPixels_WithoutPalette(t *testing.T) {
 
 	script := gen.DrawPixels("Layer 1", 1, pixels, false)
 
-	// Verify palette snapper helper is NOT included
-	if strings.Contains(script, "local function snapToPalette") {
-		t.Error("Script should NOT include snapToPalette helper when usePalette=false")
+	// Indexed images still require explicit palette indices even without RGB snapping.
+	if !strings.Contains(script, "if spr.colorMode == ColorMode.INDEXED then") {
+		t.Error("Script must distinguish indexed pixel values from RGB colors")
 	}
 
 	// Verify colors use direct Color() constructor
@@ -104,8 +104,8 @@ func TestDrawPixels_WithoutPalette(t *testing.T) {
 		t.Error("Script should use direct Color() constructor")
 	}
 
-	if strings.Contains(script, "snapToPalette") {
-		t.Error("Script should NOT call snapToPalette when usePalette=false")
+	if !strings.Contains(script, "snapToPaletteForPixel(255, 0, 0, 255)") {
+		t.Error("Indexed path must resolve an index against the sprite palette")
 	}
 }
 

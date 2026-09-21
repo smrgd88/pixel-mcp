@@ -492,3 +492,26 @@ func BenchmarkFloydSteinbergDither(b *testing.B) {
 		FloydSteinbergDither(img, palette)
 	}
 }
+
+func TestQuantizationTransparencyCountsTowardsTarget(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 16, 16))
+	for y := 0; y < 15; y++ {
+		for x := 0; x < 16; x++ {
+			img.SetRGBA(x, y, color.RGBA{R: uint8(x * 16), G: uint8(y * 16), B: uint8((x + y) * 8), A: 255})
+		}
+	}
+	for _, algorithm := range []string{"median_cut", "kmeans", "octree"} {
+		t.Run(algorithm, func(t *testing.T) {
+			palette, _, err := QuantizePalette(img, 4, algorithm, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(palette) > 4 {
+				t.Fatalf("transparent slot exceeded target: %v", palette)
+			}
+			if palette[0] != "#00000000" {
+				t.Fatalf("transparent color missing: %v", palette)
+			}
+		})
+	}
+}

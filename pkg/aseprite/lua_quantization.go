@@ -68,7 +68,7 @@ colorMode = "indexed"`
 	} else {
 		conversionCode = `
 -- Keep RGB mode, just apply palette
-colorMode = tostring(spr.colorMode):match("ColorMode%%.(%%w+)")`
+colorMode = modeName()`
 	}
 
 	return fmt.Sprintf(`local spr = app.activeSprite
@@ -77,7 +77,12 @@ if not spr then
 end
 
 -- Store original color mode for reporting
-local colorMode = tostring(spr.colorMode):match("ColorMode%%.(%%w+)")
+local function modeName()
+    if spr.colorMode == ColorMode.INDEXED then return "indexed" end
+    if spr.colorMode == ColorMode.GRAY then return "grayscale" end
+    return "rgb"
+end
+local colorMode = modeName()
 
 -- Get or create palette
 local palette = spr.palettes[1]
@@ -146,8 +151,10 @@ if not newImg then
 end
 
 app.transaction(function()
-	-- Flatten all layers to a single layer
-	spr:flatten()
+	-- Preserve the RGB remap until the new quantized palette is applied.
+    if spr.colorMode ~= ColorMode.RGB then app.command.ChangePixelFormat{format="rgb"} end
+    -- Flatten all layers to a single layer
+    spr:flatten()
 
 	-- Get the flattened layer (should be only layer now)
 	local layer = spr.layers[1]
@@ -173,7 +180,7 @@ app.transaction(function()
 	local celX = cel.position.x
 	local celY = cel.position.y
 	spr:deleteCel(cel)
-	spr:newCel(layer, 1, finalImg, celX, celY)
+	spr:newCel(layer, 1, finalImg, Point(0, 0))
 end)
 
 spr:saveAs(spr.filename)

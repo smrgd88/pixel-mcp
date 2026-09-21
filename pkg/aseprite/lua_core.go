@@ -101,8 +101,9 @@ local function findNearestPaletteIndex(r, g, b, a)
 		return 0
 	end
 
-	local minDist = math.huge
-	local nearestIndex = 0
+	if spr.colorMode == ColorMode.INDEXED and a == 0 then return spr.transparentColor end
+    local minDist = math.huge
+    local nearestIndex = 0
 
 	for i = 0, #palette - 1 do
 		local palColor = palette:getColor(i)
