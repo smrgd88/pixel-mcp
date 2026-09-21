@@ -4,6 +4,109 @@ import (
 	"fmt"
 )
 
+// selectionStateLua persists exact masks in an extension-owned property namespace.
+// Legacy sprite.data bounds/runs remain readable, but user data is never rewritten.
+const selectionStateLua = `local spr = app.activeSprite
+if not spr then error("No active sprite") end
+-- Keep user sprite.data byte-for-byte intact. Selection state is private,
+-- versioned extension data; the version marker also records an explicit clear.
+local store = spr.properties("pixel-mcp/selection")
+local state = {}
+if store.version == 1 then
+    state.selection = store.mask
+elseif spr.data ~= "" then
+    -- Read old bounds/runs without rewriting or converting unrelated JSON data.
+    local ok, mask = pcall(function()
+        local saved = json.decode(spr.data).selection
+        if type(saved) ~= "table" and type(saved) ~= "userdata" then return nil end
+        if type(saved.x) ~= "number" or type(saved.y) ~= "number" or
+           type(saved.w) ~= "number" or type(saved.h) ~= "number" then return nil end
+        local result = {x=saved.x,y=saved.y,w=saved.w,h=saved.h}
+        if saved.runs then
+            if type(saved.runs) ~= "table" and type(saved.runs) ~= "userdata" then return nil end
+            result.runs = {}
+            for _,run in ipairs(saved.runs) do
+                if type(run.x) ~= "number" or type(run.y) ~= "number" or type(run.w) ~= "number" then return nil end
+                table.insert(result.runs,{x=run.x,y=run.y,w=run.w})
+            end
+        end
+        return result
+    end)
+    if ok then state.selection = mask end
+end
+local function restoreSelection()
+    local saved = state.selection
+    if spr.selection.isEmpty and type(saved) == "table" then
+        local sel = Selection()
+        if type(saved.runs) == "table" then
+            for _, run in ipairs(saved.runs) do sel:add(Rectangle(run.x, run.y, run.w, 1)) end
+        elseif saved.w and saved.h and saved.w > 0 and saved.h > 0 then
+            sel = Selection(Rectangle(saved.x, saved.y, saved.w, saved.h))
+        end
+        spr.selection = sel
+    end
+end
+local function persistSelection()
+    if spr.selection.isEmpty then
+        state.selection = nil
+    else
+        local bounds = spr.selection.bounds
+        local saved = {x=bounds.x, y=bounds.y, w=bounds.width, h=bounds.height, runs={}}
+        for y=bounds.y,bounds.y+bounds.height-1 do
+            local start = nil
+            for x=bounds.x,bounds.x+bounds.width do
+                local inside = x < bounds.x+bounds.width and spr.selection:contains(x,y)
+                if inside and not start then start = x end
+                if not inside and start then
+                    table.insert(saved.runs, {x=start, y=y, w=x-start})
+                    start = nil
+                end
+            end
+        end
+        state.selection = saved
+    end
+    store.version = 1
+    store.mask = state.selection
+end
+local function combineSelection(sel, mode)
+    restoreSelection()
+    if mode == "replace" then spr.selection = sel
+    elseif mode == "add" then spr.selection:add(sel)
+    elseif mode == "subtract" then spr.selection:subtract(sel)
+    elseif mode == "intersect" then spr.selection:intersect(sel)
+    else error("Invalid selection mode") end
+    persistSelection()
+    spr:saveAs(spr.filename)
+end
+local function emptyImage(width, height)
+    local spec = spr.spec
+    spec.width, spec.height = width, height
+    local img = Image(spec)
+    img:clear(spr.colorMode == ColorMode.INDEXED and spr.transparentColor or 0)
+    return img
+end
+local function copyToClipboard(sourceCel)
+    if not sourceCel then error("Source cel not found") end
+    local bounds = spr.selection.bounds
+    local img = emptyImage(bounds.width, bounds.height)
+    for y=bounds.y,bounds.y+bounds.height-1 do
+        for x=bounds.x,bounds.x+bounds.width-1 do
+            local sx,sy = x-sourceCel.position.x,y-sourceCel.position.y
+            if spr.selection:contains(x,y) and sx >= 0 and sy >= 0 and sx < sourceCel.image.width and sy < sourceCel.image.height then
+                img:drawPixel(x-bounds.x,y-bounds.y,sourceCel.image:getPixel(sx,sy))
+            end
+        end
+    end
+    local clipboardLayer = nil
+    for _, l in ipairs(spr.layers) do if l.name == "__mcp_clipboard__" then clipboardLayer = l; break end end
+    if not clipboardLayer then clipboardLayer = spr:newLayer(); clipboardLayer.name = "__mcp_clipboard__" end
+    clipboardLayer.isVisible = false
+    local old = clipboardLayer:cel(1)
+    if old then spr:deleteCel(old) end
+    spr:newCel(clipboardLayer,1,img,Point(bounds.x,bounds.y))
+end
+`
+
 // SelectRectangle generates a Lua script to create a rectangular selection.
 //
 // Creates or modifies the current selection using a rectangular region.
@@ -22,47 +125,23 @@ import (
 //   - "subtract": removes rectangle from current selection
 //   - "intersect": keeps only the intersection of current and new selection
 //
-// The selection is persisted to sprite.data as JSON and restored across operations.
+// The selection is persisted in extension properties and restored across operations.
 // The sprite is saved after the selection is created.
 //
 // Prints "Rectangle selection created successfully" on success.
 // Returns an error if no sprite is active.
 func (g *LuaGenerator) SelectRectangle(x, y, width, height int, mode string) string {
-	return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
-local rect = Rectangle(%d, %d, %d, %d)
-local sel = Selection(rect)
-
-if "%s" == "replace" then
-	spr.selection = sel
-else
-	spr.selection:add(sel)
-	if "%s" == "subtract" then
-		spr.selection:subtract(sel)
-	elseif "%s" == "intersect" then
-		spr.selection:intersect(sel)
-	end
-end
-
--- Persist selection state to sprite.data for cross-process persistence
-if not spr.selection.isEmpty then
-	local bounds = spr.selection.bounds
-	spr.data = string.format('{"selection":{"x":%%d,"y":%%d,"w":%%d,"h":%%d}}',
-		bounds.x, bounds.y, bounds.width, bounds.height)
-	spr:saveAs(spr.filename)
-end
-
-print("Rectangle selection created successfully")`, x, y, width, height, mode, mode, mode)
+	return selectionStateLua + fmt.Sprintf(`
+local sel = Selection(Rectangle(%d, %d, %d, %d))
+combineSelection(sel, "%s")
+print("Rectangle selection created successfully")`, x, y, width, height, EscapeString(mode))
 }
 
 // SelectEllipse generates a Lua script to create an elliptical selection.
 //
 // Creates or modifies the current selection using an elliptical region.
 // The ellipse is defined by its bounding rectangle and filled using the
-// midpoint ellipse algorithm.
+// pixel-center ellipse test, constrained to the requested bounds.
 //
 // Parameters:
 //   - x, y: top-left corner of the ellipse bounding box
@@ -76,61 +155,23 @@ print("Rectangle selection created successfully")`, x, y, width, height, mode, m
 //   - "subtract": removes ellipse from current selection
 //   - "intersect": keeps only the intersection of current and new selection
 //
-// The selection is persisted to sprite.data as JSON and restored across operations.
+// The selection is persisted in extension properties and restored across operations.
 // The sprite is saved after the selection is created.
 //
 // Prints "Ellipse selection created successfully" on success.
 // Returns an error if no sprite is active.
 func (g *LuaGenerator) SelectEllipse(x, y, width, height int, mode string) string {
-	return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
--- Create ellipse selection by using drawPixel for each point on ellipse
+	return selectionStateLua + fmt.Sprintf(`
 local sel = Selection()
-local rx = %d / 2
-local ry = %d / 2
-local cx = %d + rx
-local cy = %d + ry
-
--- Midpoint ellipse algorithm to create selection
-for angle = 0, 360 do
-	local rad = math.rad(angle)
-	local ex = math.floor(cx + rx * math.cos(rad))
-	local ey = math.floor(cy + ry * math.sin(rad))
-	-- Fill from center to edge
-	for fillx = math.floor(cx - rx), math.floor(cx + rx) do
-		for filly = math.floor(cy - ry), math.floor(cy + ry) do
-			local dx = (fillx - cx) / rx
-			local dy = (filly - cy) / ry
-			if dx * dx + dy * dy <= 1 then
-				sel:add(Rectangle(fillx, filly, 1, 1))
-			end
-		end
-	end
-	break  -- Only need one pass to fill
+local x,y,w,h = %d,%d,%d,%d
+for py=y,y+h-1 do
+    for px=x,x+w-1 do
+        local nx,ny = (px+0.5-x-w/2)/(w/2),(py+0.5-y-h/2)/(h/2)
+        if nx*nx+ny*ny <= 1 then sel:add(Rectangle(px,py,1,1)) end
+    end
 end
-
-if "%s" == "replace" then
-	spr.selection = sel
-elseif "%s" == "add" then
-	spr.selection:add(sel)
-elseif "%s" == "subtract" then
-	spr.selection:subtract(sel)
-elseif "%s" == "intersect" then
-	spr.selection:intersect(sel)
-end
-
--- Persist selection state to sprite.data for cross-process persistence
-if not spr.selection.isEmpty then
-	local bounds = spr.selection.bounds
-	spr.data = string.format('{"selection":{"x":%%d,"y":%%d,"w":%%d,"h":%%d}}',
-		bounds.x, bounds.y, bounds.width, bounds.height)
-	spr:saveAs(spr.filename)
-end
-
-print("Ellipse selection created successfully")`, width, height, x, y, mode, mode, mode, mode)
+combineSelection(sel, "%s")
+print("Ellipse selection created successfully")`, x, y, width, height, EscapeString(mode))
 }
 
 // SelectAll generates a Lua script to select the entire canvas.
@@ -139,28 +180,16 @@ print("Ellipse selection created successfully")`, width, height, x, y, mode, mod
 // (sprite.width, sprite.height). This is useful before copy/cut operations
 // or to quickly select all content for transformations.
 //
-// The selection is persisted to sprite.data as JSON and restored across operations.
+// The selection is persisted in extension properties and restored across operations.
 // The sprite is saved after the selection is created.
 //
 // Prints "Select all completed successfully" on success.
 // Returns an error if no sprite is active.
 func (g *LuaGenerator) SelectAll() string {
-	return `local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
--- Create selection covering entire sprite
-local rect = Rectangle(0, 0, spr.width, spr.height)
-local sel = Selection(rect)
-spr.selection = sel
-
--- Persist selection state to sprite.data for cross-process persistence
-local bounds = spr.selection.bounds
-spr.data = string.format('{"selection":{"x":%%d,"y":%%d,"w":%%d,"h":%%d}}',
-	bounds.x, bounds.y, bounds.width, bounds.height)
+	return selectionStateLua + `
+spr.selection = Selection(Rectangle(0, 0, spr.width, spr.height))
+persistSelection()
 spr:saveAs(spr.filename)
-
 print("Select all completed successfully")`
 }
 
@@ -169,26 +198,19 @@ print("Select all completed successfully")`
 // Removes the current selection mask, allowing operations to affect the entire
 // canvas again. This is the opposite of SelectAll.
 //
-// The persisted selection state in sprite.data is cleared and the sprite is saved.
+// The persisted selection state in extension properties is cleared and the sprite is saved.
 //
 // Prints "Deselect completed successfully" on success.
 // Returns an error if no sprite is active.
 func (g *LuaGenerator) Deselect() string {
-	return `local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
+	return selectionStateLua + `
 app.command.DeselectMask()
-
--- Clear persisted selection state
-spr.data = ""
+persistSelection()
 spr:saveAs(spr.filename)
-
 print("Deselect completed successfully")`
 }
 
-// MoveSelection generates a Lua script to translate the selection bounds.
+// MoveSelection generates a Lua script to translate the selection mask.
 //
 // Shifts the selection mask by the specified offset without moving the pixel
 // content. This is useful for repositioning the selection after creating it,
@@ -206,33 +228,20 @@ print("Deselect completed successfully")`
 //   - No sprite is active
 //   - No selection exists to move
 func (g *LuaGenerator) MoveSelection(dx, dy int) string {
-	return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
--- Restore selection from persisted state if needed
-if spr.selection.isEmpty and spr.data ~= "" then
-	local x, y, w, h = spr.data:match('x":(%%d+),"y":(%%d+),"w":(%%d+),"h":(%%d+)')
-	if x and y and w and h then
-		spr.selection = Selection(Rectangle(tonumber(x), tonumber(y), tonumber(w), tonumber(h)))
-	end
-end
-
-if spr.selection.isEmpty then
-	error("No active selection to move")
-end
-
+	return selectionStateLua + fmt.Sprintf(`
+restoreSelection()
+if spr.selection.isEmpty then error("No active selection to move") end
 local bounds = spr.selection.bounds
-local newSel = Selection(Rectangle(bounds.x + %d, bounds.y + %d, bounds.width, bounds.height))
-spr.selection = newSel
-
--- Persist updated selection state
-local newBounds = spr.selection.bounds
-spr.data = string.format('{"selection":{"x":%%d,"y":%%d,"w":%%d,"h":%%d}}',
-	newBounds.x, newBounds.y, newBounds.width, newBounds.height)
+local dx,dy = %d,%d
+local moved = Selection()
+for y=bounds.y,bounds.y+bounds.height-1 do
+    for x=bounds.x,bounds.x+bounds.width-1 do
+        if spr.selection:contains(x,y) then moved:add(Rectangle(x+dx,y+dy,1,1)) end
+    end
+end
+spr.selection = moved
+persistSelection()
 spr:saveAs(spr.filename)
-
 print("Selection moved successfully")`, dx, dy)
 }
 
@@ -255,88 +264,31 @@ print("Selection moved successfully")`, dx, dy)
 //   - The layer is not found
 //   - The frame number is invalid
 func (g *LuaGenerator) CutSelection(layerName string, frameNumber int) string {
-	escapedName := EscapeString(layerName)
-	return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
--- Restore selection from persisted state if needed
-if spr.selection.isEmpty and spr.data ~= "" then
-	local x, y, w, h = spr.data:match('x":(%%d+),"y":(%%d+),"w":(%%d+),"h":(%%d+)')
-	if x and y and w and h then
-		spr.selection = Selection(Rectangle(tonumber(x), tonumber(y), tonumber(w), tonumber(h)))
-	end
-end
-
-if spr.selection.isEmpty then
-	error("No active selection to cut")
-end
-
--- Find layer by name
+	return selectionStateLua + fmt.Sprintf(`
+restoreSelection()
+if spr.selection.isEmpty then error("No active selection to cut") end
 local layer = nil
-for i, lyr in ipairs(spr.layers) do
-	if lyr.name == "%s" then
-		layer = lyr
-		break
-	end
-end
-
-if not layer then
-	error("Layer not found: %s")
-end
-
+for _,lyr in ipairs(spr.layers) do if lyr.name == "%s" then layer=lyr; break end end
+if not layer then error("Layer not found") end
 local frame = spr.frames[%d]
-if not frame then
-	error("Frame not found: %d")
-end
-
--- Find or create hidden clipboard layer before cutting
-local clipboardLayer = nil
-for i, lyr in ipairs(spr.layers) do
-	if lyr.name == "__mcp_clipboard__" then
-		clipboardLayer = lyr
-		break
-	end
-end
-
-if not clipboardLayer then
-	clipboardLayer = spr:newLayer()
-	clipboardLayer.name = "__mcp_clipboard__"
-	clipboardLayer.isVisible = false
-end
-
--- Copy selected region to clipboard layer first
+if not frame then error("Frame not found") end
 local cel = layer:cel(frame)
-if cel then
-	local bounds = spr.selection.bounds
-	local clipImage = Image(bounds.width, bounds.height, spr.colorMode)
-	clipImage:drawImage(cel.image, Point(-bounds.x, -bounds.y))
-
-	-- Store in clipboard layer
-	spr:newCel(clipboardLayer, 1, clipImage, Point(bounds.x, bounds.y))
-end
-
--- Now cut from the source layer
+if not cel then error("Source cel not found") end
 app.transaction(function()
-	local cel = layer:cel(frame)
-	if cel then
-		local bounds = spr.selection.bounds
-		-- Clear pixels in selection
-		for y = bounds.y, bounds.y + bounds.height - 1 do
-			for x = bounds.x, bounds.x + bounds.width - 1 do
-				if spr.selection:contains(x, y) then
-					cel.image:drawPixel(x - cel.position.x, y - cel.position.y, Color{r=0,g=0,b=0,a=0})
-				end
-			end
-		end
-	end
+    copyToClipboard(cel)
+    local bounds = spr.selection.bounds
+    local clear = spr.colorMode == ColorMode.INDEXED and spr.transparentColor or 0
+    for y=bounds.y,bounds.y+bounds.height-1 do
+        for x=bounds.x,bounds.x+bounds.width-1 do
+            local sx,sy=x-cel.position.x,y-cel.position.y
+            if spr.selection:contains(x,y) and sx>=0 and sy>=0 and sx<cel.image.width and sy<cel.image.height then cel.image:drawPixel(sx,sy,clear) end
+        end
+    end
 end)
-
--- Selection cleared after cut, clear persisted state
-spr.data = ""
+app.command.DeselectMask()
+persistSelection()
 spr:saveAs(spr.filename)
-print("Cut selection completed successfully")`, escapedName, escapedName, frameNumber, frameNumber)
+print("Cut selection completed successfully")`, EscapeString(layerName), frameNumber)
 }
 
 // CopySelection generates a Lua script to copy the selected pixels to clipboard.
@@ -354,54 +306,12 @@ print("Cut selection completed successfully")`, escapedName, escapedName, frameN
 //   - No sprite is active
 //   - No selection exists
 func (g *LuaGenerator) CopySelection() string {
-	return `local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
--- Restore selection from persisted state if needed
-if spr.selection.isEmpty and spr.data ~= "" then
-	local x, y, w, h = spr.data:match('x":(%d+),"y":(%d+),"w":(%d+),"h":(%d+)')
-	if x and y and w and h then
-		spr.selection = Selection(Rectangle(tonumber(x), tonumber(y), tonumber(w), tonumber(h)))
-	end
-end
-
-if spr.selection.isEmpty then
-	error("No active selection to copy")
-end
-
--- Find or create hidden clipboard layer
-local clipboardLayer = nil
-for i, lyr in ipairs(spr.layers) do
-	if lyr.name == "__mcp_clipboard__" then
-		clipboardLayer = lyr
-		break
-	end
-end
-
-if not clipboardLayer then
-	clipboardLayer = spr:newLayer()
-	clipboardLayer.name = "__mcp_clipboard__"
-	clipboardLayer.isVisible = false
-end
-
--- Get the selected image from layer 1, frame 1
--- In batch mode, we need to explicitly use frame 1 since app.activeFrame/activeLayer may not be set correctly
-local sourceLayer = spr.layers[1]
-local sourceFrame = spr.frames[1]
-local sourceCel = sourceLayer:cel(sourceFrame)
-
-if sourceCel then
-	-- Copy selected region to clipboard layer
-	local bounds = spr.selection.bounds
-	local clipImage = Image(bounds.width, bounds.height, spr.colorMode)
-	clipImage:drawImage(sourceCel.image, Point(-bounds.x, -bounds.y))
-
-	-- Store in clipboard layer at frame 1
-	spr:newCel(clipboardLayer, 1, clipImage, Point(bounds.x, bounds.y))
-end
-
+	return selectionStateLua + `
+restoreSelection()
+if spr.selection.isEmpty then error("No active selection to copy") end
+-- The public copy tool has no target selector: retain first-layer/frame behavior.
+local sourceCel = spr.layers[1]:cel(spr.frames[1])
+app.transaction(function() copyToClipboard(sourceCel) end)
 spr:saveAs(spr.filename)
 print("Copy selection completed successfully")`
 }
@@ -439,11 +349,7 @@ func (g *LuaGenerator) PasteClipboard(layerName string, frameNumber int, x, y *i
 		pastePos = "local pasteX, pasteY = 0, 0"
 	}
 
-	return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
+	return selectionStateLua + fmt.Sprintf(`
 -- Find clipboard layer
 local clipboardLayer = nil
 for i, lyr in ipairs(spr.layers) do
@@ -485,12 +391,16 @@ end
 
 app.transaction(function()
 	local targetCel = layer:cel(frame)
-	if not targetCel then
-		targetCel = spr:newCel(layer, frame)
-	end
-
-	-- Draw clipboard image onto target
-	targetCel.image:drawImage(clipCel.image, Point(pasteX - targetCel.position.x, pasteY - targetCel.position.y))
+    local left,top,right,bottom=pasteX,pasteY,pasteX+clipCel.image.width,pasteY+clipCel.image.height
+    if targetCel then
+        left,top=math.min(left,targetCel.position.x),math.min(top,targetCel.position.y)
+        right,bottom=math.max(right,targetCel.position.x+targetCel.image.width),math.max(bottom,targetCel.position.y+targetCel.image.height)
+    end
+    local img=emptyImage(right-left,bottom-top)
+    if targetCel then img:drawImage(targetCel.image,Point(targetCel.position.x-left,targetCel.position.y-top)) end
+    img:drawImage(clipCel.image,Point(pasteX-left,pasteY-top))
+    if targetCel then targetCel.image=img;targetCel.position=Point(left,top)
+    else spr:newCel(layer,frame,img,Point(left,top)) end
 end)
 
 spr:saveAs(spr.filename)

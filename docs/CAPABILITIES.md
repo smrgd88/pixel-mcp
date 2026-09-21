@@ -93,7 +93,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | GAP-08 | [app.command](https://www.aseprite.org/api/app_command/): 밝기·대비·색상 곡선·convolution·despeckle | 부분: outline은 제공, 나열한 보정 명령은 미지원; batch 옵션 검증 필요 | R5 |
 | GAP-09 | [Layer](https://www.aseprite.org/api/layer/), [Slice](https://www.aseprite.org/api/slice/): data·properties | 미지원: 내부 상태 저장과 별개로 범용 사용자 metadata 편집 도구 없음 | R5 |
 | GAP-10 | [app](https://www.aseprite.org/api/app/): version·apiVersion | 부분: CLI health에서 버전 접근 확인, 구조화된 capability 응답·최소 API 사전 거부 없음 | R1 |
-| GAP-11 | [Selection](https://www.aseprite.org/api/selection/): 선택 영역 연산 | 부분: 사각형·타원·전체·이동·4종 결합 모드 및 복사/붙여넣기; 선택 반전 등 확장 없음. 선택 저장 코드가 bounds 중심이므로 비사각형 mask의 호출 간 보존은 별도 검증 필요 | R5 |
+| GAP-11 | [Selection](https://www.aseprite.org/api/selection/): 선택 영역 연산 | 부분: 사각형·타원·전체·이동·4종 결합 모드 및 복사/붙여넣기; 선택 반전 등 확장 없음. 선택 mask는 행별 run으로 저장하며 호출 간 복원·결합·이동을 검증함; 기존 bounds-only 데이터는 사각형으로 읽음 | R5 |
 | GAP-12 | [API](https://www.aseprite.org/api/): Brush·Tool·ColorSpace·Grid 등 | 부분/미지원: 기본 도형·색상 API는 내부 사용, 범용 brush/ink·색공간·grid 설정은 미노출 | R5 |
 | GAP-13 | [API](https://www.aseprite.org/api/): Plugin·Dialog·Editor·Events·Timer·WebSocket 등 | 현재 구조 밖: GUI 확장·지속 세션 연동을 MCP로 제공하지 않음 | 별도 SPIKE 필요 |
 

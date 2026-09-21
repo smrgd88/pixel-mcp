@@ -166,59 +166,38 @@ print("Tag deleted successfully")`, escapedName, escapedName)
 //   - The source frame is not found
 //   - The insert position exceeds the sprite's frame count (when insertAfter > 0)
 func (g *LuaGenerator) DuplicateFrame(sourceFrame int, insertAfter int) string {
-	if insertAfter == 0 {
-		// Insert at end
-		return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
-local srcFrame = spr.frames[%d]
-if not srcFrame then
-	error("Source frame not found: %d")
-end
-
-local newFrame
-app.transaction(function()
-	newFrame = spr:newFrame(srcFrame)
-	newFrame.duration = srcFrame.duration
-end)
-
-spr:saveAs(spr.filename)
-print(#spr.frames)`, sourceFrame, sourceFrame)
-	}
-
-	// Insert after specific frame
 	return fmt.Sprintf(`local spr = app.activeSprite
-if not spr then
-	error("No active sprite")
-end
-
+if not spr then error("No active sprite") end
 local srcFrame = spr.frames[%d]
-if not srcFrame then
-	error("Source frame not found: %d")
-end
-
-if #spr.frames < %d then
-	error("Insert position exceeds sprite frames")
-end
-
+if not srcFrame then error("Source frame not found") end
+local insertAfter = %d
+if insertAfter > #spr.frames then error("Insert position exceeds sprite frames") end
+local target = insertAfter == 0 and #spr.frames + 1 or insertAfter + 1
 local newFrame
 app.transaction(function()
-	newFrame = spr:newFrame(%d + 1)
-	newFrame.duration = srcFrame.duration
-
-	-- Copy cels from source frame to new frame
-	for _, layer in ipairs(spr.layers) do
-		local srcCel = layer:cel(srcFrame)
-		if srcCel then
-			local newCel = spr:newCel(layer, newFrame, srcCel.image, srcCel.position)
-		end
-	end
+ -- Apply insertion at its final position first, so tag ranges follow normal insertion semantics.
+ -- Native duplication then retains nested layers and all cel user-data namespaces.
+ local sourceIndex = srcFrame.frameNumber
+ spr:newEmptyFrame(target)
+ if target <= sourceIndex then sourceIndex = sourceIndex + 1 end
+ local clone = spr:newFrame(sourceIndex)
+ local cloneIndex = clone.frameNumber
+ local destination = target
+ if cloneIndex <= destination then destination = destination + 1 end
+ local duration = clone.duration
+ local cels = {}
+ for _,cel in ipairs(spr.cels) do
+  if cel.frameNumber == cloneIndex then table.insert(cels,cel) end
+ end
+ for _,cel in ipairs(cels) do cel.frameNumber = destination end
+ spr.frames[destination].duration = duration
+ -- Delete the temporary clone at the same index it was inserted, undoing its
+ -- structural shifts while leaving the moved cels at the requested destination.
+ spr:deleteFrame(cloneIndex)
+ newFrame = spr.frames[target]
 end)
-
 spr:saveAs(spr.filename)
-print(%d + 1)`, sourceFrame, sourceFrame, insertAfter, insertAfter, insertAfter)
+print(newFrame.frameNumber)`, sourceFrame, insertAfter)
 }
 
 // LinkCel generates a Lua script to create a linked cel.

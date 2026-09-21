@@ -42,6 +42,24 @@ func QuantizePalette(img image.Image, targetColors int, algorithm string, preser
 		return nil, originalColors, fmt.Errorf("no non-transparent pixels to quantize")
 	}
 
+	// The transparent entry consumes one of the requested palette slots.
+	hasTransparency := false
+	if preserveTransparency {
+		bounds := img.Bounds()
+		for y := bounds.Min.Y; y < bounds.Max.Y && !hasTransparency; y++ {
+			for x := bounds.Min.X; x < bounds.Max.X; x++ {
+				_, _, _, a := img.At(x, y).RGBA()
+				if a == 0 {
+					hasTransparency = true
+					break
+				}
+			}
+		}
+	}
+	if hasTransparency {
+		targetColors--
+	}
+
 	// Run quantization algorithm
 	var paletteColors []color.Color
 	switch algorithm {
@@ -70,23 +88,8 @@ func QuantizePalette(img image.Image, targetColors int, algorithm string, preser
 		return nil, 0, fmt.Errorf("unknown algorithm: %s (must be median_cut, kmeans, or octree)", algorithm)
 	}
 
-	// Add transparency to palette if needed
-	if preserveTransparency {
-		// Check if image has any transparent pixels
-		hasTransparency := false
-		bounds := img.Bounds()
-		for y := bounds.Min.Y; y < bounds.Max.Y && !hasTransparency; y++ {
-			for x := bounds.Min.X; x < bounds.Max.X; x++ {
-				_, _, _, a := img.At(x, y).RGBA()
-				if a == 0 {
-					hasTransparency = true
-					break
-				}
-			}
-		}
-		if hasTransparency {
-			paletteColors = append([]color.Color{color.RGBA{R: 0, G: 0, B: 0, A: 0}}, paletteColors...)
-		}
+	if hasTransparency {
+		paletteColors = append([]color.Color{color.RGBA{}}, paletteColors...)
 	}
 
 	// Convert to hex strings
@@ -303,6 +306,7 @@ func OctreeQuantization(pixels []color.Color, targetColors int) []color.Color {
 
 	// Track nodes at each level for reduction
 	levels := make([][]*octreeNode, 9)
+	levels[0] = append(levels[0], root)
 
 	// Insert all pixels into octree
 	for _, p := range pixels {
@@ -374,8 +378,8 @@ func (n *octreeNode) insert(r, g, b uint8, level int, levels [][]*octreeNode) {
 			children: make([]*octreeNode, 8),
 		}
 		// Track node at this level for reduction
-		if level < 8 {
-			levels[level] = append(levels[level], n.children[idx])
+		if level+1 < 8 {
+			levels[level+1] = append(levels[level+1], n.children[idx])
 		}
 	}
 
@@ -558,7 +562,11 @@ func findNearestColor(c color.Color, palette []color.Color) color.Color {
 	var nearest color.Color = palette[0]
 
 	for _, p := range palette {
-		r2, g2, b2, _ := p.RGBA()
+		r2, g2, b2, a2 := p.RGBA()
+		// Transparent entries must not win a nearest-color match for opaque pixels.
+		if a2 == 0 {
+			continue
+		}
 		color2 := colorful.Color{
 			R: float64(r2) / 65535.0,
 			G: float64(g2) / 65535.0,
