@@ -64,9 +64,10 @@ type ScaleSpriteInput struct {
 
 // ScaleSpriteOutput defines the output for the scale_sprite tool.
 type ScaleSpriteOutput struct {
-	Success   bool `json:"success"`
-	NewWidth  int  `json:"new_width" jsonschema:"New sprite width after scaling"`
-	NewHeight int  `json:"new_height" jsonschema:"New sprite height after scaling"`
+	Warnings  []ToolWarning `json:"warnings,omitempty" jsonschema:"Potentially destructive effects of this completed operation; omitted when none apply"`
+	Success   bool          `json:"success"`
+	NewWidth  int           `json:"new_width" jsonschema:"New sprite width after scaling"`
+	NewHeight int           `json:"new_height" jsonschema:"New sprite height after scaling"`
 }
 
 // CropSpriteInput defines the input parameters for the crop_sprite tool.
@@ -320,6 +321,8 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			if err := parseJSON(output, &result); err != nil {
 				return nil, nil, fmt.Errorf("failed to parse scale result: %w", err)
 			}
+
+			result.Warnings = scaleWarnings(input.Algorithm, input.ScaleX, input.ScaleY)
 
 			opLogger.Information("Sprite scaled successfully",
 				"scale_x", input.ScaleX,

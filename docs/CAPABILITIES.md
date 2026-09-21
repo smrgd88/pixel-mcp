@@ -32,7 +32,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-004 | 캔버스·레이어·프레임 | `get_sprite_info` | v0.1.0 | — | [canvas.go](../pkg/tools/canvas.go) |
 | MCP-005 | 캔버스·레이어·프레임 | `delete_layer` | v0.1.0 | — | [canvas.go](../pkg/tools/canvas.go) |
 | MCP-006 | 캔버스·레이어·프레임 | `delete_frame` | v0.1.0 | — | [canvas.go](../pkg/tools/canvas.go) |
-| MCP-007 | 캔버스·레이어·프레임 | `flatten_layers` | v0.5.0 | — | [canvas.go](../pkg/tools/canvas.go) |
+| MCP-007 | 캔버스·레이어·프레임 | `flatten_layers` | v0.5.0 | Unreleased: optional warnings (작업 브랜치) | [canvas.go](../pkg/tools/canvas.go) |
 | MCP-008 | 드로잉 | `draw_pixels` | v0.1.0 | Unreleased: cel 좌표 수정 (#1) | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-009 | 드로잉 | `draw_line` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-010 | 드로잉 | `draw_contour` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
@@ -56,7 +56,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-028 | 변형 | `downsample_image` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-029 | 변형 | `flip_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-030 | 변형 | `rotate_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
-| MCP-031 | 변형 | `scale_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
+| MCP-031 | 변형 | `scale_sprite` | v0.1.0 | Unreleased: optional warnings (작업 브랜치) | [transform.go](../pkg/tools/transform.go) |
 | MCP-032 | 변형 | `crop_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-033 | 변형 | `resize_canvas` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-034 | 변형 | `apply_outline` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
@@ -73,7 +73,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-045 | 팔레트·shading | `analyze_palette_harmonies` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-046 | 참조 분석 | `analyze_reference` | v0.1.0 | — | [analysis.go](../pkg/tools/analysis.go) |
 | MCP-047 | 디더링 | `draw_with_dither` | v0.1.0 | v0.3.0: Floyd-Steinberg 추가 | [dithering.go](../pkg/tools/dithering.go) |
-| MCP-048 | 감색 | `quantize_palette` | v0.4.0 | — | [quantization.go](../pkg/tools/quantization.go) |
+| MCP-048 | 감색 | `quantize_palette` | v0.4.0 | Unreleased: optional warnings (작업 브랜치) | [quantization.go](../pkg/tools/quantization.go) |
 | MCP-049 | 자동 shading | `apply_auto_shading` | v0.4.0 | Unreleased: indexed index 보존 (#8) | [auto_shading.go](../pkg/tools/auto_shading.go) |
 | MCP-050 | 안티앨리어싱 | `suggest_antialiasing` | v0.1.0 | — | [antialiasing.go](../pkg/tools/antialiasing.go) |
 
@@ -105,7 +105,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 
 | ID | 항목 | 현재 상태 | 책임·의존성 |
 | --- | --- | --- | --- |
-| SAFE-01 | 위험 작업 warnings | 예정 | MCP 공통 응답 계약, R1 |
+| SAFE-01 | 위험 작업 warnings | 구현 완료 / 작업 브랜치 (Unreleased) | 3개 도구·4개 코드, [계약과 검증 범위](WARNINGS.md); develop 병합 전, 실제 클라이언트 UI 미검증 |
 | SAFE-02 | dry-run | 예정 | 임시 복사본·동일 실행 경로·정리 정책, R2. CLI preview만으로 Lua 결과 검증을 대체하지 않음 |
 | SAFE-03 | snapshot/restore | 예정 | 파일 저장 primitive + ID·보존·복원 정책, R2 |
 | SAFE-04 | operation history·undo | 예정 | SAFE-03 의존, R2. 호출마다 프로세스가 달라 native undo를 호출 간 복구로 사용하지 않음 |

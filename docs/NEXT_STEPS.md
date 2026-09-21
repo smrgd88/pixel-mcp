@@ -72,7 +72,7 @@
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. 다음 기능 작업은 warnings(SAFE-01)이며 capability(GAP-10)는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 작업 브랜치에서 구현했고 병합 후 다음 기능 작업은 capability(GAP-10)다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## P0 — 다음 릴리스 전에 처리
 
@@ -164,15 +164,18 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 ### 위험 작업 warning 반환
 
+SAFE-01: `feature/shared-operation-warnings`에서 구현. develop 병합 전이며 [응답 계약](WARNINGS.md)에 적용 범위와 검증 한계를 기록한다.
+
 대상: [upstream #15](https://github.com/willibrandon/pixel-mcp/issues/15)
 
 분류: **pixel-mcp 책임**
 
-- [ ] 공통 output contract에 `warnings`를 추가한다.
-- [ ] `quantize_palette`, `flatten_layers`, color mode 변경, 보간 scale에 warning을 적용한다.
-- [ ] stderr 로그와 MCP JSON warning의 역할을 구분한다.
-- [ ] warning 조건을 table-driven unit test로 고정한다.
-- [ ] 기존 MCP 클라이언트가 새 optional field를 문제없이 처리하는지 확인한다.
+- [x] 공통 output contract에 `warnings`를 추가한다.
+- [x] `quantize_palette`, `flatten_layers`, color mode 변경, 보간 scale에 warning을 적용한다.
+- [x] stderr 로그와 MCP JSON warning의 역할을 구분한다.
+- [x] warning 조건을 table-driven unit test로 고정한다.
+- [x] MCP SDK contract test에서 optional schema, text/structured 응답, legacy JSON decode를 검증한다.
+- [ ] 실제 Claude/Codex/Gemini 앱 UI의 optional field 수용·표시를 검증한다 (자동 protocol 검증과 구분).
 
 ### dry-run 설계
 
@@ -263,7 +266,8 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 중복된 순서 목록 대신 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 관리한다.
 
-- 다음 기능 작업: `[SHARED][FEATURE] 위험 작업 warning 반환` (SAFE-01, upstream #15).
+- 현재 작업: SAFE-01 warnings 구현 완료, 작업 브랜치에서 검증·리뷰 후 병합 대기.
+- 병합 후 다음 기능 작업: `[SHARED][FEATURE] Aseprite capability 사전 검사` (GAP-10).
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
 - indexed #16은 기존 보류 조건을 유지한다.
