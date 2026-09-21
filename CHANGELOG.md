@@ -27,6 +27,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
+- Aseprite version/API preflight before each Lua operation, requiring 1.3.17.2 and API 39. `--health` now emits JSON with detected versions, support floors, and capability error codes; existing tool schemas remain unchanged.
+
 - Optional structured `warnings` for palette quantization, indexed conversion requests, layer flattening (including quantization with dithering), and non-nearest scaling. Existing fields remain unchanged; warnings describe potential effects after successful execution (see `docs/WARNINGS.md`).
 
 - Explicit configuration selection via `--config` and `PIXEL_MCP_CONFIG`, with the existing user config path as fallback (#1).
@@ -35,7 +37,7 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 ### Changed
 
 - Go baseline updated to 1.25 and MCP Go SDK to 1.4.1 (#5).
-- Documented Aseprite support floor of 1.3.17.2/API 39, with recorded validation on 1.3.17.2 and 1.3.18.3. Runtime capability enforcement is still planned.
+- Documented Aseprite support floor of 1.3.17.2/API 39, with recorded validation on 1.3.17.2 and 1.3.18.3. Runtime capability enforcement is implemented in this Unreleased change.
 - CI configuration isolated through `PIXEL_MCP_CONFIG` (#7).
 
 ### Fixed

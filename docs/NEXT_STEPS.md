@@ -1,8 +1,8 @@
 # pixel-mcp 다음 작업 체크리스트
 
-작성일: 2026-08-31 · 현황 동기화: 2026-09-11
+작성일: 2026-08-31 · 현황 동기화: 2026-09-21
 
-현재 기준: `develop`의 `1076166edf99f60e92bfd7fc4def261264930dcb` (PR #9까지 반영)
+현재 기준: `develop`의 `6c9ac5ec211df74aafa9b14a96b132aee0209be8` (PR #11·#12 병합 반영)
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -72,7 +72,7 @@
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 작업 브랜치에서 구현했고 병합 후 다음 기능 작업은 capability(GAP-10)다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 현재 작업은 capability(GAP-10)다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## P0 — 다음 릴리스 전에 처리
 
@@ -164,7 +164,7 @@ Aseprite는 indexed image와 palette API를 공식 지원하지만 RGB 결과를
 
 ### 위험 작업 warning 반환
 
-SAFE-01: `feature/shared-operation-warnings`에서 구현. develop 병합 전이며 [응답 계약](WARNINGS.md)에 적용 범위와 검증 한계를 기록한다.
+SAFE-01: PR #11로 develop `6c9ac5e`에 병합했으며 [응답 계약](WARNINGS.md)에 적용 범위와 검증 한계를 기록한다.
 
 대상: [upstream #15](https://github.com/willibrandon/pixel-mcp/issues/15)
 
@@ -228,10 +228,14 @@ SAFE-01: `feature/shared-operation-warnings`에서 구현. develop 병합 전이
 
 ### 공식 API capability와 버전 검사
 
-- [ ] health output에 `app.version`과 `app.apiVersion`을 포함한다.
+GAP-10: `feature/shared-aseprite-capability`에서 구현. 아직 병합 전이며 [실행 환경 검사 계약](CAPABILITIES.md#실행-환경-사전-검사-gap-10)에 검증 범위를 기록한다.
+
+- [x] health output에 `app.version`과 `app.apiVersion`을 포함한다.
 - [x] 최소 지원 Aseprite 버전을 1.3.17.2/API 39로 문서에 명시한다.
 - [x] 사용하는 기능별 공식 API와 pixel-mcp 구현 경계를 표로 관리한다.
-- [ ] 미지원 API는 실행 중 Lua 오류가 아니라 사전 capability 오류로 반환한다.
+- [x] 미지원 버전/API 하한은 도구 실행 전에 capability 오류로 반환한다.
+- [x] 버전/API 경계·조회 실패·취소·원본 보존·health JSON을 검증한다.
+- [ ] 정확한 버전을 보고하는 Aseprite 1.3.17.2 바이너리로 하한 실행 검증을 완료한다 (현재 로컬 이미지 보고값은 `1.x-dev`).
 - [x] Aseprite API changes와 공식 release를 릴리스 체크리스트의 근거로 연결한다.
 
 ### cross-platform native launcher
@@ -266,8 +270,8 @@ SAFE-01: `feature/shared-operation-warnings`에서 구현. develop 병합 전이
 
 중복된 순서 목록 대신 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 관리한다.
 
-- 현재 작업: SAFE-01 warnings 구현 완료, 작업 브랜치에서 검증·리뷰 후 병합 대기.
-- 병합 후 다음 기능 작업: `[SHARED][FEATURE] Aseprite capability 사전 검사` (GAP-10).
+- 현재 작업: `[SHARED][FEATURE] Aseprite capability 사전 검사` (GAP-10), 작업 브랜치에서 구현·검증.
+- GAP-10 병합 후 다음 기능 작업: `[SHARED][FEATURE] 파일 변경 보호 기반` (SAFE-05).
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
 - indexed #16은 기존 보류 조건을 유지한다.

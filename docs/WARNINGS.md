@@ -1,6 +1,6 @@
 # 위험 작업 경고 계약 (SAFE-01)
 
-`flatten_layers`, `quantize_palette`, `scale_sprite`의 성공 응답은 선택적 `warnings` 배열을 제공한다. 기존 필드와 입력은 유지한다. 최초 제공 버전은 Unreleased이며 feature/shared-operation-warnings에서 구현했다. develop 병합·릴리스 태그 포함 시 [기능표](CAPABILITIES.md)의 상태를 갱신한다.
+`flatten_layers`, `quantize_palette`, `scale_sprite`의 성공 응답은 선택적 `warnings` 배열을 제공한다. 기존 필드와 입력은 유지한다. PR #11로 develop `6c9ac5e`에 병합했다. 릴리스 버전은 아직 Unreleased이며 태그 포함 시 [기능표](CAPABILITIES.md)를 갱신한다.
 
 ```json
 {

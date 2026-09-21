@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +15,7 @@ import (
 	"github.com/willibrandon/mtlog"
 	"github.com/willibrandon/mtlog/core"
 	"github.com/willibrandon/mtlog/sinks"
+	"github.com/willibrandon/pixel-mcp/pkg/aseprite"
 	"github.com/willibrandon/pixel-mcp/pkg/config"
 	"github.com/willibrandon/pixel-mcp/pkg/server"
 )
@@ -196,43 +200,50 @@ func createLogger(logLevel string, logFilePath string) core.Logger {
 
 // performHealthCheck checks if Aseprite is accessible and returns exit code.
 func performHealthCheck(cfg *config.Config, logger core.Logger) int {
+	return writeHealthCheck(cfg, logger, os.Stdout)
+}
+
+// healthResult is emitted only for --health, never on the MCP protocol stream.
+type healthResult struct {
+	Success           bool   `json:"success"`
+	AsepriteVersion   string `json:"aseprite_version,omitempty"`
+	APIVersion        int    `json:"api_version,omitempty"`
+	MinimumVersion    string `json:"minimum_version"`
+	MinimumAPIVersion int    `json:"minimum_api_version"`
+	ErrorCode         string `json:"error_code,omitempty"`
+	Error             string `json:"error,omitempty"`
+}
+
+func writeHealthCheck(cfg *config.Config, logger core.Logger, out io.Writer) int {
 	logger.Information("Performing health check...")
-
-	// Check if Aseprite executable exists
-	if _, err := os.Stat(cfg.AsepritePath); os.IsNotExist(err) {
-		logger.Error("Health check failed: Aseprite executable not found at {Path}", cfg.AsepritePath)
-		return 1
-	}
-
-	logger.Information("✓ Aseprite executable found at {Path}", cfg.AsepritePath)
-
-	// Try to get Aseprite version
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	srv, err := server.New(cfg, logger)
+	client := aseprite.NewClient(cfg.AsepritePath, cfg.TempDir, cfg.Timeout)
+	caps, err := client.CheckCapabilities(ctx)
+	result := healthResult{
+		Success:           err == nil,
+		AsepriteVersion:   caps.Version,
+		APIVersion:        caps.APIVersion,
+		MinimumVersion:    aseprite.MinimumVersion,
+		MinimumAPIVersion: aseprite.MinimumAPIVersion,
+	}
 	if err != nil {
-		logger.Error("Health check failed: Could not create server - {Error}", err)
+		result.ErrorCode = "capability_probe_failed"
+		var capabilityError *aseprite.CapabilityError
+		if errors.As(err, &capabilityError) {
+			result.ErrorCode = capabilityError.Code
+		}
+		result.Error = err.Error()
+		logger.Error("Health check failed: {Error}", err)
+	} else {
+		logger.Information("Health check passed: Aseprite {Version}, API {APIVersion}", caps.Version, caps.APIVersion)
+	}
+	if encodeErr := json.NewEncoder(out).Encode(result); encodeErr != nil {
+		logger.Error("Could not write health result: {Error}", encodeErr)
 		return 1
 	}
-
-	// Get version through client
-	version, err := srv.Client().GetVersion(ctx)
 	if err != nil {
-		logger.Error("Health check failed: Could not get Aseprite version - {Error}", err)
 		return 1
 	}
-
-	logger.Information("✓ Aseprite is accessible (version {Version})", version)
-
-	// Check temp directory
-	if err := os.MkdirAll(cfg.TempDir, 0755); err != nil {
-		logger.Error("Health check failed: Could not access temp directory {Path} - {Error}", cfg.TempDir, err)
-		return 1
-	}
-
-	logger.Information("✓ Temp directory is accessible at {Path}", cfg.TempDir)
-
-	logger.Information("Health check passed - all systems operational")
 	return 0
 }
