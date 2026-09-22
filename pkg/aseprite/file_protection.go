@@ -191,6 +191,13 @@ func WithSpriteAccess(ctx context.Context, path string, write bool, fn func(cont
 		if err != nil {
 			return err
 		}
+		info, err := os.Stat(canonical)
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return fmt.Errorf("not a regular file: %s", path)
+		}
 		s := scopeOf(ctx)
 		key := pathKey(canonical)
 		if _, ok := s.sprites[key]; ok {
@@ -238,19 +245,38 @@ type fileSnapshot struct {
 	hash [32]byte
 }
 
+// Reject non-regular files before opening (a FIFO open can block), then check
+// the actual opened handle again. Unix also uses nonblocking open for swap races.
+func openRegularFile(path string) (*os.File, os.FileInfo, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, nil, fmt.Errorf("not a regular file: %s", path)
+	}
+	f, err := openReadFile(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	info, err = f.Stat()
+	if err != nil {
+		f.Close()
+		return nil, nil, err
+	}
+	if !info.Mode().IsRegular() {
+		f.Close()
+		return nil, nil, fmt.Errorf("not a regular file: %s", path)
+	}
+	return f, info, nil
+}
+
 func snapshot(path string) (fileSnapshot, error) {
-	f, err := os.Open(path)
+	f, info, err := openRegularFile(path)
 	if err != nil {
 		return fileSnapshot{}, err
 	}
 	defer f.Close()
-	info, err := f.Stat()
-	if err != nil {
-		return fileSnapshot{}, err
-	}
-	if !info.Mode().IsRegular() {
-		return fileSnapshot{}, fmt.Errorf("not a regular file: %s", path)
-	}
 	h := sha256.New()
 	if _, err = io.Copy(h, f); err != nil {
 		return fileSnapshot{}, err
@@ -300,7 +326,7 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 	// Existing output bytes are conflict evidence, not a new output. Only
 	// in-place sprite edits start from a copy of the original.
 	if exists && requireExisting {
-		src, e := os.Open(original)
+		src, _, e := openRegularFile(original)
 		if e != nil {
 			return e
 		}

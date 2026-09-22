@@ -24,3 +24,7 @@ func checkSingleLink(path string, info os.FileInfo) error {
 	}
 	return nil
 }
+
+func openReadFile(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_RDONLY|unix.O_NONBLOCK, 0)
+}

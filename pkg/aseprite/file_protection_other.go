@@ -16,3 +16,7 @@ func replaceFile(string, string) error {
 func checkSingleLink(string, os.FileInfo) error {
 	return fmt.Errorf("file protection unsupported on this platform")
 }
+
+func openReadFile(path string) (*os.File, error) {
+	return nil, fmt.Errorf("file protection unsupported on this platform")
+}

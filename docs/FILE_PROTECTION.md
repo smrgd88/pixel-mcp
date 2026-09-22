@@ -28,6 +28,7 @@ spritesheet의 JSON 파일은 현재 generator가 include_json=false일 때도 �
 - Linux/macOS는 flock, Windows는 LockFileEx를 사용한다. 같은 사용자·호스트·cache 디렉터리의 협력하는 서버 프로세스 간에도 유효하다. 프로세스가 죽으면 OS가 잠금을 해제한다.
 - 잠금 파일은 사용자 cache의 `pixel-mcp/file-locks`에 둔다. 파일 이름은 canonical path의 SHA-256이다. inode 교체 중 잠금이 갈라지지 않도록 실행 중에 잠금 파일을 삭제하지 않는다. metadata 파일이 남아 있어도 잠금이 유지된다는 뜻은 아니다.
 - macOS/Windows의 잠금 키는 소문자로 정규화한다. case-sensitive 볼륨의 서로 다른 대소문자 파일도 직렬화될 수 있지만 잘못된 파일을 교체하지 않는다.
+- snapshot/복사 전에 일반 파일인지 검사하며 FIFO/device는 열기 전에 거부한다. Unix에서는 nonblocking open과 열린 handle의 재검사도 적용한다.
 - hard link가 있는 파일은 atomic replace가 alias를 분리하므로 쓰기를 거부한다. 읽기 전용 파일은 쓰기를 거부하며, 조회는 가능하다.
 - 각 MCP 호출의 설정 timeout에는 lock 대기·probe·Lua 및 후처리가 포함된다. 대기는 context 취소/timeout으로 중단할 수 있고 이미 취득한 잠금은 해제된다.
 

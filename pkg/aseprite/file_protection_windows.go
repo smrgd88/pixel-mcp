@@ -42,3 +42,5 @@ func checkSingleLink(path string, _ os.FileInfo) error {
 	}
 	return nil
 }
+
+func openReadFile(path string) (*os.File, error) { return os.Open(path) }
