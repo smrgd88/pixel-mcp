@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -58,6 +59,12 @@ func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handle
 		}
 		target := inputPath(input, "OutputPath")
 		paths := []string{source, target, inputPath(input, "ImagePath")}
+		var sheetOutputs []string
+		if tool == "export_spritesheet" && target != "" {
+			// ExportSpritesheet supplies dataFilename even with include_json=false.
+			sheetOutputs = []string{target, spritesheetDataPath(target)}
+			paths = append(paths, sheetOutputs[1])
+		}
 		err := aseprite.WithFileLocks(ctx, paths, func(ctx context.Context) error {
 			// Keep argument validation and missing-file errors in the existing handlers.
 			if _, e := os.Stat(source); e != nil {
@@ -83,24 +90,12 @@ func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handle
 					return err
 				})
 			}
-			if (tool == "export_sprite" || tool == "export_spritesheet") && target != "" {
-				src, e := aseprite.CanonicalPath(source)
-				if e != nil {
-					return e
-				}
-				dst, e := aseprite.CanonicalPath(target)
-				if e != nil {
-					return e
-				}
-				si, e := os.Stat(src)
-				if e != nil {
-					return e
-				}
-				di, e := os.Stat(dst)
-				if src == dst || (e == nil && os.SameFile(si, di)) {
-					return fmt.Errorf("export output must not overwrite the source sprite")
+			if len(sheetOutputs) > 0 {
+				if err := validateSheetOutputs(source, sheetOutputs); err != nil {
+					return err
 				}
 			}
+
 			return aseprite.WithSpriteAccess(ctx, source, !readOnly, func(ctx context.Context) error { return call(ctx, input) })
 		})
 		if err != nil {
@@ -120,4 +115,40 @@ func restoreOutputPath(output any, path string) {
 	case *DownsampleImageOutput:
 		out.OutputPath = path
 	}
+}
+
+// Match the generator's Lua outputPath:gsub("%.%w+$", ".json").
+var sheetExtension = regexp.MustCompile(`\.[A-Za-z0-9]+$`)
+
+func spritesheetDataPath(path string) string { return sheetExtension.ReplaceAllString(path, ".json") }
+
+func validateSheetOutputs(source string, outputs []string) error {
+	canonical, err := aseprite.CanonicalPath(source)
+	if err != nil {
+		return err
+	}
+	info, err := os.Stat(canonical)
+	if err != nil {
+		return err
+	}
+	paths := []string{canonical}
+	infos := []os.FileInfo{info}
+	for _, output := range outputs {
+		dest, err := aseprite.CanonicalPath(output)
+		if err != nil {
+			return err
+		}
+		destInfo, err := os.Stat(dest)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		for i, path := range paths {
+			if dest == path || (destInfo != nil && infos[i] != nil && os.SameFile(infos[i], destInfo)) {
+				return fmt.Errorf("spritesheet outputs must not alias the source or each other")
+			}
+		}
+		paths = append(paths, dest)
+		infos = append(infos, destInfo)
+	}
+	return nil
 }

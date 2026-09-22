@@ -297,7 +297,9 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 	}
 	defer os.RemoveAll(dir)
 	staged := filepath.Join(dir, filepath.Base(original))
-	if exists {
+	// Existing output bytes are conflict evidence, not a new output. Only
+	// in-place sprite edits start from a copy of the original.
+	if exists && requireExisting {
 		src, e := os.Open(original)
 		if e != nil {
 			return e

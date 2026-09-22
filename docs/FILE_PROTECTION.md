@@ -11,13 +11,15 @@ MCP의 동일 파일 읽기/쓰기·쓰기/쓰기는 **호출 전체**를 배타
 | 기존 sprite 수정 도구 | 원본과 같은 파일시스템의 임시 디렉터리에서 작업, 성공 시 파일 하나를 atomic replace |
 | 조회·분석·export의 source | 같은 배타 잠금으로 writer와 직렬화. 읽기만 할 때는 원본 복사·교체 안 함 |
 | `save_as`, 명시적 output_path의 `downsample_image`, `export_sprite` | 단일 출력 파일도 staging 후 교체. 응답에는 요청한 출력 경로를 반환 |
-| `export_spritesheet` | source 및 요청한 texture 경로 잠금. texture+JSON 다중 파일 묶음의 atomic publish는 미포함 (R4 export 정책에서 처리) |
+| `export_spritesheet` | source·texture·파생 JSON 경로 잠금 및 alias 충돌 거부. texture+JSON 다중 파일 묶음의 atomic publish는 미포함 (R4 export 정책에서 처리) |
 | `create_canvas`, output_path가 없는 downsample | 서버가 생성하는 고유 새 파일. 이번 기존 파일 보호의 rollback 대상 아님 |
 | 직접 `Client.ExecuteLua(..., spritePath)` | 외부 operation context가 없으면 Lua 호출 하나를 보호. context가 있으면 같은 작업 복사본 재사용 |
 
 경고·MCP 입출력 schema와 도구 수(50개)는 유지한다. 공통 wrapper는 기존 input struct의 SpritePath/SourcePath/ReferencePath/OutputPath/ImagePath string 필드를 사용하며, 임의 JSON 문자열에서 경로를 추출하지 않는다. 새로운 도구는 같은 필드 계약과 wrapper를 사용하고, read-only 도구는 명시적 목록에 등록해야 한다.
 
 직접 Lua에 별도 저장 경로를 하드코딩하거나 raw ExecuteCommand를 사용하는 외부 라이브러리 호출은 임의 파일 전체의 sandbox가 아니다. 보호 대상은 예약한 source/단일 output이다. export 이미지 시퀀스·sheet 부속 JSON 등 여러 출력의 일괄 rollback은 이 단계의 범위 밖이다.
+
+spritesheet의 JSON 파일은 현재 generator가 include_json=false일 때도 경로를 전달하므로 항상 잠금·원본 alias 검사 대상이다. source/texture/JSON이 서로 같은 파일을 가리키면 export 전에 거부한다. 이 검사는 다중 파일 atomic publish를 의미하지 않는다.
 
 ## 잠금과 경로
 
@@ -31,8 +33,8 @@ MCP의 동일 파일 읽기/쓰기·쓰기/쓰기는 **호출 전체**를 배타
 
 ## 저장과 실패 경계
 
-1. 원본 파일 상태와 SHA-256을 기록하고 같은 부모의 `.pixel-mcp-stage-*` 디렉터리에 복사한다.
-2. Aseprite는 복사본을 열고 저장한다. 원본 이름/확장자를 유지하며 staging 디렉터리는 private이다.
+1. 원본 파일 상태와 SHA-256을 기록하고 같은 부모에 `.pixel-mcp-stage-*` 디렉터리를 만든다. 기존 sprite 수정은 원본을 복사하지만, 새 출력 생성은 staging 파일을 미리 만들지 않고 callback이 반드시 새 파일을 생성해야 한다. 기존 출력 파일을 새 결과로 간주하지 않는다.
+2. 수정 작업은 복사본을 열어 저장하고, 출력 작업은 새 staging 파일을 생성한다. 원본 이름/확장자를 유지하며 staging 디렉터리는 private이다.
 3. 성공 후 staged 파일이 regular/non-empty인지 확인한다. 원본 경로·파일 identity·내용·mode가 달라지면 `file_changed`로 교체를 거부한다.
 4. 기존 파일의 permission bits를 보존하고 staged 파일을 fsync한 뒤 rename/MoveFileEx로 교체한다. 실패 시 원본을 먼저 삭제하거나 덮어쓰기 copy로 fallback하지 않는다.
 5. 정상 완료·오류·취소·panic unwind 시 임시 디렉터리를 정리한다. atomic replacement 완료가 commit point다. 최종 취소 검사 후 교체에 진입한 작업은 새 취소 요청과 경쟁할 수 있으며, 이미 완료된 저장은 되돌리지 않는다.

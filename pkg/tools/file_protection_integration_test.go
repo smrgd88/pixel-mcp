@@ -4,6 +4,7 @@ package tools
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -106,6 +107,27 @@ func TestIntegrationFileProtectionMCP(t *testing.T) {
 		require.NoError(t, json.Unmarshal([]byte(result.Content[0].(*mcp.TextContent).Text), &out))
 		require.Equal(t, target, out.FilePath)
 		require.FileExists(t, target)
+	}
+
+	for _, includeJSON := range []bool{true, false} {
+		t.Run(fmt.Sprintf("metadata_source_alias_%v", includeJSON), func(t *testing.T) {
+			source := filepath.Join(t.TempDir(), "native.aseprite")
+			_, err := c.ExecuteLua(context.Background(), gen.CreateCanvas(8, 8, aseprite.ColorModeRGB, source), "")
+			require.NoError(t, err)
+			before, err := os.ReadFile(source)
+			require.NoError(t, err)
+			texture := filepath.Join(filepath.Dir(source), "sheet.png")
+			require.NoError(t, os.Symlink(source, filepath.Join(filepath.Dir(source), "sheet.json")))
+			result, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: "export_spritesheet", Arguments: map[string]any{
+				"sprite_path": source, "output_path": texture, "layout": "horizontal", "padding": 0, "include_json": includeJSON,
+			}})
+			require.NoError(t, err)
+			after, err := os.ReadFile(source)
+			require.NoError(t, err)
+			require.Equal(t, sha256.Sum256(before), sha256.Sum256(after), "metadata output must not overwrite source")
+			require.True(t, result.IsError, "source alias must be rejected before export")
+			require.NoFileExists(t, texture)
+		})
 	}
 	stageDirs, err := filepath.Glob(filepath.Join(dir, ".pixel-mcp-stage-*"))
 	require.NoError(t, err)

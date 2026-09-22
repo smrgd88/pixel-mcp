@@ -279,3 +279,17 @@ func TestFileProtectionSymlinkParentTraversal(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "decoy", string(data))
 }
+
+func TestFileProtectionOutputRequiresNewFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "export.png")
+	require.NoError(t, os.WriteFile(path, []byte("old output"), 0600))
+	err := WithOutputFile(context.Background(), path, func(stage string) error {
+		// A multi-file exporter can write numbered outputs without creating the
+		// requested base file. The old output must not stand in for a new one.
+		return os.WriteFile(stage+"1.png", []byte("new frame"), 0600)
+	})
+	require.Error(t, err)
+	b, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, "old output", string(b))
+}
