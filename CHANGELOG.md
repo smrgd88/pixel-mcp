@@ -44,6 +44,10 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Fixed
 
+- `quantize_palette` preserves both opaque colors in two-color indexed output by assigning palette indices explicitly and separating the transparent index after palette resizing (BUG-04).
+- Non-dithered quantization now remaps cel pixels without flattening; disabling indexed conversion preserves the input RGB/grayscale/indexed mode instead of skipping pixel reduction (BUG-05). Dithered quantization retains its existing flattening warnings.
+- Already-small sampled color sets bypass lossy clustering. Indexed output reserves a mask index (at most 255 opaque palette entries). Multi-frame and tilemap quantization now return explicit unsupported-input errors before modification; see `docs/CAPABILITIES.md` for palette, transparency, and rendering limits.
+
 - `draw_pixels` maps sprite coordinates into offset cel images and expands bounds, including missing-cel paths (#1).
 - `link_cel` creates native linked cels that remain linked after save/reopen and rejects occupied targets (#6).
 - Indexed `apply_auto_shading` preserves existing palette and transparent indices, appends new shades only when space permits, and preserves original indices when no exact shade can be added (#8).

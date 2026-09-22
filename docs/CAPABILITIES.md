@@ -73,7 +73,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-045 | 팔레트·shading | `analyze_palette_harmonies` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-046 | 참조 분석 | `analyze_reference` | v0.1.0 | — | [analysis.go](../pkg/tools/analysis.go) |
 | MCP-047 | 디더링 | `draw_with_dither` | v0.1.0 | v0.3.0: Floyd-Steinberg 추가 | [dithering.go](../pkg/tools/dithering.go) |
-| MCP-048 | 감색 | `quantize_palette` | v0.4.0 | Unreleased: optional warnings (#11, develop 반영) | [quantization.go](../pkg/tools/quantization.go) |
+| MCP-048 | 감색 | `quantize_palette` | v0.4.0 | Unreleased: warnings + BUG-04/05 픽셀 remap 수정 (작업 브랜치, 병합 대기) | [quantization.go](../pkg/tools/quantization.go) |
 | MCP-049 | 자동 shading | `apply_auto_shading` | v0.4.0 | Unreleased: indexed index 보존 (#8) | [auto_shading.go](../pkg/tools/auto_shading.go) |
 | MCP-050 | 안티앨리어싱 | `suggest_antialiasing` | v0.1.0 | — | [antialiasing.go](../pkg/tools/antialiasing.go) |
 
@@ -157,11 +157,13 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 - unit: 버전 숫자·prerelease 경계, API 하한, 응답 누락/중복/잘못된 형식, probe 실패.
 - 실제 Aseprite: version/API 조회, 정상 Lua 출력에 probe 데이터가 섞이지 않음, 높은 테스트용 하한에서 원본 불변·payload 차단, 동시 probe, 취소·timeout, 임시 script 정리, health JSON/exit 결과.
 - 테스트에서만 private 실행 helper에 더 높은 하한을 전달한다. 운영 환경에서 하한을 낮추거나 검사를 끄는 옵션은 제공하지 않는다.
-- 실행 기준: Linux amd64 Docker / Go 1.25.14 / Aseprite 1.3.18.3-dev. 로컬 `aseprite-1.3.17.2` 이미지가 CLI에서 `1.x-dev`, Lua에서 `1.0-dev`를 보고하므로 이를 최소 버전 실행 검증으로 간주하지 않는다. 하한 비교 자체는 unit 경계값 검사로 검증하며, 올바른 버전을 보고하는 하한 바이너리 실검증은 남아 있다.
+- 실행 기준: Linux amd64 Docker / Go 1.25.14 / Aseprite 1.3.18.3-dev. 로컬 `aseprite-1.3.17.2` 이미지가 CLI에서 `1.x-dev`, Lua에서 `1.0-dev`를 보고하므로 이를 최소 버전 실행 검증으로 간주하지 않는다. 당시 하한 비교는 unit 경계값 검사로 검증했고, 하한 바이너리 실행은 아래 추가 검증에서 완료했다.
 
 2026-09-21 검증 결과: `go build ./...`, `go vet ./...`, `go test -race -cover ./...`, `go test -tags=integration ./...` 및 실제 CLI `--health` 통과. 감지값은 `1.3.18.3-dev` / API `41`; pkg/tools integration은 154.740초였다. 매 호출의 추가 probe에 따른 실행 비용이 있으며 이전 실행 시간을 성능 보장으로 사용하지 않는다.
 
 추가 실검증: 이 버전 불명 로컬 이미지의 `--health`가 `capability_probe_failed` JSON과 exit 1로 거부되는 것을 확인했다. 실제 하한 정식 바이너리의 검증을 대신하지 않는다.
+
+2026-09-22 추가 검증: 공식 `v1.3.17.2` 태그(`793fb65`) 소스의 기본 버전 메타데이터를 해당 릴리스 번호로 설정하고 재빌드했다. `--health`는 `1.3.17.2` / API `40`, Linux 전체 통합 테스트는 캐시 없이 통과했다. macOS arm64에서도 설치된 Aseprite `1.3.18.2-arm64` / API `41`로 health 및 감색·warnings 관련 10개 테스트 그룹을 실행해 통과했다. [빌드 출처·재현 방법·범위](NEXT_STEPS.md#수정-작업과-완료-조건)를 참조한다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
 
 ## 알려진 동작 제약 (2026-09-22 재확인)
 
@@ -172,7 +174,17 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 | draw_with_dither | 명시적 density=0도 기본 0.5로 처리 | BUG-01 |
 | analyze_reference | 광고된 BMP/.aseprite 입력은 decoder 오류; PNG/JPG/GIF control 성공 | BUG-02 |
 | export_sprite | 다중 frame PNG는 단일 출력 경로 계약과 불일치. 현재 보호 경로에서는 출력 누락 오류, 시퀀스 publish 미지원 | BUG-03 |
-| quantize_palette | 2색 opaque RGB → indexed에서 렌더링 단색화 재현 | BUG-04 |
-| quantize_palette | dither=false/convert_to_indexed=false는 palette만 축소하고 RGB pixel은 유지. 의도·계약 확정 필요 | BUG-05 |
+| quantize_palette | 작업 브랜치에서 opaque palette index 0 보존 및 투명 인덱스 분리로 수정; 병합 대기 | BUG-04 |
+| quantize_palette | 작업 브랜치에서 dither=false도 cel 픽셀 remap, convert_to_indexed=false는 입력 모드 유지로 수정; 병합 대기 | BUG-05 |
 
-이번 갱신은 재현과 작업 계획이며 기능 수정 완료를 의미하지 않는다. 기존 warnings 계약과 파일 보호는 후속 수정에서도 유지한다.
+BUG-04/05 수정 기준은 `fix/be-quantization-contract`이며 develop 반영·릴리스와 구분한다. 나머지 3건은 미수정이다. 기존 warnings 계약과 파일 보호를 유지한다.
+
+### 감색 계약 (BUG-04/05 수정 브랜치)
+
+- `quantize_palette`는 픽셀 감색 도구다. `dither=false`도 각 cel의 픽셀을 팔레트의 가까운 RGB 색으로 매핑한다. `convert_to_indexed=false`는 감색 생략이 아니라 원본 RGB/grayscale/indexed 모드 유지다.
+- 분석 대상은 단일 프레임의 보이는 합성 이미지다. 비디더링은 숨김 레이어를 포함한 각 cel을 같은 팔레트로 매핑하고 레이어·그룹·위치·opacity·메타데이터를 유지한다. 레이어 합성·blend/opacity로 렌더링 색 수가 팔레트 항목 수보다 많을 수 있다.
+- `dither=true`는 기존 Floyd–Steinberg 경로로 합성 이미지를 감색하고 레이어를 flatten한다. 기존 `palette_quantization`, 요청 시 `color_mode_conversion`, dither 시 `layer_flattening` 경고 조건은 그대로다.
+- `target_colors`는 팔레트 항목 수의 상한이며 정확히 그만큼 서로 다른 색이 생긴다는 보장은 아니다. `quantized_colors`는 반환 팔레트 길이다. 샘플링된 색 집합이 목표 이하이면 해당 색을 그대로 사용한다.
+- `preserve_transparency=true`이고 완전 투명 픽셀이 있으면 투명 항목도 목표 개수에 포함한다. false는 분석에서 투명 픽셀을 제외하지 않고 전용 팔레트 항목을 예약하지 않는다. 두 설정 모두 완전 투명 픽셀을 유지한다. 반투명 픽셀의 alpha 보존은 지원하지 않으며 불투명 팔레트 색으로 감색한다.
+- indexed에는 투명 인덱스가 필요하다. 투명 팔레트 항목이 없으면 사용하지 않는 index 255를 사용하며, 불투명 항목은 최대 255개다. 2색 불투명 입력은 두 색 모두 사용할 수 있다. RGB/grayscale은 이 indexed 제한을 적용하지 않는다.
+- 단일 프레임·일반 raster 레이어만 지원한다. 애니메이션과 tilemap은 변경 전에 명시적으로 거부한다. 완전 투명 입력은 기본 설정에서 기존처럼 감색할 불투명 픽셀이 없다는 오류다. 다중 프레임 PNG 내보내기는 별도 BUG-03이다.

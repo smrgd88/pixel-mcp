@@ -515,3 +515,36 @@ func TestQuantizationTransparencyCountsTowardsTarget(t *testing.T) {
 		})
 	}
 }
+
+func TestQuantizePaletteKeepsColorsWithinBudget(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 20, 1))
+	for x := 0; x < 20; x++ {
+		c := color.RGBA{R: 255, A: 255}
+		if x == 19 {
+			c = color.RGBA{B: 255, A: 255}
+		}
+		img.Set(x, 0, c)
+	}
+	for _, algorithm := range []string{"median_cut", "kmeans", "octree"} {
+		t.Run(algorithm, func(t *testing.T) {
+			// Unequal frequencies make duplicate random k-means seeds likely in the
+			// old path. No clustering should change an already representable image.
+			for trial := 0; trial < 20; trial++ {
+				palette, original, err := QuantizePalette(img, 2, algorithm, true)
+				if err != nil || original != 2 || len(palette) != 2 {
+					t.Fatalf("unexpected result: %v, %d, %v", palette, original, err)
+				}
+				colors := map[string]bool{}
+				for _, c := range palette {
+					colors[c] = true
+				}
+				if !colors["#FF0000"] || !colors["#0000FF"] {
+					t.Fatalf("lost an original color: %v", palette)
+				}
+			}
+		})
+	}
+	if _, _, err := QuantizePalette(img, 2, "invalid", true); err == nil {
+		t.Fatal("unknown algorithm must be rejected even within color budget")
+	}
+}
