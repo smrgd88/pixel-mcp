@@ -108,7 +108,11 @@ P1은 무조건 운영 장애라는 뜻이 아니라, 이 작업 묶음에서 �
    - [ ] 광고한 형식을 실제 지원하거나 지원 계약을 명시적으로 조정한다. native/animation 입력에서 분석할 frame 규칙도 기록한다.
    - [ ] PNG/JPG/GIF/BMP/.aseprite의 동일 fixture와 잘못된 파일을 검증한다.
 
-BUG-04/05 브랜치 검증 (2026-09-22): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 `go build ./...`, `go vet ./...`, `go test -race -cover ./...`, `go test -tags=integration ./...` 통과. pkg/tools integration 186.491초. darwin amd64/arm64, linux amd64/arm64, windows amd64 빌드 통과. 2색 저장·재열기 및 PNG export/reopen, RGB 픽셀 감색, 3종 알고리즘, grayscale/indexed 입력 모드 유지, 256색 경계, 투명 픽셀·반복 감색, cel 메타데이터, 오류 시 원본 바이트 보존과 기존 warnings를 확인했다. 새 변경의 최소 지원 Aseprite 1.3.17.2 실검증과 macOS/Windows native 실행은 수행하지 않았다. 하한 로컬 이미지의 버전 오보고 제약은 GAP-10 기록을 따른다.
+BUG-04/05 브랜치 검증 (2026-09-22): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 `go build ./...`, `go vet ./...`, `go test -race -cover ./...`, `go test -tags=integration ./...` 통과. pkg/tools integration 186.491초. darwin amd64/arm64, linux amd64/arm64, windows amd64 빌드 통과. 2색 저장·재열기 및 PNG export/reopen, RGB 픽셀 감색, 3종 알고리즘, grayscale/indexed 입력 모드 유지, 256색 경계, 투명 픽셀·반복 감색, cel 메타데이터, 오류 시 원본 바이트 보존과 기존 warnings를 확인했다. 이후 최소 지원 버전 전체 통합 및 macOS arm64 감색 회귀 검증도 완료했다. 환경·재현 방법은 아래 추가 검증 기록을 따른다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
+
+2026-09-22 추가 검증 (`c2a3b6b` 코드): 공식 `v1.3.17.2` 태그와 원격 commit `793fb6526540b4c6f5cf8381ae189241cb003fdf`의 일치를 확인했다. 해당 태그의 `src/ver/CMakeLists.txt` 기본 `1.x-dev`를 `1.3.17.2` 버전 메타데이터로 설정하고 CMake/Ninja로 재빌드한 별도 `pixel-mcp-ci:aseprite-1.3.17.2-verified` 이미지를 사용했다. 애플리케이션 동작 코드와 pixel-mcp capability 검사는 변경하지 않았다. Linux amd64 / Go 1.25.14에서 `--health`가 `1.3.17.2` / API `40`으로 성공했고, `go test -count=1 -tags=integration ./...` 전체 통과 (pkg/tools 199.779초). 기존 버전 불명 이미지는 이 검증 이미지와 구분한다.
+
+macOS arm64 추가 검증: 설치된 Aseprite `1.3.18.2-arm64` / API `41`에서 `--health` 및 감색·warnings 관련 10개 최상위 테스트 그룹 통과. Docker에서 `GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go test -c -tags=integration ./pkg/tools`로 만든 Mach-O 테스트 바이너리를 Mac 호스트에서 직접 실행했다. 실행 필터는 `TestQuantizationContract|TestBehavior_Quantization|TestOperationWarningsViaMCP`이며 전체 macOS suite 또는 macOS race 검증을 의미하지 않는다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
 
 공통: 최신 develop에서 원인별 수정·회귀 테스트, 기존 warnings 계약 유지, NEXT_STEPS/CAPABILITIES/CHANGELOG 갱신, PR 생성 후 병합 대기. 플러그인 저장소는 수정하지 않는다. 위 브랜치 분리는 권장 실행 단위이며 모든 수정이 완료됐다는 뜻이 아니다.
 
@@ -285,7 +289,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - [x] 사용하는 기능별 공식 API와 pixel-mcp 구현 경계를 표로 관리한다.
 - [x] 미지원 버전/API 하한은 도구 실행 전에 capability 오류로 반환한다.
 - [x] 버전/API 경계·조회 실패·취소·원본 보존·health JSON을 검증한다.
-- [ ] 정확한 버전을 보고하는 Aseprite 1.3.17.2 바이너리로 하한 실행 검증을 완료한다 (현재 로컬 이미지 보고값은 `1.x-dev`).
+- [x] 공식 v1.3.17.2 태그 소스에서 버전 메타데이터를 설정해 재빌드한 바이너리로 health 및 전체 통합 검증을 완료한다 (API 40, 2026-09-22 추가 검증 기록 참조).
 - [x] Aseprite API changes와 공식 release를 릴리스 체크리스트의 근거로 연결한다.
 
 ### cross-platform native launcher

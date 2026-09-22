@@ -32,7 +32,7 @@
 | 단계 | 목적·추적 ID | 주요 작업 | 완료 조건 | 선행 조건·현재 상태 |
 | --- | --- | --- | --- | --- |
 | R0 | 현황·릴리스 근거 정리, OPS-01 | 기능표/태그/Unreleased 동기화, CI Go·Aseprite 버전 artifact (로그 출력은 구현됨), draw_pixels upstream 제출 범위 결정 | 등록 50개와 기능표 일치; 버전 증거 보존; 제출 범위 기록 | 문서 초안 작성 완료, CI artifact·범위 결정 예정 |
-| R1 | 실행 계약 확립, SAFE-01·GAP-10·OPS-03 | warnings, capability preflight, 오류 분류 및 응답 규칙 설계 | 위험 작업별 경고·기존 클라이언트 호환 검증; 미지원 버전/API를 변경 전에 거부 | warnings develop 병합 완료. capability PR #13 병합 완료; 하한 실검증 잔여 별도 추적 |
+| R1 | 실행 계약 확립, SAFE-01·GAP-10·OPS-03 | warnings, capability preflight, 오류 분류 및 응답 규칙 설계 | 위험 작업별 경고·기존 클라이언트 호환 검증; 미지원 버전/API를 변경 전에 거부 | warnings develop 병합 완료. capability PR #13 병합 완료; 하한 health·전체 통합 실검증 완료 (2026-09-22) |
 | R2 | 원본 보호와 복구, SAFE-02–05·OPS-03 | path lock·atomic save 기반, 임시 복사본 dry-run, snapshot/restore, history/undo, request ID·redaction | 실패·취소·동시 요청 시 원본 보존; dry-run 원본 불변; snapshot 복원·history 일관성 회귀 통과 | R1 이후. undo는 snapshot 이후 |
 | R3 | 편집·조회 빈 부분 해소, GAP-01–04 | 레이어 속성·그룹, 상세 구조 조회, cel 위치/opacity/unlink, 태그 조회·편집, 범용 색상 모드 전환 | 다중 레이어/프레임에서 정확한 대상 지정; 저장/재열기 검증; destructive 변경에 R1/R2 계약 적용 | R1/R2 기반 이후, 예정 |
 | R4 | 게임·UI 자산 export, GAP-05–06 | 태그/레이어/프레임 범위 export, trim/extrude/개별 padding, slices/pivot/nine-slice | 출력 이미지와 JSON의 frame·bounds·pivot 일치; overwrite/실패 보호 | R3 상세 조회 기반, 예정 |
@@ -81,7 +81,7 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [ ] OPS-01: CI 버전 artifact (로그 출력은 구현됨)
 - [ ] upstream #19: 제출 범위 결정
 - [x] SAFE-01: warnings 구현 (PR #11 develop 병합 완료, [검증 범위](WARNINGS.md))
-- [x] GAP-10: capability preflight 구현 (PR #13 병합 완료; 하한 바이너리 실행 검증 잔여는 NEXT_STEPS 참조)
+- [x] GAP-10: capability preflight 구현 (PR #13 병합 완료; 하한 실행 추가 검증 완료, NEXT_STEPS 참조)
 - [x] SAFE-05: 파일 변경 보호 구현 (PR #14 develop 병합 완료; [검증 범위](FILE_PROTECTION.md))
 - [ ] BUG-04/05 → BUG-01 → BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
 - [ ] SAFE-02–04: dry-run·snapshot·history/undo

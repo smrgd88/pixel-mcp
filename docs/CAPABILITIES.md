@@ -157,11 +157,13 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 - unit: 버전 숫자·prerelease 경계, API 하한, 응답 누락/중복/잘못된 형식, probe 실패.
 - 실제 Aseprite: version/API 조회, 정상 Lua 출력에 probe 데이터가 섞이지 않음, 높은 테스트용 하한에서 원본 불변·payload 차단, 동시 probe, 취소·timeout, 임시 script 정리, health JSON/exit 결과.
 - 테스트에서만 private 실행 helper에 더 높은 하한을 전달한다. 운영 환경에서 하한을 낮추거나 검사를 끄는 옵션은 제공하지 않는다.
-- 실행 기준: Linux amd64 Docker / Go 1.25.14 / Aseprite 1.3.18.3-dev. 로컬 `aseprite-1.3.17.2` 이미지가 CLI에서 `1.x-dev`, Lua에서 `1.0-dev`를 보고하므로 이를 최소 버전 실행 검증으로 간주하지 않는다. 하한 비교 자체는 unit 경계값 검사로 검증하며, 올바른 버전을 보고하는 하한 바이너리 실검증은 남아 있다.
+- 실행 기준: Linux amd64 Docker / Go 1.25.14 / Aseprite 1.3.18.3-dev. 로컬 `aseprite-1.3.17.2` 이미지가 CLI에서 `1.x-dev`, Lua에서 `1.0-dev`를 보고하므로 이를 최소 버전 실행 검증으로 간주하지 않는다. 당시 하한 비교는 unit 경계값 검사로 검증했고, 하한 바이너리 실행은 아래 추가 검증에서 완료했다.
 
 2026-09-21 검증 결과: `go build ./...`, `go vet ./...`, `go test -race -cover ./...`, `go test -tags=integration ./...` 및 실제 CLI `--health` 통과. 감지값은 `1.3.18.3-dev` / API `41`; pkg/tools integration은 154.740초였다. 매 호출의 추가 probe에 따른 실행 비용이 있으며 이전 실행 시간을 성능 보장으로 사용하지 않는다.
 
 추가 실검증: 이 버전 불명 로컬 이미지의 `--health`가 `capability_probe_failed` JSON과 exit 1로 거부되는 것을 확인했다. 실제 하한 정식 바이너리의 검증을 대신하지 않는다.
+
+2026-09-22 추가 검증: 공식 `v1.3.17.2` 태그(`793fb65`) 소스의 기본 버전 메타데이터를 해당 릴리스 번호로 설정하고 재빌드했다. `--health`는 `1.3.17.2` / API `40`, Linux 전체 통합 테스트는 캐시 없이 통과했다. macOS arm64에서도 설치된 Aseprite `1.3.18.2-arm64` / API `41`로 health 및 감색·warnings 관련 10개 테스트 그룹을 실행해 통과했다. [빌드 출처·재현 방법·범위](NEXT_STEPS.md#수정-작업과-완료-조건)를 참조한다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
 
 ## 알려진 동작 제약 (2026-09-22 재확인)
 
