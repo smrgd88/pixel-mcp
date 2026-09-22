@@ -69,7 +69,7 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 			Name:        "analyze_reference",
 			Description: "Extract structured data from reference images to guide pixel art creation. Performs k-means palette extraction, brightness/edge detection, and composition analysis. Returns palette sorted by hue/lightness, brightness map with quantized levels, edge map with major contours, composition guides (rule of thirds, focal points), and suggested dithering zones.",
 		},
-		maybeWrapWithTiming("analyze_reference", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input AnalyzeReferenceInput) (*mcp.CallToolResult, *AnalyzeReferenceOutput, error) {
+		maybeWrapWithTiming("analyze_reference", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input AnalyzeReferenceInput) (*mcp.CallToolResult, *AnalyzeReferenceOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("analyze_reference tool called",
 				"reference", input.ReferencePath,

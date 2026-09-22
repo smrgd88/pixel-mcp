@@ -156,7 +156,7 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "draw_pixels",
 			Description: "Draw individual pixels at specified coordinates with colors. Supports batch operations for efficiency.",
 		},
-		maybeWrapWithTiming("draw_pixels", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DrawPixelsInput) (*mcp.CallToolResult, *DrawPixelsOutput, error) {
+		maybeWrapWithTiming("draw_pixels", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawPixelsInput) (*mcp.CallToolResult, *DrawPixelsOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("draw_pixels tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber, "pixel_count", len(input.Pixels))
 
@@ -215,7 +215,7 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "draw_line",
 			Description: "Draw a line between two points with specified color and thickness.",
 		},
-		maybeWrapWithTiming("draw_line", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DrawLineInput) (*mcp.CallToolResult, *DrawLineOutput, error) {
+		maybeWrapWithTiming("draw_line", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawLineInput) (*mcp.CallToolResult, *DrawLineOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("draw_line tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber)
 
@@ -266,7 +266,7 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "draw_contour",
 			Description: "Draw a polyline or polygon by connecting multiple points. Supports both open paths and closed shapes.",
 		},
-		maybeWrapWithTiming("draw_contour", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DrawContourInput) (*mcp.CallToolResult, *DrawContourOutput, error) {
+		maybeWrapWithTiming("draw_contour", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawContourInput) (*mcp.CallToolResult, *DrawContourOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("draw_contour tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber, "points", len(input.Points), "closed", input.Closed)
 
@@ -327,7 +327,7 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "draw_rectangle",
 			Description: "Draw a rectangle with specified position, size, color, and fill option.",
 		},
-		maybeWrapWithTiming("draw_rectangle", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DrawRectangleInput) (*mcp.CallToolResult, *DrawRectangleOutput, error) {
+		maybeWrapWithTiming("draw_rectangle", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawRectangleInput) (*mcp.CallToolResult, *DrawRectangleOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("draw_rectangle tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber, "filled", input.Filled)
 
@@ -378,7 +378,7 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "draw_circle",
 			Description: "Draw a circle with specified center, radius, color, and fill option.",
 		},
-		maybeWrapWithTiming("draw_circle", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DrawCircleInput) (*mcp.CallToolResult, *DrawCircleOutput, error) {
+		maybeWrapWithTiming("draw_circle", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawCircleInput) (*mcp.CallToolResult, *DrawCircleOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("draw_circle tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber, "radius", input.Radius, "filled", input.Filled)
 
@@ -429,7 +429,7 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "fill_area",
 			Description: "Flood fill from a starting point with specified color (paint bucket tool).",
 		},
-		maybeWrapWithTiming("fill_area", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input FillAreaInput) (*mcp.CallToolResult, *FillAreaOutput, error) {
+		maybeWrapWithTiming("fill_area", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input FillAreaInput) (*mcp.CallToolResult, *FillAreaOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("fill_area tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber, "x", input.X, "y", input.Y, "tolerance", input.Tolerance)
 

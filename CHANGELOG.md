@@ -27,6 +27,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
+- Per-file operation locks and staged atomic publication for existing sprite edits and explicit single-file outputs. Multi-step MCP edits now publish only after handler success; failure/cancellation preserves the original. See `docs/FILE_PROTECTION.md` for multi-file export and crash-cleanup limits.
+
 - Aseprite version/API preflight before each Lua operation, requiring 1.3.17.2 and API 39. `--health` now emits JSON with detected versions, support floors, and capability error codes; existing tool schemas remain unchanged.
 
 - Optional structured `warnings` for palette quantization, indexed conversion requests, layer flattening (including quantization with dithering), and non-nearest scaling. Existing fields remain unchanged; warnings describe potential effects after successful execution (see `docs/WARNINGS.md`).

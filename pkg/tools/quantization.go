@@ -44,7 +44,7 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 			Name:        "quantize_palette",
 			Description: "Automatically reduce sprite colors using industry-standard quantization algorithms. Supports three algorithms: median_cut (fast, balanced quality), kmeans (highest quality, slower), octree (very fast, good for photos). Can apply Floyd-Steinberg dithering for smoother gradients. Optionally converts to indexed color mode for true palette constraint or keeps RGB mode for flexible multi-pass workflows.",
 		},
-		maybeWrapWithTiming("quantize_palette", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input QuantizePaletteInput) (*mcp.CallToolResult, *QuantizePaletteOutput, error) {
+		maybeWrapWithTiming("quantize_palette", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input QuantizePaletteInput) (*mcp.CallToolResult, *QuantizePaletteOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("quantize_palette tool called",
 				"sprite", input.SpritePath,

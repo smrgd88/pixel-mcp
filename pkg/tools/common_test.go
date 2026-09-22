@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog"
@@ -106,7 +107,7 @@ func TestMaybeWrapWithTiming_Enabled(t *testing.T) {
 	}
 
 	// Wrap with timing enabled
-	wrapped := maybeWrapWithTiming("test_tool", logger, true, handler)
+	wrapped := maybeWrapWithTiming("test_tool", logger, true, 30*time.Second, handler)
 
 	// Execute - should be wrapped with timing
 	ctx := context.Background()
@@ -145,7 +146,7 @@ func TestMaybeWrapWithTiming_Disabled(t *testing.T) {
 	}
 
 	// Wrap with timing disabled
-	wrapped := maybeWrapWithTiming("test_tool", logger, false, handler)
+	wrapped := maybeWrapWithTiming("test_tool", logger, false, 30*time.Second, handler)
 
 	// Execute - should be direct call without timing wrapper
 	ctx := context.Background()

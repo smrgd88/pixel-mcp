@@ -124,7 +124,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "create_canvas",
 			Description: "Create a new Aseprite sprite with specified dimensions and color mode. Returns the path to the created .aseprite file.",
 		},
-		maybeWrapWithTiming("create_canvas", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input CreateCanvasInput) (*mcp.CallToolResult, *CreateCanvasOutput, error) {
+		maybeWrapWithTiming("create_canvas", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input CreateCanvasInput) (*mcp.CallToolResult, *CreateCanvasOutput, error) {
 			// Use logger with context for request tracking
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("create_canvas parameters", "width", input.Width, "height", input.Height, "color_mode", input.ColorMode)
@@ -171,7 +171,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "add_layer",
 			Description: "Add a new layer to an existing Aseprite sprite. Returns success status.",
 		},
-		maybeWrapWithTiming("add_layer", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input AddLayerInput) (*mcp.CallToolResult, *AddLayerOutput, error) {
+		maybeWrapWithTiming("add_layer", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input AddLayerInput) (*mcp.CallToolResult, *AddLayerOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("add_layer tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName)
 
@@ -203,7 +203,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "add_frame",
 			Description: "Add a new frame to an existing Aseprite sprite. Returns the frame number (1-based index).",
 		},
-		maybeWrapWithTiming("add_frame", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input AddFrameInput) (*mcp.CallToolResult, *AddFrameOutput, error) {
+		maybeWrapWithTiming("add_frame", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input AddFrameInput) (*mcp.CallToolResult, *AddFrameOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("add_frame tool called", "sprite_path", input.SpritePath, "duration_ms", input.DurationMs)
 
@@ -242,7 +242,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "get_sprite_info",
 			Description: "Retrieve metadata about an existing Aseprite sprite including dimensions, color mode, frame count, layer count, and layer names.",
 		},
-		maybeWrapWithTiming("get_sprite_info", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input GetSpriteInfoInput) (*mcp.CallToolResult, *GetSpriteInfoOutput, error) {
+		maybeWrapWithTiming("get_sprite_info", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input GetSpriteInfoInput) (*mcp.CallToolResult, *GetSpriteInfoOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("get_sprite_info tool called", "sprite_path", input.SpritePath)
 
@@ -276,7 +276,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "delete_layer",
 			Description: "Delete a layer from an existing sprite. Cannot delete the last remaining layer.",
 		},
-		maybeWrapWithTiming("delete_layer", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DeleteLayerInput) (*mcp.CallToolResult, *DeleteLayerOutput, error) {
+		maybeWrapWithTiming("delete_layer", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DeleteLayerInput) (*mcp.CallToolResult, *DeleteLayerOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("delete_layer tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName)
 
@@ -303,7 +303,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "delete_frame",
 			Description: "Delete a frame from an existing sprite. Cannot delete the last remaining frame.",
 		},
-		maybeWrapWithTiming("delete_frame", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DeleteFrameInput) (*mcp.CallToolResult, *DeleteFrameOutput, error) {
+		maybeWrapWithTiming("delete_frame", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DeleteFrameInput) (*mcp.CallToolResult, *DeleteFrameOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("delete_frame tool called", "sprite_path", input.SpritePath, "frame_number", input.FrameNumber)
 
@@ -330,7 +330,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "flatten_layers",
 			Description: "Flatten all layers in a sprite into a single layer.",
 		},
-		maybeWrapWithTiming("flatten_layers", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input FlattenLayersInput) (*mcp.CallToolResult, *FlattenLayersOutput, error) {
+		maybeWrapWithTiming("flatten_layers", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input FlattenLayersInput) (*mcp.CallToolResult, *FlattenLayersOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("flatten_layers tool called", "sprite_path", input.SpritePath)
 

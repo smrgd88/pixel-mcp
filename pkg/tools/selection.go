@@ -118,7 +118,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "select_rectangle",
 			Description: "Create a rectangular selection with specified mode (replace/add/subtract/intersect). Selections define which pixels will be affected by editing operations.",
 		},
-		maybeWrapWithTiming("select_rectangle", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input SelectRectangleInput) (*mcp.CallToolResult, *SelectRectangleOutput, error) {
+		maybeWrapWithTiming("select_rectangle", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SelectRectangleInput) (*mcp.CallToolResult, *SelectRectangleOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("select_rectangle tool called", "sprite_path", input.SpritePath, "x", input.X, "y", input.Y, "width", input.Width, "height", input.Height, "mode", input.Mode)
 
@@ -169,7 +169,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "select_ellipse",
 			Description: "Create an elliptical selection with specified mode (replace/add/subtract/intersect). The ellipse is defined by a bounding box.",
 		},
-		maybeWrapWithTiming("select_ellipse", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input SelectEllipseInput) (*mcp.CallToolResult, *SelectEllipseOutput, error) {
+		maybeWrapWithTiming("select_ellipse", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SelectEllipseInput) (*mcp.CallToolResult, *SelectEllipseOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("select_ellipse tool called", "sprite_path", input.SpritePath, "x", input.X, "y", input.Y, "width", input.Width, "height", input.Height, "mode", input.Mode)
 
@@ -220,7 +220,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "select_all",
 			Description: "Select the entire canvas. This selects all pixels in the sprite, regardless of layers or frames.",
 		},
-		maybeWrapWithTiming("select_all", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input SelectAllInput) (*mcp.CallToolResult, *SelectAllOutput, error) {
+		maybeWrapWithTiming("select_all", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SelectAllInput) (*mcp.CallToolResult, *SelectAllOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("select_all tool called", "sprite_path", input.SpritePath)
 
@@ -252,7 +252,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "deselect",
 			Description: "Clear the current selection. Removes any active selection from the sprite.",
 		},
-		maybeWrapWithTiming("deselect", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DeselectInput) (*mcp.CallToolResult, *DeselectOutput, error) {
+		maybeWrapWithTiming("deselect", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DeselectInput) (*mcp.CallToolResult, *DeselectOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("deselect tool called", "sprite_path", input.SpritePath)
 
@@ -284,7 +284,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "move_selection",
 			Description: "Move the current selection by a specified offset. Does not move the pixel content, only the selection bounds. Requires an active selection.",
 		},
-		maybeWrapWithTiming("move_selection", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input MoveSelectionInput) (*mcp.CallToolResult, *MoveSelectionOutput, error) {
+		maybeWrapWithTiming("move_selection", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input MoveSelectionInput) (*mcp.CallToolResult, *MoveSelectionOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("move_selection tool called", "sprite_path", input.SpritePath, "dx", input.DX, "dy", input.DY)
 
@@ -316,7 +316,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "cut_selection",
 			Description: "Cut the selected pixels to clipboard. Removes pixels from the specified layer and frame, placing them on the clipboard. Requires an active selection.",
 		},
-		maybeWrapWithTiming("cut_selection", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input CutSelectionInput) (*mcp.CallToolResult, *CutSelectionOutput, error) {
+		maybeWrapWithTiming("cut_selection", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input CutSelectionInput) (*mcp.CallToolResult, *CutSelectionOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("cut_selection tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber)
 
@@ -357,7 +357,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "copy_selection",
 			Description: "Copy the selected pixels to clipboard without removing them. Requires an active selection.",
 		},
-		maybeWrapWithTiming("copy_selection", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input CopySelectionInput) (*mcp.CallToolResult, *CopySelectionOutput, error) {
+		maybeWrapWithTiming("copy_selection", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input CopySelectionInput) (*mcp.CallToolResult, *CopySelectionOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("copy_selection tool called", "sprite_path", input.SpritePath)
 
@@ -389,7 +389,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "paste_clipboard",
 			Description: "Paste clipboard content onto the specified layer and frame. Optionally specify paste position (x, y). Requires clipboard to contain image data.",
 		},
-		maybeWrapWithTiming("paste_clipboard", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input PasteClipboardInput) (*mcp.CallToolResult, *PasteClipboardOutput, error) {
+		maybeWrapWithTiming("paste_clipboard", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input PasteClipboardInput) (*mcp.CallToolResult, *PasteClipboardOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("paste_clipboard tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "frame_number", input.FrameNumber, "x", input.X, "y", input.Y)
 

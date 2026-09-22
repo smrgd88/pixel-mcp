@@ -1,6 +1,6 @@
 # 기능 지원 현황
 
-기준일: 2026-09-21 · 구현 기준: `develop`의 `6c9ac5ec211df74aafa9b14a96b132aee0209be8`
+기준일: 2026-09-22 · 구현 기준: `develop`의 `897c2f1d218b712e0a5387bb3806671dce302ddf`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -92,7 +92,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | GAP-07 | [Tileset](https://www.aseprite.org/api/tileset/), [Sprite](https://www.aseprite.org/api/sprite/): tilemap·tileset·tile | 미지원 | R5 |
 | GAP-08 | [app.command](https://www.aseprite.org/api/app_command/): 밝기·대비·색상 곡선·convolution·despeckle | 부분: outline은 제공, 나열한 보정 명령은 미지원; batch 옵션 검증 필요 | R5 |
 | GAP-09 | [Layer](https://www.aseprite.org/api/layer/), [Slice](https://www.aseprite.org/api/slice/): data·properties | 미지원: 내부 상태 저장과 별개로 범용 사용자 metadata 편집 도구 없음 | R5 |
-| GAP-10 | [app](https://www.aseprite.org/api/app/): version·apiVersion | 구현 / 작업 브랜치: CLI health JSON 및 매 Lua 실행 전 version/API 검사; 아래 계약 참조 | R1 |
+| GAP-10 | [app](https://www.aseprite.org/api/app/): version·apiVersion | develop 반영 (#13): CLI health JSON 및 매 Lua 실행 전 version/API 검사; 아래 계약 참조 | R1 |
 | GAP-11 | [Selection](https://www.aseprite.org/api/selection/): 선택 영역 연산 | 부분: 사각형·타원·전체·이동·4종 결합 모드 및 복사/붙여넣기; 선택 반전 등 확장 없음. 선택 mask는 행별 run으로 저장하며 호출 간 복원·결합·이동을 검증함; 기존 bounds-only 데이터는 사각형으로 읽음 | R5 |
 | GAP-12 | [API](https://www.aseprite.org/api/): Brush·Tool·ColorSpace·Grid 등 | 부분/미지원: 기본 도형·색상 API는 내부 사용, 범용 brush/ink·색공간·grid 설정은 미노출 | R5 |
 | GAP-13 | [API](https://www.aseprite.org/api/): Plugin·Dialog·Editor·Events·Timer·WebSocket 등 | 현재 구조 밖: GUI 확장·지속 세션 연동을 MCP로 제공하지 않음 | 별도 SPIKE 필요 |
@@ -109,7 +109,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-02 | dry-run | 예정 | 임시 복사본·동일 실행 경로·정리 정책, R2. CLI preview만으로 Lua 결과 검증을 대체하지 않음 |
 | SAFE-03 | snapshot/restore | 예정 | 파일 저장 primitive + ID·보존·복원 정책, R2 |
 | SAFE-04 | operation history·undo | 예정 | SAFE-03 의존, R2. 호출마다 프로세스가 달라 native undo를 호출 간 복구로 사용하지 않음 |
-| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | 예정 | canonical path lock·atomic 교체·fault test, R2 |
+| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | 구현 / 작업 브랜치 (Unreleased) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체, [검증과 제외 범위](FILE_PROTECTION.md), R2 |
 | OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
 | OPS-03 | 오류·request ID·로그 계약 통일 | 예정 | 기존 로깅과 timeout 처리는 존재, 전체 응답 표준화는 R1/R2 |
@@ -126,7 +126,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 
 ## 실행 환경 사전 검사 (GAP-10)
 
-작업: `[SHARED][FEATURE] Aseprite capability 사전 검사`, 브랜치 `feature/shared-aseprite-capability`. 기준 develop은 `6c9ac5e`; 아래 기능은 작업 브랜치에서 구현했으며 아직 병합·릴리스 전이다.
+작업: `[SHARED][FEATURE] Aseprite capability 사전 검사`, 브랜치 `feature/shared-aseprite-capability`. PR #13으로 develop `897c2f1`에 병합했으며 릴리스 전이다.
 
 - 모든 `Client.ExecuteLua` 호출 전에 별도 Aseprite batch process에서 `app.version`과 `app.apiVersion`을 조회한다. probe는 sprite를 열지 않고 도구 코드를 실행하지 않는다. 조회 실패 또는 지원 하한 미달이면 본 작업을 시작하지 않는다.
 - 최소 버전 `1.3.17.2`와 최소 API `39`를 **둘 다** 만족해야 한다. 네 자리 숫자 버전을 수치 비교하며 생략된 네 번째 자리는 0이다. 정확히 하한과 같은 숫자의 prerelease(`1.3.17.2-dev` 등)는 거부한다. 더 높은 숫자 버전의 `-dev` 빌드는 API 조건도 충족하면 허용한다.

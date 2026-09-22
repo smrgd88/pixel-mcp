@@ -58,14 +58,16 @@ func wrapWithTiming[I any, O any](
 
 // maybeWrapWithTiming conditionally wraps a handler with timing based on config.
 //
-// If enable is true, returns wrapWithTiming, otherwise returns the handler unchanged.
+// File protection always applies. Timing is enabled only when requested.
 // This allows timing to be opt-in via configuration.
 func maybeWrapWithTiming[I any, O any](
 	toolName string,
 	logger core.Logger,
 	enable bool,
+	timeout time.Duration,
 	handler func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error),
 ) func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error) {
+	handler = wrapWithFileProtection(toolName, timeout, handler)
 	if enable {
 		return wrapWithTiming(toolName, logger, handler)
 	}
