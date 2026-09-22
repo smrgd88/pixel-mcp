@@ -1,6 +1,6 @@
 # 기능 지원 현황
 
-기준일: 2026-09-22 · 구현 기준: `develop`의 `897c2f1d218b712e0a5387bb3806671dce302ddf`
+기준일: 2026-09-22 · 구현 기준: `develop`의 `7e60ad96cdc0487bd2d584cdb34df076136506b9`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -109,7 +109,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-02 | dry-run | 예정 | 임시 복사본·동일 실행 경로·정리 정책, R2. CLI preview만으로 Lua 결과 검증을 대체하지 않음 |
 | SAFE-03 | snapshot/restore | 예정 | 파일 저장 primitive + ID·보존·복원 정책, R2 |
 | SAFE-04 | operation history·undo | 예정 | SAFE-03 의존, R2. 호출마다 프로세스가 달라 native undo를 호출 간 복구로 사용하지 않음 |
-| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | 구현 / 작업 브랜치 (Unreleased) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체, [검증과 제외 범위](FILE_PROTECTION.md), R2 |
+| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체, [검증과 제외 범위](FILE_PROTECTION.md), R2 |
 | OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
 | OPS-03 | 오류·request ID·로그 계약 통일 | 예정 | 기존 로깅과 timeout 처리는 존재, 전체 응답 표준화는 R1/R2 |
@@ -162,3 +162,17 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 2026-09-21 검증 결과: `go build ./...`, `go vet ./...`, `go test -race -cover ./...`, `go test -tags=integration ./...` 및 실제 CLI `--health` 통과. 감지값은 `1.3.18.3-dev` / API `41`; pkg/tools integration은 154.740초였다. 매 호출의 추가 probe에 따른 실행 비용이 있으며 이전 실행 시간을 성능 보장으로 사용하지 않는다.
 
 추가 실검증: 이 버전 불명 로컬 이미지의 `--health`가 `capability_probe_failed` JSON과 exit 1로 거부되는 것을 확인했다. 실제 하한 정식 바이너리의 검증을 대신하지 않는다.
+
+## 알려진 동작 제약 (2026-09-22 재확인)
+
+등록된 도구가 있다는 사실과 모든 입력/출력 계약이 올바르다는 것은 구분한다. develop `7e60ad9`, Linux amd64/Aseprite 1.3.18.3-dev/API 41에서 다음을 확인했다. [재현·우선순위·수정 체크리스트](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)를 기준으로 추적한다.
+
+| 도구 | 제약·현재 동작 | 추적 |
+| --- | --- | --- |
+| draw_with_dither | 명시적 density=0도 기본 0.5로 처리 | BUG-01 |
+| analyze_reference | 광고된 BMP/.aseprite 입력은 decoder 오류; PNG/JPG/GIF control 성공 | BUG-02 |
+| export_sprite | 다중 frame PNG는 단일 출력 경로 계약과 불일치. 현재 보호 경로에서는 출력 누락 오류, 시퀀스 publish 미지원 | BUG-03 |
+| quantize_palette | 2색 opaque RGB → indexed에서 렌더링 단색화 재현 | BUG-04 |
+| quantize_palette | dither=false/convert_to_indexed=false는 palette만 축소하고 RGB pixel은 유지. 의도·계약 확정 필요 | BUG-05 |
+
+이번 갱신은 재현과 작업 계획이며 기능 수정 완료를 의미하지 않는다. 기존 warnings 계약과 파일 보호는 후속 수정에서도 유지한다.
