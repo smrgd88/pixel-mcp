@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-09-22 · 코드 기준: `develop`의 `897c2f1d218b712e0a5387bb3806671dce302ddf`
+기준일: 2026-09-22 · 코드 기준: `develop`의 `7e60ad96cdc0487bd2d584cdb34df076136506b9`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -11,6 +11,21 @@
 포크의 config 격리, draw_pixels 좌표, native linked cel, indexed shading 수정은 develop에 반영됐지만 `v0.5.0`에는 없다. 신규 릴리스 번호나 배포 일자는 확정하지 않는다. R0–R5는 작업 단계이며 버전 번호가 아니다.
 
 기능 상태의 기준은 CAPABILITIES, 작업 상세·검증 이력은 NEXT_STEPS, 우선순위·의존성은 이 문서에 둔다. 기능마다 문서를 따로 복제하지 않고 ID로 연결한다.
+
+## 다음 작업 순서
+
+최신 develop에서 재현한 알려진 동작 오류를 SAFE-02 dry-run보다 먼저 처리한다. 잘못된 실제 결과와 모호한 감색 계약을 preview에 그대로 복제하지 않기 위한 순서다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
+
+| 순서 | 작업 | 이유 |
+| --- | --- | --- |
+| 1 | BUG-04/05 감색 결과·옵션 계약 | 잘못된 원본 수정 결과와 RGB 감색 의미를 먼저 해결 |
+| 2 | BUG-01 density=0 보존 | 명시적 사용자 입력이 다른 픽셀 결과를 만드는 오류 |
+| 3 | BUG-03 다중 frame PNG | 기존 export workflow와 실제 파일/응답 계약 복구; 필요한 출력 경로 처리만 정리 |
+| 4 | BUG-02 참조 형식 지원 | 광고된 지원과 decoder 불일치. 독립 처리 가능하며 dry-run 자체의 기술적 선행 조건은 아님 |
+| 5 | SAFE-02 dry-run | 올바른 편집 동작을 임시 복사본에서 preview |
+| 6 | SAFE-03 → SAFE-04 | snapshot/restore 이후 history/undo |
+
+파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
 ## 단계와 완료 조건
 
@@ -25,9 +40,9 @@
 
 R5의 확장 후보 전체를 하나의 릴리스에 묶지 않는다. GUI 플러그인·실시간 편집 세션(GAP-13)은 현재 batch 구조 밖이므로 별도 SPIKE에서 필요성과 구조를 결정한다.
 
-## 다음 작업 순서
+## 안전성 기능의 의존 순서
 
-SAFE-01은 PR #11로 develop에 병합했다. GAP-10은 PR #13으로 병합했다. 현재 작업은 SAFE-05 파일 변경 보호이며, 병합 후 SAFE-02 dry-run으로 진행한다. 실제 앱 UI 호환성 확인은 후속 검증으로 남긴다.
+SAFE-01은 PR #11로 develop에 병합했다. GAP-10은 PR #13, SAFE-05는 PR #14로 병합했다. 위 알려진 동작 오류를 먼저 처리한 뒤 SAFE-02 dry-run으로 진행한다. 실제 앱 UI 호환성 확인은 후속 검증으로 남긴다.
 
 1. `[SHARED][FEATURE] 위험 작업 warning 반환` — SAFE-01, upstream #15. 공통 optional warnings와 감색·flatten·색상 모드 변경·보간 scale 조건부터 고정한다.
 2. `[SHARED][FEATURE] Aseprite capability 사전 검사` — GAP-10. health 정보와 변경 전 지원 하한 검사를 연결한다.
@@ -67,7 +82,8 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [ ] upstream #19: 제출 범위 결정
 - [x] SAFE-01: warnings 구현 (PR #11 develop 병합 완료, [검증 범위](WARNINGS.md))
 - [x] GAP-10: capability preflight 구현 (PR #13 병합 완료; 하한 바이너리 실행 검증 잔여는 NEXT_STEPS 참조)
-- [x] SAFE-05: 파일 변경 보호 구현 (작업 브랜치, 병합 전; [검증 범위](FILE_PROTECTION.md))
+- [x] SAFE-05: 파일 변경 보호 구현 (PR #14 develop 병합 완료; [검증 범위](FILE_PROTECTION.md))
+- [ ] BUG-04/05 → BUG-01 → BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
 - [ ] SAFE-02–04: dry-run·snapshot·history/undo
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정

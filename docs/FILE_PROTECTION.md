@@ -1,6 +1,6 @@
 # 파일 변경 보호 (SAFE-05)
 
-기준: develop `897c2f1` + `feature/shared-file-change-protection`. 아직 작업 브랜치이며 릴리스 전이다.
+PR #14로 develop `7e60ad9`에 병합했다. 릴리스 버전은 아직 Unreleased다.
 
 ## 보호 단위
 
