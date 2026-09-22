@@ -72,8 +72,8 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-044 | 팔레트·shading | `apply_shading` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-045 | 팔레트·shading | `analyze_palette_harmonies` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-046 | 참조 분석 | `analyze_reference` | v0.1.0 | — | [analysis.go](../pkg/tools/analysis.go) |
-| MCP-047 | 디더링 | `draw_with_dither` | v0.1.0 | v0.3.0: Floyd-Steinberg 추가 | [dithering.go](../pkg/tools/dithering.go) |
-| MCP-048 | 감색 | `quantize_palette` | v0.4.0 | Unreleased: warnings + BUG-04/05 픽셀 remap 수정 (작업 브랜치, 병합 대기) | [quantization.go](../pkg/tools/quantization.go) |
+| MCP-047 | 디더링 | `draw_with_dither` | v0.1.0 | v0.3.0: Floyd-Steinberg 추가; Unreleased: density 0·endpoint 수정 (작업 브랜치) | [dithering.go](../pkg/tools/dithering.go) |
+| MCP-048 | 감색 | `quantize_palette` | v0.4.0 | Unreleased: warnings + BUG-04/05 픽셀 remap 수정 (#16, develop 반영) | [quantization.go](../pkg/tools/quantization.go) |
 | MCP-049 | 자동 shading | `apply_auto_shading` | v0.4.0 | Unreleased: indexed index 보존 (#8) | [auto_shading.go](../pkg/tools/auto_shading.go) |
 | MCP-050 | 안티앨리어싱 | `suggest_antialiasing` | v0.1.0 | — | [antialiasing.go](../pkg/tools/antialiasing.go) |
 
@@ -171,15 +171,15 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 
 | 도구 | 제약·현재 동작 | 추적 |
 | --- | --- | --- |
-| draw_with_dither | 명시적 density=0도 기본 0.5로 처리 | BUG-01 |
+| draw_with_dither | 작업 브랜치에서 생략/null과 0 구분, 모든 패턴의 0/1 endpoint 수정; 병합 대기 | BUG-01 |
 | analyze_reference | 광고된 BMP/.aseprite 입력은 decoder 오류; PNG/JPG/GIF control 성공 | BUG-02 |
 | export_sprite | 다중 frame PNG는 단일 출력 경로 계약과 불일치. 현재 보호 경로에서는 출력 누락 오류, 시퀀스 publish 미지원 | BUG-03 |
-| quantize_palette | 작업 브랜치에서 opaque palette index 0 보존 및 투명 인덱스 분리로 수정; 병합 대기 | BUG-04 |
-| quantize_palette | 작업 브랜치에서 dither=false도 cel 픽셀 remap, convert_to_indexed=false는 입력 모드 유지로 수정; 병합 대기 | BUG-05 |
+| quantize_palette | PR #16으로 opaque palette index 0 보존 및 투명 인덱스 분리 수정 병합 | BUG-04 |
+| quantize_palette | PR #16으로 dither=false도 cel 픽셀 remap, convert_to_indexed=false는 입력 모드 유지로 수정 병합 | BUG-05 |
 
-BUG-04/05 수정 기준은 `fix/be-quantization-contract`이며 develop 반영·릴리스와 구분한다. 나머지 3건은 미수정이다. 기존 warnings 계약과 파일 보호를 유지한다.
+BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 `fix/be-dither-density-zero`에서 수정·검증 후 병합 대기 중이며 BUG-02/03은 미수정이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
 
-### 감색 계약 (BUG-04/05 수정 브랜치)
+### 감색 계약 (BUG-04/05, PR #16)
 
 - `quantize_palette`는 픽셀 감색 도구다. `dither=false`도 각 cel의 픽셀을 팔레트의 가까운 RGB 색으로 매핑한다. `convert_to_indexed=false`는 감색 생략이 아니라 원본 RGB/grayscale/indexed 모드 유지다.
 - 분석 대상은 단일 프레임의 보이는 합성 이미지다. 비디더링은 숨김 레이어를 포함한 각 cel을 같은 팔레트로 매핑하고 레이어·그룹·위치·opacity·메타데이터를 유지한다. 레이어 합성·blend/opacity로 렌더링 색 수가 팔레트 항목 수보다 많을 수 있다.
@@ -188,3 +188,10 @@ BUG-04/05 수정 기준은 `fix/be-quantization-contract`이며 develop 반영·
 - `preserve_transparency=true`이고 완전 투명 픽셀이 있으면 투명 항목도 목표 개수에 포함한다. false는 분석에서 투명 픽셀을 제외하지 않고 전용 팔레트 항목을 예약하지 않는다. 두 설정 모두 완전 투명 픽셀을 유지한다. 반투명 픽셀의 alpha 보존은 지원하지 않으며 불투명 팔레트 색으로 감색한다.
 - indexed에는 투명 인덱스가 필요하다. 투명 팔레트 항목이 없으면 사용하지 않는 index 255를 사용하며, 불투명 항목은 최대 255개다. 2색 불투명 입력은 두 색 모두 사용할 수 있다. RGB/grayscale은 이 indexed 제한을 적용하지 않는다.
 - 단일 프레임·일반 raster 레이어만 지원한다. 애니메이션과 tilemap은 변경 전에 명시적으로 거부한다. 완전 투명 입력은 기본 설정에서 기존처럼 감색할 불투명 픽셀이 없다는 오류다. 다중 프레임 PNG 내보내기는 별도 BUG-03이다.
+
+### draw_with_dither density 계약 (BUG-01 수정 브랜치)
+
+- 생략 또는 `null`은 기본값 0.5다. 명시적 `0`은 color1, `1`은 color2로 영역을 채운다. 입력 숫자는 [0,1]만 허용하며 잘못된 값/타입은 원본 변경 없이 거부한다. SDK의 optional pointer 추론에 맞춰 schema는 optional number/null이다.
+- Bayer·texture 패턴의 중간값은 matrix threshold다. 패턴의 분포·영역 크기에 따라 색상 비율이 달라지므로 density=0.5가 모든 패턴에서 정확한 50:50 비율을 뜻하지 않는다. 아주 작은 양수도 Lua 생성 시 0으로 반올림하지 않는다.
+- Floyd–Steinberg도 0/1은 단색 endpoint를 따른다. `0 < density < 1`은 기존 가로 color1→color2 그라디언트를 유지하고 density로 그라디언트를 조절하지 않는다. 중간값 조절 기능은 이번 수정에 포함하지 않는다.
+- 기존 색상 모드별 색 매핑·좌표 처리와 응답/warnings 계약을 유지한다. 이 수정은 모든 drawing/export 계약의 확대 검증을 뜻하지 않는다.

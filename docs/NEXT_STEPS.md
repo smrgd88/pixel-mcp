@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-09-22
 
-현재 기준: `develop`의 `c049ad42e3a48656d4f011c8705f413441440d2a` (PR #15까지 병합 반영). BUG-04/05는 `fix/be-quantization-contract`에서 수정, 병합 대기.
+현재 기준: `develop`의 `a42c6242077c4681a9b66f44915f7aef8de33a6c` (PR #16까지 병합 반영). BUG-04/05 완료, BUG-01은 `fix/be-dither-density-zero`에서 수정·검증 완료, PR 병합 대기.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -72,23 +72,23 @@
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. 현재 BUG-04/05 수정 브랜치를 검증하며, 다음 구현 순서는 BUG-01 → BUG-03 → BUG-02다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. 현재 BUG-01을 수정하며, 다음 구현 순서는 BUG-03 → BUG-02다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## 현재 우선 작업 — 알려진 동작 오류
 
-2026-09-22, 사용자 보고 5건을 최신 develop `7e60ad9`에서 재확인했다. 아래 develop 결과는 수정 전 재현 이력이며, BUG-04/05 수정 브랜치의 상태는 완료 조건과 CAPABILITIES에 별도로 기록한다. 기존 dry-run보다 실제 결과/계약 오류를 우선한다. 전체 파일 접근 선언 리팩터링을 선행 조건으로 추가하지 않는다.
+2026-09-22, 사용자 보고 5건을 최신 develop `7e60ad9`에서 재확인했다. 아래 develop 결과는 수정 전 재현 이력이며, BUG-04/05 병합과 BUG-01 수정 브랜치의 상태는 완료 조건과 CAPABILITIES에 별도로 기록한다. 기존 dry-run보다 실제 결과/계약 오류를 우선한다. 전체 파일 접근 선언 리팩터링을 선행 조건으로 추가하지 않는다.
 
 환경: Linux amd64 Docker, Go 1.25.14, Aseprite `1.3.18.3-dev` / API 41. 컨테이너 내부 `/tmp`의 격리 fixture, 실제 MCP 호출과 별도 Aseprite 렌더링 검사. 이번 재현은 이 환경의 아래 조건에 한정한다.
 
 | ID / 보고 번호 | 우선도·실행 순서 | 최신 develop 결과 | 원인 확인 수준 |
 | --- | --- | --- | --- |
-| BUG-04 / 4 | P1, 1순위 (BUG-05와 묶음) | 불투명 빨강/파랑 각 32px인 RGB 8×8 이미지를 2색 indexed로 변환하면 빨강 64px 단색. 응답 palette/quantized_colors는 2 | 수정 브랜치: ChangePixelFormat의 mask 0 예약 + palette resize의 mask clamp를 피하고 명시적 index remap |
-| BUG-05 / 5 | P1 계약 확인, 1순위 (BUG-04와 묶음) | RGB 4색 각 16px → dither=false/convert_to_indexed=false/target_colors=2 후 팔레트는 2개, 실제 픽셀은 원래 4색 유지 | 수정 브랜치: palette만 설정하던 Lua 경로에 cel remap 추가. false는 입력 모드 유지이며 감색은 수행 |
-| BUG-01 / 1 | P1, 2순위 | bayer_2x2에서 density 생략과 명시적 0 모두 빨강 32/파랑 32. density=1은 파랑 64px | Go float64가 생략과 0을 구분하지 못하고 density==0을 0.5로 대체함 |
+| BUG-04 / 4 | P1, 1순위 (BUG-05와 묶음) | 불투명 빨강/파랑 각 32px인 RGB 8×8 이미지를 2색 indexed로 변환하면 빨강 64px 단색. 응답 palette/quantized_colors는 2 | PR #16 병합 완료: ChangePixelFormat의 mask 0 예약 + palette resize의 mask clamp를 피하고 명시적 index remap |
+| BUG-05 / 5 | P1 계약 확인, 1순위 (BUG-04와 묶음) | RGB 4색 각 16px → dither=false/convert_to_indexed=false/target_colors=2 후 팔레트는 2개, 실제 픽셀은 원래 4색 유지 | PR #16 병합 완료: palette만 설정하던 Lua 경로에 cel remap 추가. false는 입력 모드 유지이며 감색은 수행 |
+| BUG-01 / 1 | P1, 2순위 | bayer_2x2에서 density 생략과 명시적 0 모두 빨강 32/파랑 32. density=1은 파랑 64px | 수정 브랜치: optional density로 생략/null과 0 구분, Lua 숫자 정밀도 및 Floyd endpoint 처리 |
 | BUG-03 / 3 | P1, 3순위 | 2-frame PNG export는 현재 MCP에서 오류, 최종 생성 파일 없음. 직접 Aseprite export는 raw1.png/raw2.png 생성 | 단일 requested path 응답과 이미지 시퀀스 저장 방식 불일치. SAFE-05가 base file 누락을 거부하므로 예전 성공 응답 형태와 다름 |
 | BUG-02 / 2 | P2, 4순위 | PNG/JPG/GIF 분석 성공. 같은 fixture의 BMP와 .aseprite는 image: unknown format | 광고된 5개 형식과 Go image.Decode 등록 decoder(png/jpeg/gif) 불일치; Aseprite 변환 fallback 없음 |
 
-P1은 무조건 운영 장애라는 뜻이 아니라, 이 작업 묶음에서 잘못된 수정 결과 또는 핵심 workflow 실패를 우선 처리한다는 분류다. BUG-05의 수정 계약은 [CAPABILITIES](CAPABILITIES.md#감색-계약-bug-0405-수정-브랜치)에 기록한다. 팔레트 항목 수와 실제 렌더링 색 수를 같다고 가정하지 않는다. BUG-02는 dry-run의 기술적 선행 조건은 아니므로 독립적으로 처리할 수 있다.
+P1은 무조건 운영 장애라는 뜻이 아니라, 이 작업 묶음에서 잘못된 수정 결과 또는 핵심 workflow 실패를 우선 처리한다는 분류다. BUG-05의 수정 계약은 [CAPABILITIES](CAPABILITIES.md#감색-계약-bug-0405-pr-16)에 기록한다. 팔레트 항목 수와 실제 렌더링 색 수를 같다고 가정하지 않는다. BUG-02는 dry-run의 기술적 선행 조건은 아니므로 독립적으로 처리할 수 있다.
 
 ### 수정 작업과 완료 조건
 
@@ -96,10 +96,11 @@ P1은 무조건 운영 장애라는 뜻이 아니라, 이 작업 묶음에서 �
    - [x] RGB 유지도 픽셀 remap을 수행하며, 투명 항목은 target_colors에 포함한다. indexed의 미사용 mask index와 최대 255개 불투명 항목 규칙을 문서화한다.
    - [x] 2색 indexed 단색화를 고치고, 응답의 색 수·팔레트와 실제 저장/렌더링 결과를 각각 검증한다.
    - [x] opaque/transparent, RGB/grayscale/indexed, dither/convert_to_indexed 조합을 실제 Aseprite로 회귀 검증한다.
-   - [ ] PR을 develop에 병합한다 (이번 작업은 PR 생성까지만).
+   - [x] PR #16을 develop `a42c624`에 병합했다.
 2. `[BE][FIX] 명시적 dithering density 0 보존` — `fix/be-dither-density-zero`, BUG-01.
-   - [ ] 생략/0/0.5/1을 구분하고 허용 범위·endpoint 색상 계약을 고정한다.
-   - [ ] 실제 MCP 입력으로 기본값과 endpoint의 저장 픽셀을 확인한다.
+   - [x] 생략/null=0.5, 0=color1, 1=color2, 범위 [0,1]로 계약을 고정한다. 중간값은 패턴별 threshold이며 Floyd는 기존 가로 gradient다.
+   - [x] 실제 MCP 입력으로 기본값·0/1·작은 양수의 저장 픽셀, 영역 밖 보존, invalid 입력의 원본 보존과 optional number/null schema를 검증한다.
+   - [ ] 수정 PR을 develop에 병합한다.
 3. `[BE][FIX] 다중 프레임 PNG 출력 계약 수정` — `fix/be-multiframe-png-export`, BUG-03.
    - [ ] 실제 생성 파일 목록과 응답 경로를 일치시키고 단일 파일 응답의 호환성을 정의한다.
    - [ ] staging에서 생성된 모든 필요한 frame 파일의 publish·실패 정리·기존 출력 보존 정책을 정한다.
@@ -113,6 +114,8 @@ BUG-04/05 브랜치 검증 (2026-09-22): Go 1.25.14 / Linux amd64 / Aseprite 1.3
 2026-09-22 추가 검증 (`c2a3b6b` 코드): 공식 `v1.3.17.2` 태그와 원격 commit `793fb6526540b4c6f5cf8381ae189241cb003fdf`의 일치를 확인했다. 해당 태그의 `src/ver/CMakeLists.txt` 기본 `1.x-dev`를 `1.3.17.2` 버전 메타데이터로 설정하고 CMake/Ninja로 재빌드한 별도 `pixel-mcp-ci:aseprite-1.3.17.2-verified` 이미지를 사용했다. 애플리케이션 동작 코드와 pixel-mcp capability 검사는 변경하지 않았다. Linux amd64 / Go 1.25.14에서 `--health`가 `1.3.17.2` / API `40`으로 성공했고, `go test -count=1 -tags=integration ./...` 전체 통과 (pkg/tools 199.779초). 기존 버전 불명 이미지는 이 검증 이미지와 구분한다.
 
 macOS arm64 추가 검증: 설치된 Aseprite `1.3.18.2-arm64` / API `41`에서 `--health` 및 감색·warnings 관련 10개 최상위 테스트 그룹 통과. Docker에서 `GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go test -c -tags=integration ./pkg/tools`로 만든 Mach-O 테스트 바이너리를 Mac 호스트에서 직접 실행했다. 실행 필터는 `TestQuantizationContract|TestBehavior_Quantization|TestOperationWarningsViaMCP`이며 전체 macOS suite 또는 macOS race 검증을 의미하지 않는다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
+
+BUG-01 검증 (2026-09-22): 최신 develop `a42c624`에서 endpoint 및 작은 양수 회귀 실패를 확인한 뒤 수정했다. Linux amd64 / Go 1.25.14 / Aseprite 1.3.18.3-dev에서 build, vet, `go test -count=1 -race -cover ./...`, `go test -count=1 -tags=integration ./...` 전체 통과 (pkg/tools integration 204.485초). `TestDitherDensity` 4개 그룹은 최소 Aseprite 1.3.17.2 소스 빌드에서도 통과 (17.472초), macOS arm64 / 설치된 Aseprite 1.3.18.2-arm64 네이티브 실행에서도 통과했다. macOS와 최소 버전은 이번 변경의 관련 회귀 범위이며 전체 suite 재실행을 뜻하지 않는다. Windows 네이티브 검증은 사용자 요청으로 보류한다.
 
 공통: 최신 develop에서 원인별 수정·회귀 테스트, 기존 warnings 계약 유지, NEXT_STEPS/CAPABILITIES/CHANGELOG 갱신, PR 생성 후 병합 대기. 플러그인 저장소는 수정하지 않는다. 위 브랜치 분리는 권장 실행 단위이며 모든 수정이 완료됐다는 뜻이 아니다.
 
@@ -324,9 +327,10 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 
 중복된 순서 목록 대신 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 관리한다.
 
-- 현재 작업: `[BE][FIX] 감색 결과 및 옵션 계약 수정` (BUG-04/05), 작업 브랜치 수정·검증 후 PR 병합 대기.
-- 다음 구현 작업: `[BE][FIX] 명시적 dithering density 0 보존` (BUG-01).
-- 이후 BUG-01 → BUG-03 → BUG-02를 처리하고, SAFE-02 dry-run → SAFE-03 snapshot/restore → SAFE-04 history/undo로 진행한다.
+- 완료: `[BE][FIX] 감색 결과 및 옵션 계약 수정` (BUG-04/05), PR #16 develop 병합.
+- 현재 작업: `[BE][FIX] 명시적 dithering density 0 보존` (BUG-01), 수정·검증 후 PR 병합 대기.
+- 다음 구현 작업: `[BE][FIX] 다중 프레임 PNG 출력 계약 수정` (BUG-03).
+- 이후 BUG-03 → BUG-02를 처리하고, SAFE-02 dry-run → SAFE-03 snapshot/restore → SAFE-04 history/undo로 진행한다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.

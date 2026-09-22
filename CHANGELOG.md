@@ -44,6 +44,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Fixed
 
+- `draw_with_dither` preserves explicit `density=0` instead of replacing it with 0.5 (BUG-01). Omitted/null density uses 0.5; all patterns, including Floyd–Steinberg, use color1 at 0 and color2 at 1. Small positive matrix thresholds retain float precision. Interior Floyd–Steinberg values keep the existing horizontal gradient; texture thresholds do not promise exact color ratios.
+
 - `quantize_palette` preserves both opaque colors in two-color indexed output by assigning palette indices explicitly and separating the transparent index after palette resizing (BUG-04).
 - Non-dithered quantization now remaps cel pixels without flattening; disabling indexed conversion preserves the input RGB/grayscale/indexed mode instead of skipping pixel reduction (BUG-05). Dithered quantization retains its existing flattening warnings.
 - Already-small sampled color sets bypass lossy clustering. Indexed output reserves a mask index (at most 255 opaque palette entries). Multi-frame and tilemap quantization now return explicit unsupported-input errors before modification; see `docs/CAPABILITIES.md` for palette, transparency, and rendering limits.

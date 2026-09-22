@@ -2,6 +2,7 @@ package aseprite
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -597,7 +598,7 @@ print("Area filled successfully")`,
 // DrawWithDither generates a Lua script to fill a region with a dithering pattern.
 //
 // Applies a dithering pattern to create texture, gradients, or retro aesthetic effects.
-// Supports 15 different patterns including Bayer matrices and texture patterns.
+// Supports 16 patterns including Bayer matrices, textures, and Floyd-Steinberg.
 //
 // Parameters:
 //   - layerName: name of the target layer (automatically escaped for Lua safety)
@@ -608,7 +609,7 @@ print("Area filled successfully")`,
 //   - color1: first color as hex string (e.g., "#FF0000FF")
 //   - color2: second color as hex string (alternates with color1 based on pattern)
 //   - pattern: dithering pattern name (see below for available patterns)
-//   - density: pattern density/threshold (0.0-1.0, where 0.5 = balanced mix)
+//   - density: threshold (0 fills color1, 1 fills color2); interior coverage depends on the pattern
 //
 // Available patterns:
 //   - "bayer_2x2", "bayer_4x4", "bayer_8x8" - Ordered dithering matrices
@@ -766,8 +767,13 @@ local matrixSize = 4`
 }
 local matrixSize = 4`
 	case "floyd_steinberg":
-		// Floyd-Steinberg uses error diffusion instead of matrix patterns
-		return generateFloydSteinbergLua(escapedLayerName, frameNumber, x, y, width, height, c1, c2, density)
+		// Keep the existing horizontal gradient for interior values. Use the
+		// shared matrix path for exact solid-fill endpoints.
+		if density != 0 && density != 1 {
+			return generateFloydSteinbergLua(escapedLayerName, frameNumber, x, y, width, height, c1, c2, density)
+		}
+		matrixCode = `local matrix = {{0}}
+local matrixSize = 1`
 	default:
 		return fmt.Sprintf(`error("Unknown dithering pattern: %s")`, pattern)
 	}
@@ -856,7 +862,7 @@ local levels = 0
 for _, row in ipairs(matrix) do
     for _, value in ipairs(row) do levels = math.max(levels, value + 1) end
 end
-local threshold = %f * levels
+local threshold = %s * levels
 
 -- Apply dithering pattern
 app.transaction(function()
@@ -883,7 +889,7 @@ print("Dithering applied successfully")`,
 		c1.R, c1.G, c1.B, c1.A,
 		c2.R, c2.G, c2.B, c2.A,
 		matrixCode,
-		density,
+		strconv.FormatFloat(density, 'g', -1, 64),
 		height, width,
 		x, y)
 }
@@ -899,8 +905,8 @@ print("Dithering applied successfully")`,
 // where X is the current pixel being processed.
 //
 // The implementation creates a horizontal gradient from color1 to color2 and applies error
-// diffusion to produce smooth transitions. The density parameter is currently unused as the
-// gradient quality is controlled by the error diffusion algorithm itself.
+// diffusion to produce smooth transitions. Interior density values keep this gradient
+// unchanged; DrawWithDither handles 0 and 1 through the shared solid-fill path.
 func generateFloydSteinbergLua(layerName string, frameNumber int, x, y, width, height int, c1, c2 Color, density float64) string {
 	return fmt.Sprintf(`local spr = app.activeSprite
 if not spr then
