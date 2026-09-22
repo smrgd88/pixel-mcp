@@ -60,34 +60,56 @@ func QuantizePalette(img image.Image, targetColors int, algorithm string, preser
 		targetColors--
 	}
 
-	// Run quantization algorithm
-	var paletteColors []color.Color
-	switch algorithm {
-	case "median_cut":
-		paletteColors = MedianCutQuantization(pixels, targetColors)
-	case "kmeans":
-		// Use existing k-means implementation from palette.go
-		colorfulPixels := make([]colorful.Color, len(pixels))
-		for i, p := range pixels {
-			r, g, b, _ := p.RGBA()
-			colorfulPixels[i] = colorful.Color{
-				R: float64(r) / 65535.0,
-				G: float64(g) / 65535.0,
-				B: float64(b) / 65535.0,
-			}
+	// Preserve an already-small color set exactly. In particular, random
+	// k-means seeds may otherwise duplicate a color and lose the other color.
+	exact := make([]color.Color, 0, targetColors)
+	seen := make(map[color.RGBA]bool)
+	for _, p := range pixels {
+		r, g, b, _ := p.RGBA()
+		c := color.RGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: 255}
+		if !seen[c] {
+			seen[c] = true
+			exact = append(exact, c)
 		}
-		centroids := kmeansClustering(colorfulPixels, targetColors, 100)
-		paletteColors = make([]color.Color, len(centroids))
-		for i, c := range centroids {
-			r, g, b := c.RGB255()
-			paletteColors[i] = color.RGBA{R: r, G: g, B: b, A: 255}
+		if len(exact) > targetColors {
+			break
 		}
-	case "octree":
-		paletteColors = OctreeQuantization(pixels, targetColors)
-	default:
+	}
+	// Validate even when no reduction is needed.
+	if algorithm != "median_cut" && algorithm != "kmeans" && algorithm != "octree" {
 		return nil, 0, fmt.Errorf("unknown algorithm: %s (must be median_cut, kmeans, or octree)", algorithm)
 	}
+	var paletteColors []color.Color
+	if len(exact) <= targetColors {
+		paletteColors = exact
+	} else {
+		switch algorithm {
+		case "median_cut":
+			paletteColors = MedianCutQuantization(pixels, targetColors)
+		case "kmeans":
+			// Use existing k-means implementation from palette.go
+			colorfulPixels := make([]colorful.Color, len(pixels))
+			for i, p := range pixels {
+				r, g, b, _ := p.RGBA()
+				colorfulPixels[i] = colorful.Color{
+					R: float64(r) / 65535.0,
+					G: float64(g) / 65535.0,
+					B: float64(b) / 65535.0,
+				}
+			}
+			centroids := kmeansClustering(colorfulPixels, targetColors, 100)
+			paletteColors = make([]color.Color, len(centroids))
+			for i, c := range centroids {
+				r, g, b := c.RGB255()
+				paletteColors[i] = color.RGBA{R: r, G: g, B: b, A: 255}
+			}
+		case "octree":
+			paletteColors = OctreeQuantization(pixels, targetColors)
+		default:
+			return nil, 0, fmt.Errorf("unknown algorithm: %s (must be median_cut, kmeans, or octree)", algorithm)
+		}
 
+	}
 	if hasTransparency {
 		paletteColors = append([]color.Color{color.RGBA{}}, paletteColors...)
 	}

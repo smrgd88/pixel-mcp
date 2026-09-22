@@ -18,11 +18,11 @@ import (
 // QuantizePaletteInput defines the input parameters for the quantize_palette tool.
 type QuantizePaletteInput struct {
 	SpritePath           string `json:"sprite_path" jsonschema:"Path to source .aseprite file"`
-	TargetColors         int    `json:"target_colors" jsonschema:"Target palette size (2-256)"`
+	TargetColors         int    `json:"target_colors" jsonschema:"Maximum palette entries (2-256); indexed output reserves a transparent index and supports at most 255 opaque entries"`
 	Algorithm            string `json:"algorithm" jsonschema:"Quantization algorithm: median_cut (default), kmeans, or octree"`
 	Dither               bool   `json:"dither" jsonschema:"Apply Floyd-Steinberg dithering during quantization (default: false)"`
-	PreserveTransparency *bool  `json:"preserve_transparency,omitempty" jsonschema:"Keep transparent pixels transparent (default: true)"`
-	ConvertToIndexed     *bool  `json:"convert_to_indexed,omitempty" jsonschema:"Convert sprite to indexed color mode (default: true)"`
+	PreserveTransparency *bool  `json:"preserve_transparency,omitempty" jsonschema:"Reserve a palette entry for fully transparent pixels (default: true); transparent pixels remain transparent in either setting"`
+	ConvertToIndexed     *bool  `json:"convert_to_indexed,omitempty" jsonschema:"Convert to indexed (default: true); false preserves the input color mode while still remapping pixels"`
 }
 
 // QuantizePaletteOutput defines the output for the quantize_palette tool.
@@ -31,7 +31,7 @@ type QuantizePaletteOutput struct {
 	Success         bool          `json:"success" jsonschema:"Whether the operation succeeded"`
 	OriginalColors  int           `json:"original_colors" jsonschema:"Number of unique colors in original sprite"`
 	QuantizedColors int           `json:"quantized_colors" jsonschema:"Number of colors in quantized palette"`
-	ColorMode       string        `json:"color_mode" jsonschema:"Color mode after quantization (indexed or rgb)"`
+	ColorMode       string        `json:"color_mode" jsonschema:"Color mode after quantization (indexed, rgb, or grayscale)"`
 	Palette         []string      `json:"palette" jsonschema:"Array of hex colors in the quantized palette"`
 	AlgorithmUsed   string        `json:"algorithm_used" jsonschema:"Quantization algorithm that was used"`
 }
@@ -42,7 +42,7 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 		server,
 		&mcp.Tool{
 			Name:        "quantize_palette",
-			Description: "Automatically reduce sprite colors using industry-standard quantization algorithms. Supports three algorithms: median_cut (fast, balanced quality), kmeans (highest quality, slower), octree (very fast, good for photos). Can apply Floyd-Steinberg dithering for smoother gradients. Optionally converts to indexed color mode for true palette constraint or keeps RGB mode for flexible multi-pass workflows.",
+			Description: "Reduce pixels to a quantized palette in single-frame sprites (tilemap layers are unsupported). Supports three algorithms: median_cut (fast, balanced quality), kmeans (highest quality, slower), octree (very fast, good for photos). Can apply Floyd-Steinberg dithering for smoother gradients. Always remaps pixels, even without dithering or indexed conversion. Non-dithered remapping preserves layers; dithering flattens them. Disabling indexed conversion preserves the input color mode. Palette size does not bound colors created by layer blending.",
 		},
 		maybeWrapWithTiming("quantize_palette", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input QuantizePaletteInput) (*mcp.CallToolResult, *QuantizePaletteOutput, error) {
 			opLogger := logger.WithContext(ctx)
@@ -92,12 +92,19 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 
 			tempPNG := filepath.Join(tempDir, "sprite.png")
 
-			// Export sprite to PNG using gen.ExportSprite for consistency
-			exportScript := gen.ExportSprite(tempPNG, 0)
+			// Render one frame and retain the input mode before dithering replaces it.
+			exportScript := gen.ExportQuantizationSource(tempPNG)
 
-			_, err = client.ExecuteLua(ctx, exportScript, input.SpritePath)
+			sourceOutput, err := client.ExecuteLua(ctx, exportScript, input.SpritePath)
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to export sprite to PNG: %w", err)
+			}
+
+			var source struct {
+				ColorMode string `json:"color_mode"`
+			}
+			if err := parseJSON(sourceOutput, &source); err != nil {
+				return nil, nil, fmt.Errorf("failed to read source color mode: %w", err)
 			}
 
 			// Step 2: Load PNG and perform quantization in Go
@@ -117,15 +124,50 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 				}
 			}
 
+			// An indexed sprite needs one mask index even when the visible image is
+			// opaque. For transparent inputs QuantizePalette already reserves it.
+			targetColors := input.TargetColors
+			if targetColors == 256 && (*input.ConvertToIndexed || source.ColorMode == "indexed") {
+				hasTransparent := false
+				if *input.PreserveTransparency {
+					for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y && !hasTransparent; y++ {
+						for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+							_, _, _, a := img.At(x, y).RGBA()
+							if a == 0 {
+								hasTransparent = true
+								break
+							}
+						}
+					}
+				}
+				if !hasTransparent {
+					targetColors = 255
+				}
+			}
 			// Perform quantization
 			palette, originalColors, err := aseprite.QuantizePalette(
 				img,
-				input.TargetColors,
+				targetColors,
 				input.Algorithm,
 				*input.PreserveTransparency,
 			)
 			if err != nil {
 				return nil, nil, fmt.Errorf("quantization failed: %w", err)
+			}
+
+			// A grayscale document stores intensity, so report and dither with
+			// the same grayscale palette that its cels can represent.
+			if source.ColorMode == "grayscale" && !*input.ConvertToIndexed {
+				for i, hex := range palette {
+					var c aseprite.Color
+					if err := c.FromHex(hex); err != nil {
+						return nil, nil, err
+					}
+					if c.A != 0 {
+						v := (299*int(c.R) + 587*int(c.G) + 114*int(c.B) + 500) / 1000
+						palette[i] = fmt.Sprintf("#%02X%02X%02X", v, v, v)
+					}
+				}
 			}
 
 			opLogger.Information("Quantization completed",
@@ -154,10 +196,14 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 				if err != nil {
 					return nil, nil, fmt.Errorf("failed to create dithered PNG: %w", err)
 				}
-				defer ditheredFile.Close()
 
 				if err := png.Encode(ditheredFile, ditheredImg); err != nil {
+					ditheredFile.Close()
 					return nil, nil, fmt.Errorf("failed to encode dithered PNG: %w", err)
+				}
+
+				if err := ditheredFile.Close(); err != nil {
+					return nil, nil, fmt.Errorf("failed to close dithered PNG: %w", err)
 				}
 
 				// Replace sprite content with dithered image
@@ -177,6 +223,7 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 				input.Algorithm,
 				*input.ConvertToIndexed,
 				input.Dither,
+				source.ColorMode,
 			)
 
 			output, err := client.ExecuteLua(ctx, applyScript, input.SpritePath)
