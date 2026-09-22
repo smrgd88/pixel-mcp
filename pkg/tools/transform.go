@@ -120,7 +120,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "downsample_image",
 			Description: "Downsample an image to smaller dimensions using box filter (area averaging) algorithm. Accepts any image format supported by Aseprite (.aseprite, .png, .jpg, .bmp, .gif) and creates a new downsampled sprite. This is useful for creating pixel art versions of high-resolution images or reducing image size while maintaining quality.",
 		},
-		maybeWrapWithTiming("downsample_image", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DownsampleImageInput) (*mcp.CallToolResult, *DownsampleImageOutput, error) {
+		maybeWrapWithTiming("downsample_image", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DownsampleImageInput) (*mcp.CallToolResult, *DownsampleImageOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("downsample_image tool called", "source", input.SourcePath, "target_width", input.TargetWidth, "target_height", input.TargetHeight)
 
@@ -206,7 +206,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "flip_sprite",
 			Description: "Flip a sprite, layer, or cel horizontally or vertically. This operation mirrors the image content along the specified axis.",
 		},
-		maybeWrapWithTiming("flip_sprite", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input FlipSpriteInput) (*mcp.CallToolResult, *FlipSpriteOutput, error) {
+		maybeWrapWithTiming("flip_sprite", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input FlipSpriteInput) (*mcp.CallToolResult, *FlipSpriteOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("flip_sprite tool called", "sprite", input.SpritePath, "direction", input.Direction, "target", input.Target)
 
@@ -246,7 +246,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "rotate_sprite",
 			Description: "Rotate a sprite, layer, or cel by 90, 180, or 270 degrees clockwise.",
 		},
-		maybeWrapWithTiming("rotate_sprite", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input RotateSpriteInput) (*mcp.CallToolResult, *RotateSpriteOutput, error) {
+		maybeWrapWithTiming("rotate_sprite", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input RotateSpriteInput) (*mcp.CallToolResult, *RotateSpriteOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("rotate_sprite tool called", "sprite", input.SpritePath, "angle", input.Angle, "target", input.Target)
 
@@ -286,7 +286,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "scale_sprite",
 			Description: "Scale a sprite by specified X and Y factors using a chosen algorithm (nearest, bilinear, or rotsprite). Returns the new dimensions.",
 		},
-		maybeWrapWithTiming("scale_sprite", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input ScaleSpriteInput) (*mcp.CallToolResult, *ScaleSpriteOutput, error) {
+		maybeWrapWithTiming("scale_sprite", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ScaleSpriteInput) (*mcp.CallToolResult, *ScaleSpriteOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("scale_sprite tool called", "sprite", input.SpritePath, "scale_x", input.ScaleX, "scale_y", input.ScaleY, "algorithm", input.Algorithm)
 
@@ -341,7 +341,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "crop_sprite",
 			Description: "Crop a sprite to a specified rectangular region. The crop bounds must be within the sprite dimensions.",
 		},
-		maybeWrapWithTiming("crop_sprite", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input CropSpriteInput) (*mcp.CallToolResult, *CropSpriteOutput, error) {
+		maybeWrapWithTiming("crop_sprite", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input CropSpriteInput) (*mcp.CallToolResult, *CropSpriteOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("crop_sprite tool called", "sprite", input.SpritePath, "bounds", fmt.Sprintf("%d,%d,%dx%d", input.X, input.Y, input.Width, input.Height))
 
@@ -376,7 +376,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "resize_canvas",
 			Description: "Resize the canvas without scaling content. Content is positioned according to the anchor point (center, top_left, top_right, bottom_left, or bottom_right).",
 		},
-		maybeWrapWithTiming("resize_canvas", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input ResizeCanvasInput) (*mcp.CallToolResult, *ResizeCanvasOutput, error) {
+		maybeWrapWithTiming("resize_canvas", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ResizeCanvasInput) (*mcp.CallToolResult, *ResizeCanvasOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("resize_canvas tool called", "sprite", input.SpritePath, "size", fmt.Sprintf("%dx%d", input.Width, input.Height), "anchor", input.Anchor)
 
@@ -426,7 +426,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "apply_outline",
 			Description: "Apply an outline effect to a layer at a specified frame. The outline is drawn around non-transparent pixels with configurable color and thickness.",
 		},
-		maybeWrapWithTiming("apply_outline", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input ApplyOutlineInput) (*mcp.CallToolResult, *ApplyOutlineOutput, error) {
+		maybeWrapWithTiming("apply_outline", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ApplyOutlineInput) (*mcp.CallToolResult, *ApplyOutlineOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("apply_outline tool called", "sprite", input.SpritePath, "layer", input.LayerName, "frame", input.FrameNumber, "color", input.Color, "thickness", input.Thickness)
 

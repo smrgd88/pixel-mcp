@@ -60,7 +60,7 @@ func RegisterInspectionTools(server *mcp.Server, client *aseprite.Client, gen *a
 			Name:        "get_pixels",
 			Description: "Read pixel data from a rectangular region of a sprite. Returns an array of pixels with their coordinates and colors in hex format (#RRGGBBAA). Supports pagination for large regions using cursor and page_size parameters (default page size: 1000, max: 10000).",
 		},
-		maybeWrapWithTiming("get_pixels", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input GetPixelsInput) (*mcp.CallToolResult, *GetPixelsOutput, error) {
+		maybeWrapWithTiming("get_pixels", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input GetPixelsInput) (*mcp.CallToolResult, *GetPixelsOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("get_pixels tool called", "sprite_path", input.SpritePath, "layer", input.LayerName, "frame", input.FrameNumber, "x", input.X, "y", input.Y, "width", input.Width, "height", input.Height, "cursor", input.Cursor, "page_size", input.PageSize)
 

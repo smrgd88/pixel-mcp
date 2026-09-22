@@ -151,3 +151,9 @@ Integration and Aseprite behavior tests use a real executable to ensure:
 **Tests timeout**
 - Increase `timeout` value in config.json (value in seconds)
 - Default is 30 seconds
+
+## File protection
+
+SAFE-05 regression coverage: `TestFileProtection*` unit/process tests and `TestIntegrationFileProtection*` real Aseprite/MCP tests. Run `go test -race -tags=integration ./pkg/aseprite ./pkg/tools -run 'Test(FileProtection|IntegrationFileProtection)'`.
+
+The process-death test intentionally kills its child test process after writing staging data; the original must remain unchanged and the OS lock must be reacquirable. See [FILE_PROTECTION](FILE_PROTECTION.md) for scope and platform limits.

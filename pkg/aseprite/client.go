@@ -122,7 +122,24 @@ func (c *Client) executeLuaWithRequirements(ctx context.Context, script, spriteP
 	if err := validateCapabilities(caps, minimum, minimumAPI); err != nil {
 		return "", err
 	}
-	return c.executeLuaUnchecked(ctx, script, spritePath)
+	if spritePath == "" {
+		return c.executeLuaUnchecked(ctx, script, "")
+	}
+	if staged, ok, err := boundSprite(ctx, spritePath); err != nil {
+		return "", err
+	} else if ok {
+		return c.executeLuaUnchecked(ctx, script, staged)
+	}
+	var output string
+	err = WithSpriteAccess(ctx, spritePath, true, func(ctx context.Context) error {
+		staged, _, e := boundSprite(ctx, spritePath)
+		if e != nil {
+			return e
+		}
+		output, e = c.executeLuaUnchecked(ctx, script, staged)
+		return e
+	})
+	return output, err
 }
 
 // executeLuaUnchecked is private so tool handlers cannot bypass capability validation.

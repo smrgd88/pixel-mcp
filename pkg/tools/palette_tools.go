@@ -127,7 +127,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "get_palette",
 			Description: "Retrieve the current sprite palette as an array of hex colors. Returns both the color array and palette size. Useful for inspecting existing palettes before modification.",
 		},
-		maybeWrapWithTiming("get_palette", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input GetPaletteInput) (*mcp.CallToolResult, *GetPaletteOutput, error) {
+		maybeWrapWithTiming("get_palette", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input GetPaletteInput) (*mcp.CallToolResult, *GetPaletteOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("get_palette tool called",
 				"sprite", input.SpritePath)
@@ -163,7 +163,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "set_palette_color",
 			Description: "Set a specific palette index to a color. Index must be within the current palette range (0 to palette size - 1). Useful for modifying individual palette entries.",
 		},
-		maybeWrapWithTiming("set_palette_color", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input SetPaletteColorInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
+		maybeWrapWithTiming("set_palette_color", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SetPaletteColorInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("set_palette_color tool called",
 				"sprite", input.SpritePath,
@@ -206,7 +206,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "add_palette_color",
 			Description: "Add a new color to the palette. The palette will be resized to accommodate the new color. Returns the index of the newly added color. Maximum palette size is 256 colors.",
 		},
-		maybeWrapWithTiming("add_palette_color", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input AddPaletteColorInput) (*mcp.CallToolResult, *AddPaletteColorOutput, error) {
+		maybeWrapWithTiming("add_palette_color", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input AddPaletteColorInput) (*mcp.CallToolResult, *AddPaletteColorOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("add_palette_color tool called",
 				"sprite", input.SpritePath,
@@ -249,7 +249,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "sort_palette",
 			Description: "Sort the palette by hue, saturation, brightness, or luminance. Can sort in ascending or descending order. Useful for organizing palettes for easier color selection.",
 		},
-		maybeWrapWithTiming("sort_palette", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input SortPaletteInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
+		maybeWrapWithTiming("sort_palette", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SortPaletteInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("sort_palette tool called",
 				"sprite", input.SpritePath,
@@ -290,7 +290,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "set_palette",
 			Description: "Set the sprite's color palette to the specified colors. Useful for applying extracted palettes from analyze_reference or creating custom limited palettes for pixel art. Colors should be in #RRGGBB hex format.",
 		},
-		maybeWrapWithTiming("set_palette", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input SetPaletteInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
+		maybeWrapWithTiming("set_palette", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SetPaletteInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("set_palette tool called",
 				"sprite", input.SpritePath,
@@ -337,7 +337,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "apply_shading",
 			Description: "Apply palette-constrained shading to a region based on light direction. Automatically adjusts pixel colors to create highlights and shadows while staying within the provided palette. Supports smooth, hard, and pillow shading styles. Essential for adding depth and dimension to pixel art.",
 		},
-		maybeWrapWithTiming("apply_shading", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input ApplyShadingInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
+		maybeWrapWithTiming("apply_shading", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ApplyShadingInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("apply_shading tool called",
 				"sprite", input.SpritePath,
@@ -427,7 +427,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 			Name:        "analyze_palette_harmonies",
 			Description: "Analyze color palette for harmonious relationships. Identifies complementary pairs (opposite colors on color wheel), triadic sets (3 evenly spaced colors), analogous groups (adjacent colors), and color temperature (warm/cool/neutral). Essential for creating professional, cohesive pixel art palettes based on color theory.",
 		},
-		maybeWrapWithTiming("analyze_palette_harmonies", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input AnalyzePaletteHarmoniesInput) (*mcp.CallToolResult, *PaletteHarmonyResult, error) {
+		maybeWrapWithTiming("analyze_palette_harmonies", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input AnalyzePaletteHarmoniesInput) (*mcp.CallToolResult, *PaletteHarmonyResult, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("analyze_palette_harmonies tool called",
 				"palette_size", len(input.Palette))

@@ -39,7 +39,7 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "draw_with_dither",
 			Description: "Fill a region with a dithering pattern to create smooth gradients and textures. Supports 16 patterns: Bayer matrix (bayer_2x2, bayer_4x4, bayer_8x8) for ordered dithering, Floyd-Steinberg error diffusion (floyd_steinberg) for high-quality gradients, checkerboard for 50/50 blends, and texture patterns (grass, water, stone, cloud, brick, dots, diagonal, cross, noise, horizontal_lines, vertical_lines) for organic effects. Use density parameter to control the ratio of color1 to color2 (0.0 = all color1, 1.0 = all color2, 0.5 = even mix). Essential for professional pixel art gradients and textures.",
 		},
-		maybeWrapWithTiming("draw_with_dither", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DrawWithDitherInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
+		maybeWrapWithTiming("draw_with_dither", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawWithDitherInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("draw_with_dither tool called",
 				"sprite", input.SpritePath,

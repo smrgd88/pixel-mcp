@@ -82,7 +82,7 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "set_frame_duration",
 			Description: "Set the duration of an existing animation frame in milliseconds.",
 		},
-		maybeWrapWithTiming("set_frame_duration", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input SetFrameDurationInput) (*mcp.CallToolResult, *SetFrameDurationOutput, error) {
+		maybeWrapWithTiming("set_frame_duration", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SetFrameDurationInput) (*mcp.CallToolResult, *SetFrameDurationOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("set_frame_duration tool called", "sprite_path", input.SpritePath, "frame_number", input.FrameNumber, "duration_ms", input.DurationMs)
 
@@ -123,7 +123,7 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "create_tag",
 			Description: "Create an animation tag to define a named frame range with playback direction.",
 		},
-		maybeWrapWithTiming("create_tag", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input CreateTagInput) (*mcp.CallToolResult, *CreateTagOutput, error) {
+		maybeWrapWithTiming("create_tag", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input CreateTagInput) (*mcp.CallToolResult, *CreateTagOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("create_tag tool called", "sprite_path", input.SpritePath, "tag_name", input.TagName, "from_frame", input.FromFrame, "to_frame", input.ToFrame, "direction", input.Direction)
 
@@ -178,7 +178,7 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "duplicate_frame",
 			Description: "Duplicate an existing frame and insert it at the specified position.",
 		},
-		maybeWrapWithTiming("duplicate_frame", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DuplicateFrameInput) (*mcp.CallToolResult, *DuplicateFrameOutput, error) {
+		maybeWrapWithTiming("duplicate_frame", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DuplicateFrameInput) (*mcp.CallToolResult, *DuplicateFrameOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("duplicate_frame tool called", "sprite_path", input.SpritePath, "source_frame", input.SourceFrame, "insert_after", input.InsertAfter)
 
@@ -221,7 +221,7 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "link_cel",
 			Description: "Create a linked cel that references another cel's image data, useful for animation optimization.",
 		},
-		maybeWrapWithTiming("link_cel", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input LinkCelInput) (*mcp.CallToolResult, *LinkCelOutput, error) {
+		maybeWrapWithTiming("link_cel", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input LinkCelInput) (*mcp.CallToolResult, *LinkCelOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("link_cel tool called", "sprite_path", input.SpritePath, "layer_name", input.LayerName, "source_frame", input.SourceFrame, "target_frame", input.TargetFrame)
 
@@ -270,7 +270,7 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "delete_tag",
 			Description: "Delete an animation tag by name.",
 		},
-		maybeWrapWithTiming("delete_tag", logger, cfg.EnableTiming, func(ctx context.Context, req *mcp.CallToolRequest, input DeleteTagInput) (*mcp.CallToolResult, *DeleteTagOutput, error) {
+		maybeWrapWithTiming("delete_tag", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DeleteTagInput) (*mcp.CallToolResult, *DeleteTagOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("delete_tag tool called", "sprite_path", input.SpritePath, "tag_name", input.TagName)
 

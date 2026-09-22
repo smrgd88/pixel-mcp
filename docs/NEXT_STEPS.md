@@ -1,8 +1,8 @@
 # pixel-mcp 다음 작업 체크리스트
 
-작성일: 2026-08-31 · 현황 동기화: 2026-09-21
+작성일: 2026-08-31 · 현황 동기화: 2026-09-22
 
-현재 기준: `develop`의 `6c9ac5ec211df74aafa9b14a96b132aee0209be8` (PR #11·#12 병합 반영)
+현재 기준: `develop`의 `897c2f1d218b712e0a5387bb3806671dce302ddf` (PR #13까지 병합 반영)
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -72,7 +72,7 @@
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 현재 작업은 capability(GAP-10)다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 현재 작업은 파일 변경 보호(SAFE-05)다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## P0 — 다음 릴리스 전에 처리
 
@@ -217,18 +217,20 @@ SAFE-01: PR #11로 develop `6c9ac5e`에 병합했으며 [응답 계약](WARNINGS
 
 ### 동일 sprite 동시 수정 보호
 
+SAFE-05: `feature/shared-file-change-protection` 작업 브랜치. [보호 범위·실패 경계](FILE_PROTECTION.md)를 기준으로 검증한다.
+
 분류: **pixel-mcp 책임**
 
-- [ ] canonical sprite path 기준으로 per-file lock을 구현한다.
-- [ ] 같은 파일의 읽기/쓰기 및 쓰기/쓰기 동시 호출 정책을 정의한다.
-- [ ] timeout과 취소 시 lock이 누수되지 않는지 테스트한다.
-- [ ] 저장 중 프로세스 종료 시 원본 파일이 손상되지 않는지 fault test를 추가한다.
+- [x] canonical sprite path 기준으로 per-file lock을 구현한다.
+- [x] 같은 파일의 읽기/쓰기 및 쓰기/쓰기 동시 호출 정책을 정의한다.
+- [x] timeout과 취소 시 lock이 누수되지 않는지 테스트한다.
+- [x] 저장 중 프로세스 종료 시 원본 파일이 손상되지 않는지 fault test를 추가한다.
 
 ## P2 — 호환성과 운영성
 
 ### 공식 API capability와 버전 검사
 
-GAP-10: `feature/shared-aseprite-capability`에서 구현. 아직 병합 전이며 [실행 환경 검사 계약](CAPABILITIES.md#실행-환경-사전-검사-gap-10)에 검증 범위를 기록한다.
+GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 계약](CAPABILITIES.md#실행-환경-사전-검사-gap-10)에 검증 범위를 기록한다.
 
 - [x] health output에 `app.version`과 `app.apiVersion`을 포함한다.
 - [x] 최소 지원 Aseprite 버전을 1.3.17.2/API 39로 문서에 명시한다.
@@ -270,8 +272,8 @@ GAP-10: `feature/shared-aseprite-capability`에서 구현. 아직 병합 전이�
 
 중복된 순서 목록 대신 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 관리한다.
 
-- 현재 작업: `[SHARED][FEATURE] Aseprite capability 사전 검사` (GAP-10), 작업 브랜치에서 구현·검증.
-- GAP-10 병합 후 다음 기능 작업: `[SHARED][FEATURE] 파일 변경 보호 기반` (SAFE-05).
+- 현재 작업: `[SHARED][FEATURE] 파일 변경 보호 기반` (SAFE-05), 작업 브랜치 구현·검증.
+- 병합 후 다음 기능 작업: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02).
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
 - indexed #16은 기존 보류 조건을 유지한다.
