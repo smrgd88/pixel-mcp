@@ -44,6 +44,9 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Fixed
 
+- `export_sprite` returns the actual PNG/JPG/BMP frame sequence in optional `files` entries, using explicit `stem_0001.ext` names. Existing `exported_path`/`file_size` identify the first real file; single-frame and animated GIF exports retain their single-file response (BUG-03).
+- Stage and validate the complete export output set before replacement; roll back published files on ordinary commit failure/cancellation, retaining backups if recovery fails. Reject source aliases and format/extension mismatches. Render individual frames with their groups, visibility, and cel positions. See `docs/FILE_PROTECTION.md` for crash and concurrent external-writer limits.
+
 - `draw_with_dither` preserves explicit `density=0` instead of replacing it with 0.5 (BUG-01). Omitted/null density uses 0.5; all patterns, including Floyd–Steinberg, use color1 at 0 and color2 at 1. Small positive matrix thresholds retain float precision. Interior Floyd–Steinberg values keep the existing horizontal gradient; texture thresholds do not promise exact color ratios.
 
 - `quantize_palette` preserves both opaque colors in two-color indexed output by assigning palette indices explicitly and separating the transparent index after palette resizing (BUG-04).
