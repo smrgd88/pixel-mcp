@@ -47,6 +47,12 @@ func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handle
 		} // create_canvas uses a unique generated path.
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
+		// export_sprite discovers its frame count first, then reserves the
+		// complete source/output set in its handler before staging any output.
+		if tool == "export_sprite" {
+			return handler(ctx, req, input)
+		}
+
 		var result *mcp.CallToolResult
 		var output O
 		call := func(ctx context.Context, in I) error {
@@ -78,7 +84,7 @@ func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handle
 			if aa, ok := any(input).(SuggestAntialiasingInput); ok && !aa.AutoApply {
 				readOnly = true
 			}
-			if tool == "save_as" || tool == "downsample_image" || tool == "export_sprite" {
+			if tool == "save_as" || tool == "downsample_image" {
 				return aseprite.WithSpriteAccess(ctx, source, false, func(ctx context.Context) error {
 					if target == "" {
 						return call(ctx, input)
