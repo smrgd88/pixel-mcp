@@ -195,3 +195,5 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 `fix/be-d
 - Bayer·texture 패턴의 중간값은 matrix threshold다. 패턴의 분포·영역 크기에 따라 색상 비율이 달라지므로 density=0.5가 모든 패턴에서 정확한 50:50 비율을 뜻하지 않는다. 아주 작은 양수도 Lua 생성 시 0으로 반올림하지 않는다.
 - Floyd–Steinberg도 0/1은 단색 endpoint를 따른다. `0 < density < 1`은 기존 가로 color1→color2 그라디언트를 유지하고 density로 그라디언트를 조절하지 않는다. 중간값 조절 기능은 이번 수정에 포함하지 않는다.
 - 기존 색상 모드별 색 매핑·좌표 처리와 응답/warnings 계약을 유지한다. 이 수정은 모든 drawing/export 계약의 확대 검증을 뜻하지 않는다.
+
+위 Floyd 중간 density 무시와 texture의 제한된 밀도 단계는 Aseprite 지원 한계가 아니라 **pixel-mcp 구현 미비**다. [DITHER-01/02 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)로 개선을 추적한다. 정확한 비율의 픽셀 단위 반올림과 문양 보존의 tradeoff는 별도 설계 제약이며, 새 동작·API는 아직 구현하거나 확정하지 않았다.

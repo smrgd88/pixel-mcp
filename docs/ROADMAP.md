@@ -27,6 +27,8 @@
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
+디더링 후속 backlog (2026-09-23): **DITHER-01 Floyd–Steinberg 중간 density 반영**, **DITHER-02 Texture 패턴의 세밀한 밀도·비율 제어**. 구현 미비를 개선하는 별도 작업으로 등록하며 착수 순서는 미확정이다. 위 실행 순서는 유지한다. 설계 결정과 완료 조건은 [NEXT_STEPS의 디더링 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)를 따른다.
+
 ## 단계와 완료 조건
 
 | 단계 | 목적·추적 ID | 주요 작업 | 완료 조건 | 선행 조건·현재 상태 |
@@ -85,6 +87,7 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] SAFE-05: 파일 변경 보호 구현 (PR #14 develop 병합 완료; [검증 범위](FILE_PROTECTION.md))
 - [x] BUG-04/05 수정·회귀 검증 및 PR #16 병합
 - [ ] BUG-01 → BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
+- [ ] DITHER-01/02: 중간 밀도·texture 비율 제어 (후속 backlog, 착수 순서 미확정)
 - [ ] SAFE-02–04: dry-run·snapshot·history/undo
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정
