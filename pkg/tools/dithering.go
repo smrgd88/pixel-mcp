@@ -19,7 +19,7 @@ type DrawWithDitherInput struct {
 	Color1      string      `json:"color1" jsonschema:"First color (hex #RRGGBB or #RRGGBBAA)"`
 	Color2      string      `json:"color2" jsonschema:"Second color (hex #RRGGBB or #RRGGBBAA)"`
 	Pattern     string      `json:"pattern" jsonschema:"Dithering pattern: bayer_2x2|bayer_4x4|bayer_8x8|checkerboard|floyd_steinberg|grass|water|stone|cloud|brick|dots|diagonal|cross|noise|horizontal_lines|vertical_lines"`
-	Density     float64     `json:"density,omitempty" jsonschema:"Ratio of color1 to color2 (0.0-1.0, default: 0.5)"`
+	Density     *float64    `json:"density,omitempty" jsonschema:"Density threshold in [0,1]; omitted or null defaults to 0.5, 0 fills color1, 1 fills color2. Interior values depend on the pattern"`
 }
 
 // RegionInput defines a rectangular region.
@@ -37,7 +37,7 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 		server,
 		&mcp.Tool{
 			Name:        "draw_with_dither",
-			Description: "Fill a region with a dithering pattern to create smooth gradients and textures. Supports 16 patterns: Bayer matrix (bayer_2x2, bayer_4x4, bayer_8x8) for ordered dithering, Floyd-Steinberg error diffusion (floyd_steinberg) for high-quality gradients, checkerboard for 50/50 blends, and texture patterns (grass, water, stone, cloud, brick, dots, diagonal, cross, noise, horizontal_lines, vertical_lines) for organic effects. Use density parameter to control the ratio of color1 to color2 (0.0 = all color1, 1.0 = all color2, 0.5 = even mix). Essential for professional pixel art gradients and textures.",
+			Description: "Fill a region with one of 16 ordered, texture, or Floyd-Steinberg dithering patterns. Omitted or null density defaults to 0.5; explicit 0 fills color1 and 1 fills color2. Interior density values select a matrix threshold, so texture coverage need not equal the density or be 50/50. For floyd_steinberg, interior values retain the existing horizontal color1-to-color2 gradient and do not adjust its density.",
 		},
 		maybeWrapWithTiming("draw_with_dither", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawWithDitherInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)
@@ -93,10 +93,10 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 				return nil, nil, fmt.Errorf("invalid color2 format: %s (expected #RRGGBB or #RRGGBBAA)", input.Color2)
 			}
 
-			// Set default density
-			density := input.Density
-			if density == 0 {
-				density = 0.5
+			// Default an unset optional value (omitted or null); zero is valid.
+			density := 0.5
+			if input.Density != nil {
+				density = *input.Density
 			}
 			if density < 0 || density > 1 {
 				return nil, nil, fmt.Errorf("density must be between 0.0 and 1.0, got %f", density)

@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-09-22 · 코드 기준: `develop`의 `c049ad42e3a48656d4f011c8705f413441440d2a`
+기준일: 2026-09-22 · 코드 기준: `develop`의 `a42c6242077c4681a9b66f44915f7aef8de33a6c`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -18,14 +18,16 @@
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | BUG-04/05 감색 결과·옵션 계약 — 수정 브랜치, 병합 대기 | 픽셀 remap·입력 모드 유지·indexed 투명 인덱스 분리. 상세 계약은 CAPABILITIES |
-| 2 | BUG-01 density=0 보존 — 다음 구현 작업 | 명시적 사용자 입력이 다른 픽셀 결과를 만드는 오류 |
-| 3 | BUG-03 다중 frame PNG | 기존 export workflow와 실제 파일/응답 계약 복구; 필요한 출력 경로 처리만 정리 |
+| 1 | BUG-04/05 감색 결과·옵션 계약 — PR #16 병합 완료 | 픽셀 remap·입력 모드 유지·indexed 투명 인덱스 분리. 상세 계약은 CAPABILITIES |
+| 2 | BUG-01 density=0 보존 — 수정 브랜치, 병합 대기 | 명시적 사용자 입력이 다른 픽셀 결과를 만드는 오류 |
+| 3 | BUG-03 다중 frame PNG — 다음 구현 작업 | 기존 export workflow와 실제 파일/응답 계약 복구; 필요한 출력 경로 처리만 정리 |
 | 4 | BUG-02 참조 형식 지원 | 광고된 지원과 decoder 불일치. 독립 처리 가능하며 dry-run 자체의 기술적 선행 조건은 아님 |
 | 5 | SAFE-02 dry-run | 올바른 편집 동작을 임시 복사본에서 preview |
 | 6 | SAFE-03 → SAFE-04 | snapshot/restore 이후 history/undo |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
+
+디더링 후속 backlog (2026-09-23): **DITHER-01 Floyd–Steinberg 중간 density 반영**, **DITHER-02 Texture 패턴의 세밀한 밀도·비율 제어**. 구현 미비를 개선하는 별도 작업으로 등록하며 착수 순서는 미확정이다. 위 실행 순서는 유지한다. 설계 결정과 완료 조건은 [NEXT_STEPS의 디더링 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)를 따른다.
 
 ## 단계와 완료 조건
 
@@ -83,7 +85,9 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] SAFE-01: warnings 구현 (PR #11 develop 병합 완료, [검증 범위](WARNINGS.md))
 - [x] GAP-10: capability preflight 구현 (PR #13 병합 완료; 하한 실행 추가 검증 완료, NEXT_STEPS 참조)
 - [x] SAFE-05: 파일 변경 보호 구현 (PR #14 develop 병합 완료; [검증 범위](FILE_PROTECTION.md))
-- [ ] BUG-04/05 → BUG-01 → BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
+- [x] BUG-04/05 수정·회귀 검증 및 PR #16 병합
+- [ ] BUG-01 → BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
+- [ ] DITHER-01/02: 중간 밀도·texture 비율 제어 (후속 backlog, 착수 순서 미확정)
 - [ ] SAFE-02–04: dry-run·snapshot·history/undo
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정
