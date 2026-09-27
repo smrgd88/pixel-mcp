@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-09-23 · 코드 기준: `develop`의 `a7ffa0fc61763685b195f41b90ba6d1f07fdeece`
+기준일: 2026-09-27 · 코드 기준: `develop`의 `363d6fa0960ebd7d339fc1edca6beb538f44e8c4`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -16,18 +16,29 @@
 
 최신 develop에서 재현한 알려진 동작 오류를 SAFE-02 dry-run보다 먼저 처리한다. 잘못된 실제 결과와 모호한 감색 계약을 preview에 그대로 복제하지 않기 위한 순서다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
 
+완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18). 아래는 남은 작업만 나열한다.
+
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | BUG-04/05 감색 결과·옵션 계약 — PR #16 병합 완료 | 픽셀 remap·입력 모드 유지·indexed 투명 인덱스 분리. 상세 계약은 CAPABILITIES |
-| 2 | BUG-01 density=0 보존 — PR #17 병합 완료 | 명시적 사용자 입력이 다른 픽셀 결과를 만드는 오류 |
-| 3 | BUG-03 다중 frame PNG — 수정 브랜치, 병합 대기 | 기존 export workflow와 실제 파일/응답 계약 복구; 필요한 출력 경로 처리만 정리 |
-| 4 | BUG-02 참조 형식 지원 — 다음 구현 작업 | 광고된 지원과 decoder 불일치. 독립 처리 가능하며 dry-run 자체의 기술적 선행 조건은 아님 |
-| 5 | SAFE-02 dry-run | 올바른 편집 동작을 임시 복사본에서 preview |
-| 6 | SAFE-03 → SAFE-04 | snapshot/restore 이후 history/undo |
+| 1 | BUG-02 참조 형식 지원 | 광고된 BMP/.aseprite 지원과 decoder 불일치 해결 |
+| 2 | SAFE-02 dry-run | 올바른 편집 동작을 임시 복사본에서 preview |
+| 3 | SAFE-03 snapshot/restore | 호출 간 복원을 위한 파일·보존 정책 구현 |
+| 4 | SAFE-04 작업 이력·undo | SAFE-03 snapshot과 성공한 변경 이력 연결 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
 디더링 후속 backlog (2026-09-23): **DITHER-01 Floyd–Steinberg 중간 density 반영**, **DITHER-02 Texture 패턴의 세밀한 밀도·비율 제어**. 구현 미비를 개선하는 별도 작업으로 등록하며 착수 순서는 미확정이다. 위 실행 순서는 유지한다. 설계 결정과 완료 조건은 [NEXT_STEPS의 디더링 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)를 따른다.
+
+## 별도 잔여·보류
+
+- 릴리스 전: OPS-01 CI 버전 artifact, upstream #19 제출 범위, 릴리스 절차·0.x 호환성 정책 및 배포 검증.
+- 후속 개선: DITHER-01/02. API와 착수 순서는 미확정이다.
+- 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, OPS-03 오류/request ID/로그 규칙. Windows 네이티브 실행은 사용자 요청으로 보류한다.
+- 기능 확장: R3 편집·조회 → R4 export·slice. spritesheet의 texture+JSON 일괄 보호도 R4 잔여다. R5 후보는 범위 선정 후 착수한다.
+- 후속 설계: export 세트 crash 복구·고아 staging/백업 정리, 파일시스템별 file_changed 관찰 재현. 현재 완료 범위에 포함하지 않는다.
+- upstream #16 indexed 검은 이미지 재현은 아래 재개 조건을 유지한다. 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다.
+
+상태·완료 조건은 [NEXT_STEPS의 남은 작업 요약](NEXT_STEPS.md#남은-작업-요약-2026-09-27)과 기존 상세 체크리스트에서 추적한다.
 
 ## 단계와 완료 조건
 
@@ -87,7 +98,8 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] SAFE-05: 파일 변경 보호 구현 (PR #14 develop 병합 완료; [검증 범위](FILE_PROTECTION.md))
 - [x] BUG-04/05 수정·회귀 검증 및 PR #16 병합
 - [x] BUG-01 수정·회귀 검증 및 PR #17 병합
-- [ ] BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
+- [x] BUG-03 수정·회귀 검증 및 PR #18 병합
+- [ ] BUG-02 지원 형식 수정 및 실제 Aseprite 회귀 검증
 - [ ] DITHER-01/02: 중간 밀도·texture 비율 제어 (후속 backlog, 착수 순서 미확정)
 - [ ] SAFE-02–04: dry-run·snapshot·history/undo
 - [ ] GAP-01–06: 편집·조회·export 확장

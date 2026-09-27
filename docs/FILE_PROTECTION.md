@@ -59,7 +59,7 @@ Linux amd64에서 실제 실행 검증한다. darwin amd64/arm64, linux arm64, w
 
 ## export_sprite 출력 세트 (BUG-03)
 
-`fix/be-multiframe-png-export` 수정 브랜치의 계약이다. 기존 단일 파일 도구와 spritesheet 동작은 별도다.
+PR #18로 develop `363d6fa`에 병합한 계약이다. 기존 단일 파일 도구와 spritesheet 동작은 별도다.
 
 1. source 잠금 아래에서 frame 수를 읽고 잠금을 해제한 뒤, source·요청 base·모든 실제 출력 경로를 정렬해 함께 잠근다. 재획득 후 frame 수가 바뀌었으면 파일을 쓰기 전에 `file_changed`로 거부한다. 같은 frame 수의 변경은 재획득 시점의 source를 내보낸다.
 2. source는 read-only로 열고 모든 출력의 기존 내용·권한을 기록한다. 기존 출력은 각 대상의 같은 부모에 만든 private staging 디렉터리에 `.original-backup`으로 복사·동기화한다. 중복 출력, bound source alias, hard link, read-only·비일반 파일은 거부한다.

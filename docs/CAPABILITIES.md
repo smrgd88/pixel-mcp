@@ -1,6 +1,6 @@
 # 기능 지원 현황
 
-기준일: 2026-09-22 · 구현 기준: `develop`의 `7e60ad96cdc0487bd2d584cdb34df076136506b9`
+기준일: 2026-09-27 · 구현 기준: `develop`의 `363d6fa0960ebd7d339fc1edca6beb538f44e8c4`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -60,7 +60,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-032 | 변형 | `crop_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-033 | 변형 | `resize_canvas` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-034 | 변형 | `apply_outline` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
-| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | Unreleased: 명시적 frame 파일 목록·출력 세트 보호 (작업 브랜치) | [export.go](../pkg/tools/export.go) |
+| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | Unreleased: 명시적 frame 파일 목록·출력 세트 보호 (#18, develop 반영) | [export.go](../pkg/tools/export.go) |
 | MCP-036 | 파일 입출력 | `export_spritesheet` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-037 | 파일 입출력 | `import_image` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-038 | 파일 입출력 | `save_as` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
@@ -109,7 +109,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-02 | dry-run | 예정 | 임시 복사본·동일 실행 경로·정리 정책, R2. CLI preview만으로 Lua 결과 검증을 대체하지 않음 |
 | SAFE-03 | snapshot/restore | 예정 | 파일 저장 primitive + ID·보존·복원 정책, R2 |
 | SAFE-04 | operation history·undo | 예정 | SAFE-03 의존, R2. 호출마다 프로세스가 달라 native undo를 호출 간 복구로 사용하지 않음 |
-| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체, [검증과 제외 범위](FILE_PROTECTION.md), R2 |
+| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체와 export 출력 세트의 일반 오류 rollback (#18), [검증과 제외 범위](FILE_PROTECTION.md), R2 |
 | OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
 | OPS-03 | 오류·request ID·로그 계약 통일 | 예정 | 기존 로깅과 timeout 처리는 존재, 전체 응답 표준화는 R1/R2 |
@@ -165,19 +165,19 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 
 2026-09-22 추가 검증: 공식 `v1.3.17.2` 태그(`793fb65`) 소스의 기본 버전 메타데이터를 해당 릴리스 번호로 설정하고 재빌드했다. `--health`는 `1.3.17.2` / API `40`, Linux 전체 통합 테스트는 캐시 없이 통과했다. macOS arm64에서도 설치된 Aseprite `1.3.18.2-arm64` / API `41`로 health 및 감색·warnings 관련 10개 테스트 그룹을 실행해 통과했다. [빌드 출처·재현 방법·범위](NEXT_STEPS.md#수정-작업과-완료-조건)를 참조한다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
 
-## 알려진 동작 제약 (2026-09-22 재확인)
+## 알려진 동작 오류와 처리 상태 (2026-09-27 동기화)
 
-등록된 도구가 있다는 사실과 모든 입력/출력 계약이 올바르다는 것은 구분한다. develop `7e60ad9`, Linux amd64/Aseprite 1.3.18.3-dev/API 41에서 다음을 확인했다. [재현·우선순위·수정 체크리스트](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)를 기준으로 추적한다.
+수정 전 재현은 develop `7e60ad9`, Linux amd64/Aseprite 1.3.18.3-dev/API 41 기준이며 아래 처리 상태는 PR #18까지 반영했다. 등록된 도구가 있다는 사실과 모든 입력/출력 계약이 올바르다는 것은 구분한다. [재현·우선순위·수정 체크리스트](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)를 기준으로 추적한다.
 
 | 도구 | 제약·현재 동작 | 추적 |
 | --- | --- | --- |
 | draw_with_dither | PR #17로 생략/null과 0 구분, 모든 패턴의 0/1 endpoint 수정 병합 | BUG-01 |
 | analyze_reference | 광고된 BMP/.aseprite 입력은 decoder 오류; PNG/JPG/GIF control 성공 | BUG-02 |
-| export_sprite | 수정 브랜치에서 번호 파일·files 목록·출력 세트 보호 추가; 병합 대기 | BUG-03 |
+| export_sprite | PR #18로 번호 파일·files 목록·출력 세트 보호 수정 병합 | BUG-03 |
 | quantize_palette | PR #16으로 opaque palette index 0 보존 및 투명 인덱스 분리 수정 병합 | BUG-04 |
 | quantize_palette | PR #16으로 dither=false도 cel 픽셀 remap, convert_to_indexed=false는 입력 모드 유지로 수정 병합 | BUG-05 |
 
-BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로 develop `a7ffa0f`에 반영됐다. BUG-03은 `fix/be-multiframe-png-export`에서 수정·검증 후 병합 대기 중이며 BUG-02는 미수정이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
+BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로 develop `a7ffa0f`에 반영됐다. BUG-03은 PR #18로 develop `363d6fa`에 반영됐다. 보고된 동작 오류 중 BUG-02만 미수정이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
 
 ### 감색 계약 (BUG-04/05, PR #16)
 
@@ -198,7 +198,7 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로
 
 위 Floyd 중간 density 무시와 texture의 제한된 밀도 단계는 Aseprite 지원 한계가 아니라 **pixel-mcp 구현 미비**다. [DITHER-01/02 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)로 개선을 추적한다. 정확한 비율의 픽셀 단위 반올림과 문양 보존의 tradeoff는 별도 설계 제약이며, 새 동작·API는 아직 구현하거나 확정하지 않았다.
 
-### export_sprite 파일 계약 (BUG-03 수정 브랜치)
+### export_sprite 파일 계약 (BUG-03, PR #18)
 
 - `frame_number=0`인 다중 프레임 PNG/JPG/BMP는 `이름_0001.ext`, `이름_0002.ext` 순서로 저장한다. 최소 4자리이며 10000 이상 번호도 잘리지 않는다. 기존 이름의 끝 숫자를 증가시키지 않는다. 예: `walk007.png` → `walk007_0001.png`, `walk007_0002.png`.
 - 시퀀스 응답의 optional `files` 배열은 `{path, file_size, frame_number}`를 프레임 순서로 포함한다. 기존 `exported_path`와 `file_size`는 첫 번째 실제 파일과 그 크기다. 요청 base 파일이나 전체 크기를 뜻하지 않는다. 전체 시퀀스를 사용하는 클라이언트는 `files`를 읽어야 한다.
