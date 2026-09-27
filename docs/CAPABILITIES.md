@@ -1,6 +1,6 @@
 # 기능 지원 현황
 
-기준일: 2026-09-22 · 구현 기준: `develop`의 `7e60ad96cdc0487bd2d584cdb34df076136506b9`
+기준일: 2026-09-27 · 구현 기준: `develop`의 `363d6fa0960ebd7d339fc1edca6beb538f44e8c4`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -60,7 +60,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-032 | 변형 | `crop_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-033 | 변형 | `resize_canvas` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-034 | 변형 | `apply_outline` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
-| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | Unreleased: 명시적 frame 파일 목록·출력 세트 보호 (작업 브랜치) | [export.go](../pkg/tools/export.go) |
+| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | Unreleased: 명시적 frame 파일 목록·출력 세트 보호 (#18, develop 반영) | [export.go](../pkg/tools/export.go) |
 | MCP-036 | 파일 입출력 | `export_spritesheet` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-037 | 파일 입출력 | `import_image` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-038 | 파일 입출력 | `save_as` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
@@ -71,7 +71,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-043 | 팔레트·shading | `set_palette` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-044 | 팔레트·shading | `apply_shading` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-045 | 팔레트·shading | `analyze_palette_harmonies` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
-| MCP-046 | 참조 분석 | `analyze_reference` | v0.1.0 | — | [analysis.go](../pkg/tools/analysis.go) |
+| MCP-046 | 참조 분석 | `analyze_reference` | v0.1.0 | Unreleased: BMP/native 로딩·첫 frame 계약 (수정 브랜치) | [analysis.go](../pkg/tools/analysis.go) |
 | MCP-047 | 디더링 | `draw_with_dither` | v0.1.0 | v0.3.0: Floyd-Steinberg 추가; Unreleased: density 0·endpoint 수정 (#17, develop 반영) | [dithering.go](../pkg/tools/dithering.go) |
 | MCP-048 | 감색 | `quantize_palette` | v0.4.0 | Unreleased: warnings + BUG-04/05 픽셀 remap 수정 (#16, develop 반영) | [quantization.go](../pkg/tools/quantization.go) |
 | MCP-049 | 자동 shading | `apply_auto_shading` | v0.4.0 | Unreleased: indexed index 보존 (#8) | [auto_shading.go](../pkg/tools/auto_shading.go) |
@@ -109,7 +109,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-02 | dry-run | 예정 | 임시 복사본·동일 실행 경로·정리 정책, R2. CLI preview만으로 Lua 결과 검증을 대체하지 않음 |
 | SAFE-03 | snapshot/restore | 예정 | 파일 저장 primitive + ID·보존·복원 정책, R2 |
 | SAFE-04 | operation history·undo | 예정 | SAFE-03 의존, R2. 호출마다 프로세스가 달라 native undo를 호출 간 복구로 사용하지 않음 |
-| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체, [검증과 제외 범위](FILE_PROTECTION.md), R2 |
+| SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체와 export 출력 세트의 일반 오류 rollback (#18), [검증과 제외 범위](FILE_PROTECTION.md), R2 |
 | OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
 | OPS-03 | 오류·request ID·로그 계약 통일 | 예정 | 기존 로깅과 timeout 처리는 존재, 전체 응답 표준화는 R1/R2 |
@@ -165,19 +165,19 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 
 2026-09-22 추가 검증: 공식 `v1.3.17.2` 태그(`793fb65`) 소스의 기본 버전 메타데이터를 해당 릴리스 번호로 설정하고 재빌드했다. `--health`는 `1.3.17.2` / API `40`, Linux 전체 통합 테스트는 캐시 없이 통과했다. macOS arm64에서도 설치된 Aseprite `1.3.18.2-arm64` / API `41`로 health 및 감색·warnings 관련 10개 테스트 그룹을 실행해 통과했다. [빌드 출처·재현 방법·범위](NEXT_STEPS.md#수정-작업과-완료-조건)를 참조한다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
 
-## 알려진 동작 제약 (2026-09-22 재확인)
+## 알려진 동작 오류와 처리 상태 (2026-09-27 동기화)
 
-등록된 도구가 있다는 사실과 모든 입력/출력 계약이 올바르다는 것은 구분한다. develop `7e60ad9`, Linux amd64/Aseprite 1.3.18.3-dev/API 41에서 다음을 확인했다. [재현·우선순위·수정 체크리스트](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)를 기준으로 추적한다.
+수정 전 재현은 develop `7e60ad9`, Linux amd64/Aseprite 1.3.18.3-dev/API 41 기준이며 아래 처리 상태는 PR #18까지 반영했다. 등록된 도구가 있다는 사실과 모든 입력/출력 계약이 올바르다는 것은 구분한다. [재현·우선순위·수정 체크리스트](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)를 기준으로 추적한다.
 
 | 도구 | 제약·현재 동작 | 추적 |
 | --- | --- | --- |
 | draw_with_dither | PR #17로 생략/null과 0 구분, 모든 패턴의 0/1 endpoint 수정 병합 | BUG-01 |
-| analyze_reference | 광고된 BMP/.aseprite 입력은 decoder 오류; PNG/JPG/GIF control 성공 | BUG-02 |
-| export_sprite | 수정 브랜치에서 번호 파일·files 목록·출력 세트 보호 추가; 병합 대기 | BUG-03 |
+| analyze_reference | 수정 브랜치에서 BMP/native 첫 frame 렌더링을 통한 분석 지원; 병합 대기 | BUG-02 |
+| export_sprite | PR #18로 번호 파일·files 목록·출력 세트 보호 수정 병합 | BUG-03 |
 | quantize_palette | PR #16으로 opaque palette index 0 보존 및 투명 인덱스 분리 수정 병합 | BUG-04 |
 | quantize_palette | PR #16으로 dither=false도 cel 픽셀 remap, convert_to_indexed=false는 입력 모드 유지로 수정 병합 | BUG-05 |
 
-BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로 develop `a7ffa0f`에 반영됐다. BUG-03은 `fix/be-multiframe-png-export`에서 수정·검증 후 병합 대기 중이며 BUG-02는 미수정이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
+BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로 develop `a7ffa0f`에 반영됐다. BUG-03은 PR #18로 develop `363d6fa`에 반영됐다. 마지막 BUG-02는 `fix/be-reference-format-support`에서 수정·검증 후 병합 대기 중이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
 
 ### 감색 계약 (BUG-04/05, PR #16)
 
@@ -198,7 +198,7 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로
 
 위 Floyd 중간 density 무시와 texture의 제한된 밀도 단계는 Aseprite 지원 한계가 아니라 **pixel-mcp 구현 미비**다. [DITHER-01/02 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)로 개선을 추적한다. 정확한 비율의 픽셀 단위 반올림과 문양 보존의 tradeoff는 별도 설계 제약이며, 새 동작·API는 아직 구현하거나 확정하지 않았다.
 
-### export_sprite 파일 계약 (BUG-03 수정 브랜치)
+### export_sprite 파일 계약 (BUG-03, PR #18)
 
 - `frame_number=0`인 다중 프레임 PNG/JPG/BMP는 `이름_0001.ext`, `이름_0002.ext` 순서로 저장한다. 최소 4자리이며 10000 이상 번호도 잘리지 않는다. 기존 이름의 끝 숫자를 증가시키지 않는다. 예: `walk007.png` → `walk007_0001.png`, `walk007_0002.png`.
 - 시퀀스 응답의 optional `files` 배열은 `{path, file_size, frame_number}`를 프레임 순서로 포함한다. 기존 `exported_path`와 `file_size`는 첫 번째 실제 파일과 그 크기다. 요청 base 파일이나 전체 크기를 뜻하지 않는다. 전체 시퀀스를 사용하는 클라이언트는 `files`를 읽어야 한다.
@@ -207,3 +207,12 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로
 - 개별 frame은 [Image:drawSprite](https://www.aseprite.org/api/image/#imagedrawsprite)로 렌더링해 저장하므로 그룹·가시성·cel 위치를 반영한다. RGB 합성 이미지로 저장하며 원본 indexed palette/index identity를 그대로 보존하는 계약은 아니다. 원본 sprite는 수정하지 않는다.
 - 원본·전체 출력 경로를 잠그고 모든 파일을 생성·검증한 뒤 반영한다. 오류·취소 rollback과 백업 보존의 경계는 [FILE_PROTECTION](FILE_PROTECTION.md#export_sprite-출력-세트-bug-03)를 따른다. 여러 파일의 crash 원자성은 제공하지 않는다.
 - 시퀀스의 요청 base 파일과 응답 목록에 없는 기존 파일은 그대로 둔다. 이전에 더 많은 프레임을 export한 경우의 오래된 파일을 자동 삭제하지 않는다. 단일 파일 출력은 요청한 기존 파일을 교체한다.
+
+### analyze_reference 입력 형식 계약 (BUG-02 수정 브랜치)
+
+- PNG/JPEG/GIF는 기존 Go decoder를 사용한다. 파일 내용으로 인식하며 JPEG의 .jpg/.jpeg를 포함한다. 이 경로는 Aseprite 프로세스를 실행하지 않는다.
+- Go decoder로 읽을 수 없고 BMP의 BM 또는 Aseprite의 native header signature로 인식된 파일은 지원 Aseprite 런타임으로 열어 frame 1을 임시 PNG로 렌더링한다. .bmp와 .ase/.aseprite를 지원한다. 외부 decoder/Go 의존성은 추가하지 않는다.
+- Aseprite 문서는 전체 canvas 크기의 첫 프레임에서 보이는 레이어·그룹·cel 위치·opacity·palette를 반영한 RGB 합성 이미지를 분석한다. 다른 프레임을 함께 분석하거나 평균하지 않는다. GIF는 기존 Go decoder가 반환하는 첫 이미지 영역을 사용하며, logical canvas 합성이나 전체 animation 분석을 새로 제공하지 않는다.
+- 기존 분석 알고리즘·출력 필드·warnings 계약은 유지한다. 새로운 frame 선택 입력은 추가하지 않는다. BMP/native 입력은 설정된 지원 Aseprite 실행 파일이 필요하며 실행/버전 검사 실패 시 오류다.
+- source 읽기 잠금은 분석 호출 전체에 적용한다. 원본을 저장·모드 변환하지 않으며 원본의 bytes와 read-only 권한을 유지한다. 임시 PNG는 private 디렉터리에서 만들고 성공·실패·취소 시 정리한다.
+- 손상되거나 지원하지 않는 파일은 오류로 반환한다. extension만 바꾸어 잘못된 파일을 지원으로 처리하지 않으며, 다른 형식에 대한 무조건적인 Aseprite fallback은 수행하지 않는다.
