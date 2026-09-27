@@ -462,3 +462,21 @@ func TestCheckDiagonalNW(t *testing.T) {
 		})
 	}
 }
+
+func aaTestThreshold(value int) *int { return &value }
+
+func TestAuditEdgeContrast(t *testing.T) {
+	cases := []struct {
+		a, b string
+		want int
+	}{
+		{"", "#FFFFFF40", 64}, {"#FF000000", "#0000FF00", 0},
+		{"#000000FF", "", 255}, {"#FFFFFF80", "#00000080", 128},
+		{"#808080FF", "#818181FF", 1},
+	}
+	for _, c := range cases {
+		if got := edgeContrast(c.a, c.b); got != c.want {
+			t.Errorf("contrast(%q,%q)=%d, want %d", c.a, c.b, got, c.want)
+		}
+	}
+}

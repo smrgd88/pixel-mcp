@@ -18,7 +18,7 @@ type SuggestAntialiasingInput struct {
 	LayerName   string  `json:"layer_name" jsonschema:"Name of the layer to analyze"`
 	FrameNumber int     `json:"frame_number" jsonschema:"Frame number to analyze (1-based)"`
 	Region      *Region `json:"region,omitempty" jsonschema:"Region to analyze (defaults to entire sprite)"`
-	Threshold   int     `json:"threshold,omitempty" jsonschema:"Edge detection sensitivity 0-255 (default: 128)"`
+	Threshold   *int    `json:"threshold,omitempty" jsonschema:"Minimum edge contrast: max premultiplied RGBA channel difference must exceed this value (0-255); omitted or null defaults to 128"`
 	AutoApply   bool    `json:"auto_apply,omitempty" jsonschema:"If true applies smoothing automatically (default: false)"`
 	UsePalette  bool    `json:"use_palette,omitempty" jsonschema:"If true snaps intermediate colors to palette (default: false)"`
 }
@@ -43,8 +43,9 @@ type AntialiasingResult struct {
 // suggestAntialiasing analyzes pixel art for jagged edges and suggests smoothing.
 func suggestAntialiasing(ctx context.Context, client *aseprite.Client, gen *aseprite.LuaGenerator, input SuggestAntialiasingInput) (*AntialiasingResult, error) {
 	// Set defaults
-	if input.Threshold == 0 {
-		input.Threshold = 128
+	threshold := 128
+	if input.Threshold != nil {
+		threshold = *input.Threshold
 	}
 
 	// Get sprite info to determine region if not specified
@@ -70,7 +71,7 @@ func suggestAntialiasing(ctx context.Context, client *aseprite.Client, gen *asep
 	pixelGrid := buildPixelGrid(pixels)
 
 	// Detect jagged edges and generate suggestions
-	suggestions := detectJaggedEdges(pixelGrid, region, input.Threshold, input.UsePalette)
+	suggestions := detectJaggedEdges(pixelGrid, region, threshold, input.UsePalette)
 
 	result := &AntialiasingResult{
 		Suggestions: suggestions,
@@ -104,11 +105,10 @@ func buildPixelGrid(pixels []PixelData) map[int]map[int]string {
 }
 
 // detectJaggedEdges identifies diagonal edges that would benefit from antialiasing.
-// Note: threshold parameter reserved for future edge detection sensitivity tuning.
+// Only candidates with premultiplied RGBA contrast greater than threshold survive.
 // Note: usePalette is used during application (applyAntialiasingHelper), not detection.
 func detectJaggedEdges(grid map[int]map[int]string, region Region, threshold int, usePalette bool) []EdgeSuggestion {
 	var suggestions []EdgeSuggestion
-	_ = threshold  // Reserved for future use
 	_ = usePalette // Used during application, not detection
 
 	// Scan for jagged diagonal patterns
@@ -122,31 +122,56 @@ func detectJaggedEdges(grid map[int]map[int]string, region Region, threshold int
 			// Check for diagonal stair-step patterns (4 directions)
 			// Northeast diagonal: ..##
 			//                     .##.
-			if suggestion := checkDiagonalNE(grid, x, y, current); suggestion != nil {
+			if suggestion := checkDiagonalNE(grid, x, y, current); suggestion != nil && edgeContrast(suggestion.CurrentColor, suggestion.NeighborColor) > threshold {
 				suggestions = append(suggestions, *suggestion)
 			}
 
 			// Northwest diagonal: ##..
 			//                     .##.
-			if suggestion := checkDiagonalNW(grid, x, y, current); suggestion != nil {
+			if suggestion := checkDiagonalNW(grid, x, y, current); suggestion != nil && edgeContrast(suggestion.CurrentColor, suggestion.NeighborColor) > threshold {
 				suggestions = append(suggestions, *suggestion)
 			}
 
 			// Southeast diagonal: .##.
 			//                     ..##
-			if suggestion := checkDiagonalSE(grid, x, y, current); suggestion != nil {
+			if suggestion := checkDiagonalSE(grid, x, y, current); suggestion != nil && edgeContrast(suggestion.CurrentColor, suggestion.NeighborColor) > threshold {
 				suggestions = append(suggestions, *suggestion)
 			}
 
 			// Southwest diagonal: .##.
 			//                     ##..
-			if suggestion := checkDiagonalSW(grid, x, y, current); suggestion != nil {
+			if suggestion := checkDiagonalSW(grid, x, y, current); suggestion != nil && edgeContrast(suggestion.CurrentColor, suggestion.NeighborColor) > threshold {
 				suggestions = append(suggestions, *suggestion)
 			}
 		}
 	}
 
 	return suggestions
+}
+
+// edgeContrast ignores hidden RGB in transparent pixels and includes opacity edges.
+// Empty cells are transparent. Values are rounded to the same 8-bit channel range.
+func edgeContrast(first, second string) int {
+	channels := func(value string) [4]int {
+		if value == "" {
+			return [4]int{}
+		}
+		r, g, b, a := parseHexColor(value)
+		alpha := int(a)
+		return [4]int{(int(r)*alpha + 127) / 255, (int(g)*alpha + 127) / 255, (int(b)*alpha + 127) / 255, alpha}
+	}
+	a, b := channels(first), channels(second)
+	result := 0
+	for i := range a {
+		d := a[i] - b[i]
+		if d < 0 {
+			d = -d
+		}
+		if d > result {
+			result = d
+		}
+	}
+	return result
 }
 
 // checkDiagonalNE checks for northeast diagonal jagged edge.
@@ -433,8 +458,8 @@ func RegisterAntialiasingTools(server *mcp.Server, client *aseprite.Client, gen 
 				return nil, nil, fmt.Errorf("layer_name is required")
 			}
 
-			if input.Threshold < 0 || input.Threshold > 255 {
-				return nil, nil, fmt.Errorf("threshold must be 0-255, got %d", input.Threshold)
+			if input.Threshold != nil && (*input.Threshold < 0 || *input.Threshold > 255) {
+				return nil, nil, fmt.Errorf("threshold must be 0-255, got %d", *input.Threshold)
 			}
 
 			// Execute antialiasing analysis

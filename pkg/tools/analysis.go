@@ -17,7 +17,7 @@ type AnalyzeReferenceInput struct {
 	TargetHeight     int    `json:"target_height" jsonschema:"Pixel art target height (1-65535)"`
 	PaletteSize      int    `json:"palette_size,omitempty" jsonschema:"Number of colors to extract (5-32, default: 16)"`
 	BrightnessLevels int    `json:"brightness_levels,omitempty" jsonschema:"Quantize brightness into N levels (2-10, default: 5)"`
-	EdgeThreshold    int    `json:"edge_threshold,omitempty" jsonschema:"Edge detection sensitivity (0-255, default: 30)"`
+	EdgeThreshold    *int   `json:"edge_threshold,omitempty" jsonschema:"Sobel edge threshold (0-255); omitted or null defaults to 30, explicit zero is preserved"`
 }
 
 // AnalyzeReferenceOutput defines the output for the analyze_reference tool.
@@ -97,9 +97,9 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 				return nil, nil, fmt.Errorf("brightness_levels must be between 2 and 10, got %d", brightnessLevels)
 			}
 
-			edgeThreshold := input.EdgeThreshold
-			if edgeThreshold == 0 {
-				edgeThreshold = 30
+			edgeThreshold := 30
+			if input.EdgeThreshold != nil {
+				edgeThreshold = *input.EdgeThreshold
 			}
 			if edgeThreshold < 0 || edgeThreshold > 255 {
 				return nil, nil, fmt.Errorf("edge_threshold must be between 0 and 255, got %d", edgeThreshold)

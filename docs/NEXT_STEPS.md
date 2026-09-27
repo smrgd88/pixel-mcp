@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-09-27
 
-현재 기준: `develop`의 `363d6fa0960ebd7d339fc1edca6beb538f44e8c4` (PR #18까지 병합 반영). BUG-01/03/04/05 완료, BUG-02는 `fix/be-reference-format-support`에서 수정·검증 완료, 통합 PR 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `8d9bdde15c463b1c8227cfdb3a7d8cf65bfac966` (PR #20까지 병합). BUG-01~05는 develop 반영 완료다. 현재 `fix/be-palette-thresholds`에서 palette mask·threshold·DITHER-01/02·palette 추출 초기화 수정을 검증한다. [범위·계약·검증](PALETTE_THRESHOLD_REVIEW.md)을 참고하며, 수정 브랜치의 완료와 develop 병합/배포를 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -22,9 +22,9 @@
 
 | 구분 | 남은 작업 | 상태·완료 기준 |
 | --- | --- | --- |
-| 현재 작업 | BUG-02 참조 이미지 지원 형식 일치 | 수정 브랜치에서 BMP/.aseprite 로딩 보완, 첫 frame 규칙·원본 보존 검증; 병합 대기 |
+| develop 완료 | BUG-01~05 | PR #16/#17/#18/#20 병합. 배포 완료와 구분 |
 | 다음 순차 구현 | SAFE-02 → SAFE-03 → SAFE-04 | dry-run → snapshot/restore → 작업 이력·undo. 원본 보호 기반 SAFE-05는 완료 |
-| 후속 개선 | DITHER-01, DITHER-02 | Floyd 중간 density 반영, texture의 세밀한 밀도·비율 제어. API·착수 순서 미확정 |
+| 현재 수정 브랜치 | MCP-AUDIT-01~03, DITHER-01/02, palette 추출 초기화 | 재현 테스트 기반 수정·검증. 기본 문양 유지, 정확한 비율의 별도 모드는 범위 밖 |
 | 릴리스 전 운영 | OPS-01, upstream #19, 릴리스 절차 | CI 버전 artifact, upstream 제출 범위 결정, 0.x 호환성·RELEASING 절차 및 main/태그/artifact 배포 검증 |
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
 | 공통 계약 | OPS-03 | success/warnings/details, 오류 분류, request ID, 로그·민감 정보 정책 통일 |
@@ -91,7 +91,7 @@
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02는 수정·검증 후 병합 대기하며 다음 구현 작업은 SAFE-02 dry-run이다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 현재 팔레트·threshold·디더링 후속 수정을 별도 브랜치에서 검증하며 SAFE-02 dry-run은 별도 PR #21에서 진행한다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## 현재 우선 작업 — 알려진 동작 오류
 
@@ -156,28 +156,25 @@ BUG-02 검증 (2026-09-27): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에�
 
 ## 디더링 후속 TODO
 
-등록일: 2026-09-23. 두 항목은 Aseprite 지원 한계가 아니라 **개선 가능한 pixel-mcp 구현 미비**로 추적한다. PR #17의 BUG-01은 생략/0 구분과 0/1 endpoint 수정 범위이며 아래 작업을 완료한 것으로 간주하지 않는다. 이번에는 TODO만 등록한다. 착수 순서는 미확정이며 BUG-02 이후의 기존 안전성 작업 순서를 변경하지 않는다.
+등록일: 2026-09-23. 최초 TODO를 현재 fix/be-palette-thresholds에서 구현·검증한다.
+PR #17은 endpoint 수정이며, 여기의 중간값 개선은 아직 develop에 병합되지 않은 별도 변경이다.
 
 ### DITHER-01 — Floyd–Steinberg 중간 density 반영
 
-예정 작업: `[BE][FEATURE] Floyd–Steinberg 중간 밀도 조절`.
-
-- [ ] `0 < density < 1` 입력을 목표 색 혼합량 계산에 반영한다. 현재는 가로 좌표만 사용해 중간 density 값들이 같은 결과를 낸다.
-- [ ] 균일한 밀도 채우기와 기존 가로 그라디언트의 의미를 구분하고, 기존 호출의 호환성·기본 동작을 결정한다. 새 모드 추가는 검토안이며 아직 확정한 API가 아니다.
-- [ ] 밀도 근사와 정확한 픽셀 개수 보장을 구분해 허용 오차를 정의한다. 오차 확산만으로 임의의 유한 영역에서 정확한 비율을 보장한다고 가정하지 않는다.
-- [ ] 실제 Aseprite에서 0/0.25/0.5/0.75/1, 작은 영역·1픽셀 폭, 결정적 결과 및 기존 그라디언트 호환성을 검증한다.
+- [x] 0<d<.5는 기존 gradient 위치에 2d를 곱하고, .5<=d<1은 1-(1-position)*2(1-d)로 평균 혼합량을 조절.
+- [x] 기본0.5/생략/null은 폭>1에서 기존 gradient를 보존. 폭1은 고정 위치0 대신 중앙 mixture와 1차원 error carry를 사용.
+- [x] 실제 Aseprite에서 .25/.5/.75의 결과 차이, 0/1, 1픽셀 폭/1픽셀 영역/잘린 타일 크기와 반복 결정성 검증.
+- 정확한 전역 픽셀 비율을 강제하지 않는다. 오차 확산 경계와 유한 픽셀 수에 따른 근사이며 새 uniform/exact 모드는 추가하지 않음.
 
 ### DITHER-02 — Texture 패턴의 세밀한 밀도 조절
 
-예정 작업: `[BE][FEATURE] Texture 패턴 밀도 및 비율 제어`.
+- [x] 이진 matrix의 0/1 그룹 안에서 결정적 공간 순위를 계산하고 각각 [0,.5),(.5,1) 범위의 threshold로 세분화.
+- [x] 기본0.5의 기존 문양을 보존하는 호환성을 우선. 순위의 중간점을 사용하며 동일 입력의 결과는 반복 가능.
+- [x] 13개 Floyd/texture 패턴의 중간값 변화와 작은 영역/반복 실행을 실제 파일로 검증.
+- 선택된 color2 횟수와 렌더링 후의 색 비율을 구분한다. indexed 매핑, 같은 두 색, alpha/레이어 합성은 서로 다른 결과를 만들 수 있음.
+- 정확한 비율 round(density*N)를 강제하는 별도 모드는 보류한 확장이다. dots 등의 기존0.5 문양은 50:50이 아니므로 기존 문양 유지와 exact-ratio를 동시에 약속하지 않음.
 
-- [ ] 현재 0/1 이진 matrix의 제한된 밀도 단계를 개선한다. 픽셀별 선택 순위 등으로 중간 density에 따른 색상 배치를 구현한다.
-- [ ] 문양 보존과 비율 정확도의 우선순위, 밀도에 따라 점·선·벽돌 무늬가 변하는 규칙, 기존 호출 호환성을 결정한다.
-- [ ] 정확한 비율 모드를 제공할 경우 실제 칠할 픽셀 수 N에 대해 color2 개수를 `round(density × N)`으로 정하고 반올림·동점 처리·영역 경계를 명시한다. 이 모드의 제공 여부는 설계 시 확정한다.
-- [ ] 픽셀 선택 개수와 렌더링 후 색상 비율을 구분한다. indexed 색 매핑, 같은 색 입력, alpha·레이어 합성에 대한 보장 범위를 정의한다.
-- [ ] 실제 Aseprite에서 패턴별 밀도 변화, 반복 실행의 동일 결과, 비율 오차 및 작은 영역·잘린 타일을 검증한다.
-
-픽셀 개수에 따른 비율의 이산성과 원래 문양을 그대로 보존하면서 모든 비율을 충족할 수 없는 점은 실제 제약이다. 두 구현 미비와 별도로 문서화한다.
+현재 수치·원인별 회귀 및 남은 검증 범위는 [리뷰 기록](PALETTE_THRESHOLD_REVIEW.md)에 남긴다.
 
 ## P0 — 다음 릴리스 전에 처리
 
@@ -380,7 +377,8 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[BE][FIX] 감색 결과 및 옵션 계약 수정` (BUG-04/05), PR #16 develop 병합.
 - 완료: `[BE][FIX] 명시적 dithering density 0 보존` (BUG-01), PR #17 develop 병합.
 - 완료: `[BE][FIX] 다중 프레임 PNG 출력 계약 수정` (BUG-03), PR #18 develop 병합.
-- 현재 작업: `[BE][FIX] 참조 이미지 지원 형식 일치` (BUG-02), 수정·검증 후 병합 대기.
+- 완료: `[BE][FIX] 참조 이미지 지원 형식 일치` (BUG-02), PR #20 develop 병합.
+- 현재 수정: palette mask·threshold·DITHER-01/02·palette 추출 초기화. [리뷰 기록](PALETTE_THRESHOLD_REVIEW.md).
 - 다음 구현 작업: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02).
 - BUG-02 병합 후 SAFE-02 dry-run → SAFE-03 snapshot/restore → SAFE-04 history/undo로 진행한다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.

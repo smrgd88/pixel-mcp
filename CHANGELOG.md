@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Palette, threshold and density review repairs (unreleased)
+
+- Preserve indexed transparent-mask identity across palette replacement/resizing and palette growth.
+- Distinguish omitted/null reference edge threshold (30) from explicit zero; wire AA threshold to a premultiplied RGBA contrast filter (default 128).
+- Apply Floyd interior density to the gradient mean and rank binary texture cells for intermediate coverage while preserving the existing .5 pattern; handle one-column error carry.
+- Use deterministic farthest-point palette seeds and update the first cluster mean before testing convergence, retaining rare sampled colors and the existing result cardinality.
+- Add red/green MCP/Aseprite regressions, boundary and source-preservation checks. See [review and verification](docs/PALETTE_THRESHOLD_REVIEW.md). This branch does not update the plugin's bundled binary.
+
 ## Review preservation fixes (unreleased)
 
 - Preserve nested groups and cel data/zIndex/color/extension properties during frame duplication, with correct requested placement and tag-boundary behavior.

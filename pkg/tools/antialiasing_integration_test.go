@@ -59,7 +59,7 @@ func TestIntegration_SuggestAntialiasing_JaggedDiagonal(t *testing.T) {
 		SpritePath:  spritePath,
 		LayerName:   "Layer 1",
 		FrameNumber: 1,
-		Threshold:   128,
+		Threshold:   aaTestThreshold(128),
 		AutoApply:   false,
 		UsePalette:  false,
 	}
@@ -127,7 +127,7 @@ func TestIntegration_SuggestAntialiasing_AutoApply(t *testing.T) {
 		SpritePath:  spritePath,
 		LayerName:   "Layer 1",
 		FrameNumber: 1,
-		Threshold:   128,
+		Threshold:   aaTestThreshold(128),
 		AutoApply:   true,
 		UsePalette:  false,
 	}
@@ -180,7 +180,7 @@ func TestIntegration_SuggestAntialiasing_NoJaggedEdges(t *testing.T) {
 		SpritePath:  spritePath,
 		LayerName:   "Layer 1",
 		FrameNumber: 1,
-		Threshold:   128,
+		Threshold:   aaTestThreshold(128),
 		AutoApply:   false,
 		UsePalette:  false,
 	}
@@ -241,7 +241,7 @@ func TestIntegration_SuggestAntialiasing_WithRegion(t *testing.T) {
 		LayerName:   "Layer 1",
 		FrameNumber: 1,
 		Region:      &region,
-		Threshold:   128,
+		Threshold:   aaTestThreshold(128),
 		AutoApply:   false,
 		UsePalette:  false,
 	}
@@ -288,7 +288,7 @@ func TestIntegration_SuggestAntialiasing_InvalidLayer(t *testing.T) {
 		SpritePath:  spritePath,
 		LayerName:   "NonExistentLayer",
 		FrameNumber: 1,
-		Threshold:   128,
+		Threshold:   aaTestThreshold(128),
 		AutoApply:   false,
 		UsePalette:  false,
 	}
