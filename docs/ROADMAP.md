@@ -20,8 +20,8 @@
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | BUG-02 참조 형식 지원 | 광고된 BMP/.aseprite 지원과 decoder 불일치 해결 |
-| 2 | SAFE-02 dry-run | 올바른 편집 동작을 임시 복사본에서 preview |
+| 1 | BUG-02 참조 형식 지원 — 수정 브랜치, 병합 대기 | 광고된 BMP/.aseprite 지원과 decoder 불일치 해결 |
+| 2 | SAFE-02 dry-run — 다음 구현 작업 | 올바른 편집 동작을 임시 복사본에서 preview |
 | 3 | SAFE-03 snapshot/restore | 호출 간 복원을 위한 파일·보존 정책 구현 |
 | 4 | SAFE-04 작업 이력·undo | SAFE-03 snapshot과 성공한 변경 이력 연결 |
 

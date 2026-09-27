@@ -3,11 +3,6 @@ package tools
 import (
 	"context"
 	"fmt"
-	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
-	"os"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog/core"
@@ -17,7 +12,7 @@ import (
 
 // AnalyzeReferenceInput defines the input parameters for the analyze_reference tool.
 type AnalyzeReferenceInput struct {
-	ReferencePath    string `json:"reference_path" jsonschema:"Path to reference image (.jpg, .png, .gif, .bmp, .aseprite)"`
+	ReferencePath    string `json:"reference_path" jsonschema:"Path to PNG, JPEG, GIF, BMP, or Aseprite (.ase/.aseprite) reference; analyzes the first frame only"`
 	TargetWidth      int    `json:"target_width" jsonschema:"Pixel art target width (1-65535)"`
 	TargetHeight     int    `json:"target_height" jsonschema:"Pixel art target height (1-65535)"`
 	PaletteSize      int    `json:"palette_size,omitempty" jsonschema:"Number of colors to extract (5-32, default: 16)"`
@@ -67,7 +62,7 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 		server,
 		&mcp.Tool{
 			Name:        "analyze_reference",
-			Description: "Extract structured data from reference images to guide pixel art creation. Performs k-means palette extraction, brightness/edge detection, and composition analysis. Returns palette sorted by hue/lightness, brightness map with quantized levels, edge map with major contours, composition guides (rule of thirds, focal points), and suggested dithering zones.",
+			Description: "Extract structured data from PNG, JPEG, GIF, BMP, or Aseprite reference images to guide pixel art creation. GIF uses the first decoded image; Aseprite uses the visible composite of frame 1. BMP and Aseprite require the configured supported Aseprite runtime. The reference is not modified. Performs k-means palette extraction, brightness/edge detection, and composition analysis. Returns palette sorted by hue/lightness, brightness map with quantized levels, edge map with major contours, composition guides (rule of thirds, focal points), and suggested dithering zones.",
 		},
 		maybeWrapWithTiming("analyze_reference", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input AnalyzeReferenceInput) (*mcp.CallToolResult, *AnalyzeReferenceOutput, error) {
 			opLogger := logger.WithContext(ctx)
@@ -110,18 +105,12 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 				return nil, nil, fmt.Errorf("edge_threshold must be between 0 and 255, got %d", edgeThreshold)
 			}
 
-			// Load reference image
-			file, err := os.Open(input.ReferencePath)
+			// Keep the existing Go decoders; render unsupported advertised
+			// native formats to a private PNG without saving the source.
+			img, err := loadReferenceImage(ctx, client, gen, input.ReferencePath, cfg.TempDir)
 			if err != nil {
-				opLogger.Error("Failed to open reference image", "error", err)
-				return nil, nil, fmt.Errorf("failed to open reference image: %w", err)
-			}
-			defer file.Close()
-
-			img, _, err := image.Decode(file)
-			if err != nil {
-				opLogger.Error("Failed to decode reference image", "error", err)
-				return nil, nil, fmt.Errorf("failed to decode reference image: %w", err)
+				opLogger.Error("Failed to load reference image", "error", err)
+				return nil, nil, err
 			}
 
 			bounds := img.Bounds()
