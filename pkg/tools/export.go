@@ -16,15 +16,23 @@ import (
 // ExportSpriteInput defines the input parameters for the export_sprite tool.
 type ExportSpriteInput struct {
 	SpritePath  string `json:"sprite_path" jsonschema:"Path to the Aseprite sprite file"`
-	OutputPath  string `json:"output_path" jsonschema:"Output file path for exported image"`
+	OutputPath  string `json:"output_path" jsonschema:"Output file path; multi-frame PNG/JPG/BMP uses stem_0001.ext, stem_0002.ext, etc."`
 	Format      string `json:"format" jsonschema:"Export format: png, gif, jpg, bmp"`
 	FrameNumber int    `json:"frame_number" jsonschema:"Specific frame to export (0 = all frames, 1-based)"`
 }
 
 // ExportSpriteOutput defines the output for the export_sprite tool.
 type ExportSpriteOutput struct {
-	ExportedPath string `json:"exported_path" jsonschema:"Path to the exported file"`
-	FileSize     int64  `json:"file_size" jsonschema:"Size of exported file in bytes"`
+	ExportedPath string         `json:"exported_path" jsonschema:"Path to the exported file; first file for an image sequence"`
+	FileSize     int64          `json:"file_size" jsonschema:"Size of exported_path in bytes; first file only for a sequence"`
+	Files        []ExportedFile `json:"files,omitempty" jsonschema:"All generated files in frame order for a multi-file image sequence; omitted for single-file exports"`
+}
+
+// ExportedFile identifies one generated sequence frame.
+type ExportedFile struct {
+	Path        string `json:"path" jsonschema:"Actual output file path"`
+	FileSize    int64  `json:"file_size" jsonschema:"Size of this file in bytes"`
+	FrameNumber int    `json:"frame_number" jsonschema:"Source frame number (1-based)"`
 }
 
 // ExportSpritesheetInput defines the input parameters for the export_spritesheet tool.
@@ -85,71 +93,11 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 		server,
 		&mcp.Tool{
 			Name:        "export_sprite",
-			Description: "Export sprite to common image formats (PNG, GIF, JPG, BMP).",
+			Description: "Export sprite to PNG, GIF, JPG, or BMP. All-frame PNG/JPG/BMP exports use numbered files (stem_0001.ext etc.) and return files in frame order. exported_path and file_size identify the first real file. Single-frame exports and animated GIF retain a single output path. The output extension must match format.",
 		},
 		maybeWrapWithTiming("export_sprite", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ExportSpriteInput) (*mcp.CallToolResult, *ExportSpriteOutput, error) {
-			opLogger := logger.WithContext(ctx)
-			opLogger.Debug("export_sprite tool called", "sprite_path", input.SpritePath, "output_path", input.OutputPath, "format", input.Format, "frame_number", input.FrameNumber)
-
-			// Validate inputs
-			if input.OutputPath == "" {
-				return nil, nil, fmt.Errorf("output_path cannot be empty")
-			}
-
-			// Validate format
-			validFormats := map[string]bool{
-				"png": true,
-				"gif": true,
-				"jpg": true,
-				"bmp": true,
-			}
-			format := strings.ToLower(input.Format)
-			if !validFormats[format] {
-				return nil, nil, fmt.Errorf("invalid format: %s (valid: png, gif, jpg, bmp)", input.Format)
-			}
-
-			// Validate frame number
-			if input.FrameNumber < 0 {
-				return nil, nil, fmt.Errorf("frame_number must be non-negative, got %d", input.FrameNumber)
-			}
-
-			// Ensure output directory exists
-			outputDir := filepath.Dir(input.OutputPath)
-			if err := os.MkdirAll(outputDir, 0755); err != nil {
-				return nil, nil, fmt.Errorf("failed to create output directory: %w", err)
-			}
-
-			// Generate Lua script
-			script := gen.ExportSprite(input.OutputPath, input.FrameNumber)
-
-			// Execute Lua script with the sprite
-			output, err := client.ExecuteLua(ctx, script, input.SpritePath)
-			if err != nil {
-				opLogger.Error("Failed to export sprite", "error", err)
-				return nil, nil, fmt.Errorf("failed to export sprite: %w", err)
-			}
-
-			// Check for success message
-			if !strings.Contains(output, "Exported successfully") {
-				opLogger.Warning("Unexpected output from export_sprite", "output", output)
-			}
-
-			// Get file size
-			fileInfo, err := os.Stat(input.OutputPath)
-			if err != nil {
-				opLogger.Warning("Failed to stat exported file", "error", err)
-				return nil, &ExportSpriteOutput{
-					ExportedPath: input.OutputPath,
-					FileSize:     0,
-				}, nil
-			}
-
-			opLogger.Information("Sprite exported successfully", "sprite", input.SpritePath, "output", input.OutputPath, "format", format, "frame", input.FrameNumber, "size", fileInfo.Size())
-
-			return nil, &ExportSpriteOutput{
-				ExportedPath: input.OutputPath,
-				FileSize:     fileInfo.Size(),
-			}, nil
+			result, err := exportSprite(ctx, client, gen, input)
+			return nil, result, err
 		}),
 	)
 

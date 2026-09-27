@@ -60,7 +60,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-032 | 변형 | `crop_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-033 | 변형 | `resize_canvas` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-034 | 변형 | `apply_outline` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
-| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
+| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | Unreleased: 명시적 frame 파일 목록·출력 세트 보호 (작업 브랜치) | [export.go](../pkg/tools/export.go) |
 | MCP-036 | 파일 입출력 | `export_spritesheet` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-037 | 파일 입출력 | `import_image` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-038 | 파일 입출력 | `save_as` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
@@ -72,7 +72,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-044 | 팔레트·shading | `apply_shading` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-045 | 팔레트·shading | `analyze_palette_harmonies` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
 | MCP-046 | 참조 분석 | `analyze_reference` | v0.1.0 | — | [analysis.go](../pkg/tools/analysis.go) |
-| MCP-047 | 디더링 | `draw_with_dither` | v0.1.0 | v0.3.0: Floyd-Steinberg 추가; Unreleased: density 0·endpoint 수정 (작업 브랜치) | [dithering.go](../pkg/tools/dithering.go) |
+| MCP-047 | 디더링 | `draw_with_dither` | v0.1.0 | v0.3.0: Floyd-Steinberg 추가; Unreleased: density 0·endpoint 수정 (#17, develop 반영) | [dithering.go](../pkg/tools/dithering.go) |
 | MCP-048 | 감색 | `quantize_palette` | v0.4.0 | Unreleased: warnings + BUG-04/05 픽셀 remap 수정 (#16, develop 반영) | [quantization.go](../pkg/tools/quantization.go) |
 | MCP-049 | 자동 shading | `apply_auto_shading` | v0.4.0 | Unreleased: indexed index 보존 (#8) | [auto_shading.go](../pkg/tools/auto_shading.go) |
 | MCP-050 | 안티앨리어싱 | `suggest_antialiasing` | v0.1.0 | — | [antialiasing.go](../pkg/tools/antialiasing.go) |
@@ -171,13 +171,13 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 
 | 도구 | 제약·현재 동작 | 추적 |
 | --- | --- | --- |
-| draw_with_dither | 작업 브랜치에서 생략/null과 0 구분, 모든 패턴의 0/1 endpoint 수정; 병합 대기 | BUG-01 |
+| draw_with_dither | PR #17로 생략/null과 0 구분, 모든 패턴의 0/1 endpoint 수정 병합 | BUG-01 |
 | analyze_reference | 광고된 BMP/.aseprite 입력은 decoder 오류; PNG/JPG/GIF control 성공 | BUG-02 |
-| export_sprite | 다중 frame PNG는 단일 출력 경로 계약과 불일치. 현재 보호 경로에서는 출력 누락 오류, 시퀀스 publish 미지원 | BUG-03 |
+| export_sprite | 수정 브랜치에서 번호 파일·files 목록·출력 세트 보호 추가; 병합 대기 | BUG-03 |
 | quantize_palette | PR #16으로 opaque palette index 0 보존 및 투명 인덱스 분리 수정 병합 | BUG-04 |
 | quantize_palette | PR #16으로 dither=false도 cel 픽셀 remap, convert_to_indexed=false는 입력 모드 유지로 수정 병합 | BUG-05 |
 
-BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 `fix/be-dither-density-zero`에서 수정·검증 후 병합 대기 중이며 BUG-02/03은 미수정이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
+BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로 develop `a7ffa0f`에 반영됐다. BUG-03은 `fix/be-multiframe-png-export`에서 수정·검증 후 병합 대기 중이며 BUG-02는 미수정이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
 
 ### 감색 계약 (BUG-04/05, PR #16)
 
@@ -189,7 +189,7 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 `fix/be-d
 - indexed에는 투명 인덱스가 필요하다. 투명 팔레트 항목이 없으면 사용하지 않는 index 255를 사용하며, 불투명 항목은 최대 255개다. 2색 불투명 입력은 두 색 모두 사용할 수 있다. RGB/grayscale은 이 indexed 제한을 적용하지 않는다.
 - 단일 프레임·일반 raster 레이어만 지원한다. 애니메이션과 tilemap은 변경 전에 명시적으로 거부한다. 완전 투명 입력은 기본 설정에서 기존처럼 감색할 불투명 픽셀이 없다는 오류다. 다중 프레임 PNG 내보내기는 별도 BUG-03이다.
 
-### draw_with_dither density 계약 (BUG-01 수정 브랜치)
+### draw_with_dither density 계약 (BUG-01, PR #17)
 
 - 생략 또는 `null`은 기본값 0.5다. 명시적 `0`은 color1, `1`은 color2로 영역을 채운다. 입력 숫자는 [0,1]만 허용하며 잘못된 값/타입은 원본 변경 없이 거부한다. SDK의 optional pointer 추론에 맞춰 schema는 optional number/null이다.
 - Bayer·texture 패턴의 중간값은 matrix threshold다. 패턴의 분포·영역 크기에 따라 색상 비율이 달라지므로 density=0.5가 모든 패턴에서 정확한 50:50 비율을 뜻하지 않는다. 아주 작은 양수도 Lua 생성 시 0으로 반올림하지 않는다.
@@ -197,3 +197,13 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 `fix/be-d
 - 기존 색상 모드별 색 매핑·좌표 처리와 응답/warnings 계약을 유지한다. 이 수정은 모든 drawing/export 계약의 확대 검증을 뜻하지 않는다.
 
 위 Floyd 중간 density 무시와 texture의 제한된 밀도 단계는 Aseprite 지원 한계가 아니라 **pixel-mcp 구현 미비**다. [DITHER-01/02 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)로 개선을 추적한다. 정확한 비율의 픽셀 단위 반올림과 문양 보존의 tradeoff는 별도 설계 제약이며, 새 동작·API는 아직 구현하거나 확정하지 않았다.
+
+### export_sprite 파일 계약 (BUG-03 수정 브랜치)
+
+- `frame_number=0`인 다중 프레임 PNG/JPG/BMP는 `이름_0001.ext`, `이름_0002.ext` 순서로 저장한다. 최소 4자리이며 10000 이상 번호도 잘리지 않는다. 기존 이름의 끝 숫자를 증가시키지 않는다. 예: `walk007.png` → `walk007_0001.png`, `walk007_0002.png`.
+- 시퀀스 응답의 optional `files` 배열은 `{path, file_size, frame_number}`를 프레임 순서로 포함한다. 기존 `exported_path`와 `file_size`는 첫 번째 실제 파일과 그 크기다. 요청 base 파일이나 전체 크기를 뜻하지 않는다. 전체 시퀀스를 사용하는 클라이언트는 `files`를 읽어야 한다.
+- 단일 프레임 문서, 양수 `frame_number`로 선택한 한 프레임, `frame_number=0`의 GIF는 요청 경로 하나를 사용하며 `files`를 생략한다. GIF 전체 내보내기는 애니메이션을 유지한다.
+- `format`과 출력 확장자는 일치해야 한다 (대소문자 무관, jpg는 .jpg/.jpeg). 불일치·잘못된 frame·source를 가리키는 출력 alias는 오류다.
+- 개별 frame은 [Image:drawSprite](https://www.aseprite.org/api/image/#imagedrawsprite)로 렌더링해 저장하므로 그룹·가시성·cel 위치를 반영한다. RGB 합성 이미지로 저장하며 원본 indexed palette/index identity를 그대로 보존하는 계약은 아니다. 원본 sprite는 수정하지 않는다.
+- 원본·전체 출력 경로를 잠그고 모든 파일을 생성·검증한 뒤 반영한다. 오류·취소 rollback과 백업 보존의 경계는 [FILE_PROTECTION](FILE_PROTECTION.md#export_sprite-출력-세트-bug-03)를 따른다. 여러 파일의 crash 원자성은 제공하지 않는다.
+- 시퀀스의 요청 base 파일과 응답 목록에 없는 기존 파일은 그대로 둔다. 이전에 더 많은 프레임을 export한 경우의 오래된 파일을 자동 삭제하지 않는다. 단일 파일 출력은 요청한 기존 파일을 교체한다.

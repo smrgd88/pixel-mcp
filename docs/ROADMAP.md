@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-09-22 · 코드 기준: `develop`의 `a42c6242077c4681a9b66f44915f7aef8de33a6c`
+기준일: 2026-09-23 · 코드 기준: `develop`의 `a7ffa0fc61763685b195f41b90ba6d1f07fdeece`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -19,9 +19,9 @@
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
 | 1 | BUG-04/05 감색 결과·옵션 계약 — PR #16 병합 완료 | 픽셀 remap·입력 모드 유지·indexed 투명 인덱스 분리. 상세 계약은 CAPABILITIES |
-| 2 | BUG-01 density=0 보존 — 수정 브랜치, 병합 대기 | 명시적 사용자 입력이 다른 픽셀 결과를 만드는 오류 |
-| 3 | BUG-03 다중 frame PNG — 다음 구현 작업 | 기존 export workflow와 실제 파일/응답 계약 복구; 필요한 출력 경로 처리만 정리 |
-| 4 | BUG-02 참조 형식 지원 | 광고된 지원과 decoder 불일치. 독립 처리 가능하며 dry-run 자체의 기술적 선행 조건은 아님 |
+| 2 | BUG-01 density=0 보존 — PR #17 병합 완료 | 명시적 사용자 입력이 다른 픽셀 결과를 만드는 오류 |
+| 3 | BUG-03 다중 frame PNG — 수정 브랜치, 병합 대기 | 기존 export workflow와 실제 파일/응답 계약 복구; 필요한 출력 경로 처리만 정리 |
+| 4 | BUG-02 참조 형식 지원 — 다음 구현 작업 | 광고된 지원과 decoder 불일치. 독립 처리 가능하며 dry-run 자체의 기술적 선행 조건은 아님 |
 | 5 | SAFE-02 dry-run | 올바른 편집 동작을 임시 복사본에서 preview |
 | 6 | SAFE-03 → SAFE-04 | snapshot/restore 이후 history/undo |
 
@@ -86,7 +86,8 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] GAP-10: capability preflight 구현 (PR #13 병합 완료; 하한 실행 추가 검증 완료, NEXT_STEPS 참조)
 - [x] SAFE-05: 파일 변경 보호 구현 (PR #14 develop 병합 완료; [검증 범위](FILE_PROTECTION.md))
 - [x] BUG-04/05 수정·회귀 검증 및 PR #16 병합
-- [ ] BUG-01 → BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
+- [x] BUG-01 수정·회귀 검증 및 PR #17 병합
+- [ ] BUG-03 → BUG-02 수정 및 실제 Aseprite 회귀 검증
 - [ ] DITHER-01/02: 중간 밀도·texture 비율 제어 (후속 backlog, 착수 순서 미확정)
 - [ ] SAFE-02–04: dry-run·snapshot·history/undo
 - [ ] GAP-01–06: 편집·조회·export 확장

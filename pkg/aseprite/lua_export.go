@@ -2,6 +2,7 @@ package aseprite
 
 import (
 	"fmt"
+	"strings"
 )
 
 // ExportSprite generates a Lua script to export a sprite.
@@ -288,4 +289,35 @@ local newPath = "%s"
 spr:saveAs(newPath)
 
 print(string.format('{"success":true,"file_path":"%%s"}', newPath))`, escapedPath)
+}
+
+// ExportSpriteFiles renders explicitly named frames. Frame zero is reserved for
+// an animated single-file export. The frame-count guard protects a plan made
+// before the caller acquired all source/output locks.
+func (g *LuaGenerator) ExportSpriteFiles(paths []string, frames []int, expectedFrames int) string {
+	if len(paths) == 0 || len(paths) != len(frames) {
+		return `error("Invalid export plan")`
+	}
+	var script strings.Builder
+	fmt.Fprintf(&script, `local s=app.activeSprite
+if not s then error("No active sprite") end
+if #s.frames~=%d then error("file_changed: sprite frame count changed; retry export") end
+`, expectedFrames)
+	for i, path := range paths {
+		if frames[i] == 0 {
+			if len(paths) != 1 {
+				return `error("Invalid animation export plan")`
+			}
+			fmt.Fprintf(&script, "if not s:saveCopyAs(\"%s\") then error(\"Failed to save animation\") end\n", EscapeString(path))
+		} else {
+			fmt.Fprintf(&script, `do
+local im=Image(s.width,s.height,ColorMode.RGB)
+im:drawSprite(s,%d)
+if not im:saveAs("%s") then error("Failed to save export frame") end
+end
+`, frames[i], EscapeString(path))
+		}
+	}
+	script.WriteString(`print("Exported successfully")`)
+	return script.String()
 }
