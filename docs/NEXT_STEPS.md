@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-09-27
 
-현재 기준: `develop`의 `363d6fa0960ebd7d339fc1edca6beb538f44e8c4` (PR #18까지 병합 반영). BUG-01/03/04/05 완료, BUG-02는 `fix/be-reference-format-support`에서 수정·검증 완료, 통합 PR 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `8d9bdde15c463b1c8227cfdb3a7d8cf65bfac966` (PR #20까지 병합 반영). BUG-01~05 완료, SAFE-02는 `feature/shared-dry-run`에서 구현·검증 완료, 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -16,14 +16,18 @@
 
 최신 검증 버전: Aseprite 1.3.18.3 (2026-08-25 공식 릴리스, 전체 Docker 검증 완료)
 
+## 개발 검증 정책
+
+macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검증한다. Windows 네이티브 테스트는 현재 개발 범위에서 제외하며 반복적인 미실행 알림·보류 목록·진행 차단 사유로 보고하지 않는다. Windows 환경 작업이나 명시적인 검증 요청이 있을 때 범위를 다시 정한다. 기존 cross-build 이력과 제품의 플랫폼 지원 계획은 별개다.
+
 ## 남은 작업 요약 (2026-09-27)
 
 상세 작업 항목은 아래 기존 체크리스트에 유지하고, 우선순위는 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 한다.
 
 | 구분 | 남은 작업 | 상태·완료 기준 |
 | --- | --- | --- |
-| 현재 작업 | BUG-02 참조 이미지 지원 형식 일치 | 수정 브랜치에서 BMP/.aseprite 로딩 보완, 첫 frame 규칙·원본 보존 검증; 병합 대기 |
-| 다음 순차 구현 | SAFE-02 → SAFE-03 → SAFE-04 | dry-run → snapshot/restore → 작업 이력·undo. 원본 보호 기반 SAFE-05는 완료 |
+| 현재 작업 | SAFE-02 dry-run | 감색·자동 shading·flatten의 임시 복사본 실행, 전후 요약과 원본 보존; 구현·검증 완료, 병합 대기 |
+| 다음 순차 구현 | SAFE-03 → SAFE-04 | snapshot/restore → 작업 이력·undo. 원본 보호 기반 SAFE-05는 완료 |
 | 후속 개선 | DITHER-01, DITHER-02 | Floyd 중간 density 반영, texture의 세밀한 밀도·비율 제어. API·착수 순서 미확정 |
 | 릴리스 전 운영 | OPS-01, upstream #19, 릴리스 절차 | CI 버전 artifact, upstream 제출 범위 결정, 0.x 호환성·RELEASING 절차 및 main/태그/artifact 배포 검증 |
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
@@ -31,7 +35,7 @@
 | 편집·조회 확장 | GAP-01–04 (R3) | 레이어 속성·그룹, 구조/cel 관리, 태그 조회·편집, 범용 색상 모드 전환. indexed helper 공통화 검증 포함 |
 | export 확장 | GAP-05–06 (R4) | 범위/trim/extrude/padding, slice/pivot/nine-slice, spritesheet texture+JSON 일괄 보호 |
 | 장기 확장 | GAP-07–09·11–13 (R5/별도 SPIKE) | tilemap/tileset, 보정 필터, metadata, 선택/brush/grid, GUI·지속 세션. 범위 선정 후 착수 |
-| 보류·검토 후보 | Windows native, upstream #16, export crash 복구 | Windows는 사용자 요청으로 보류. #16은 지원 버전 재현 시 재개. 출력 세트의 crash 복구·고아 staging/백업 자동 정리는 후속 설계 대상으로 착수 미확정 |
+| 보류·검토 후보 | upstream #16, export crash 복구 | #16은 지원 버전 재현 시 재개. 출력 세트의 crash 복구·고아 staging/백업 자동 정리는 후속 설계 대상으로 착수 미확정 |
 
 검증 관찰 잔여: Docker 호스트 bind mount에서 관찰한 `file_changed` 거부의 원인은 미확정이다. 컨테이너 내부 filesystem과 macOS 네이티브 회귀 통과 이력과 구분하며, 파일시스템별 재현 조건 확인 대상으로 남긴다.
 
@@ -91,11 +95,11 @@
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02는 수정·검증 후 병합 대기하며 다음 구현 작업은 SAFE-02 dry-run이다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 현재 SAFE-02 dry-run을 구현하며 다음 구현 작업은 SAFE-03 snapshot/restore다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## 현재 우선 작업 — 알려진 동작 오류
 
-2026-09-22, 사용자 보고 5건을 최신 develop `7e60ad9`에서 재확인했다. 아래 develop 결과는 수정 전 재현 이력이며, BUG-01/03/04/05 병합 상태와 남은 BUG-02는 완료 조건과 CAPABILITIES에 별도로 기록한다. 기존 dry-run보다 실제 결과/계약 오류를 우선한다. 전체 파일 접근 선언 리팩터링을 선행 조건으로 추가하지 않는다.
+2026-09-22, 사용자 보고 5건을 최신 develop `7e60ad9`에서 재확인했다. 아래 develop 결과는 수정 전 재현 이력이며, BUG-01~05 병합 상태는 완료 조건과 CAPABILITIES에 별도로 기록한다. 기존 dry-run보다 실제 결과/계약 오류를 우선한다. 전체 파일 접근 선언 리팩터링을 선행 조건으로 추가하지 않는다.
 
 환경: Linux amd64 Docker, Go 1.25.14, Aseprite `1.3.18.3-dev` / API 41. 컨테이너 내부 `/tmp`의 격리 fixture, 실제 MCP 호출과 별도 Aseprite 렌더링 검사. 이번 재현은 이 환경의 아래 조건에 한정한다.
 
@@ -105,7 +109,7 @@
 | BUG-05 / 5 | P1 계약 확인, 1순위 (BUG-04와 묶음) | RGB 4색 각 16px → dither=false/convert_to_indexed=false/target_colors=2 후 팔레트는 2개, 실제 픽셀은 원래 4색 유지 | PR #16 병합 완료: palette만 설정하던 Lua 경로에 cel remap 추가. false는 입력 모드 유지이며 감색은 수행 |
 | BUG-01 / 1 | P1, 2순위 | bayer_2x2에서 density 생략과 명시적 0 모두 빨강 32/파랑 32. density=1은 파랑 64px | PR #17 병합 완료: optional density로 생략/null과 0 구분, Lua 숫자 정밀도 및 Floyd endpoint 처리 |
 | BUG-03 / 3 | P1, 3순위 | 2-frame PNG export는 재현 당시 MCP에서 오류, 최종 생성 파일 없음. 직접 Aseprite export는 raw1.png/raw2.png 생성 | PR #18 병합 완료: 명시적 번호 파일·files 응답·전체 출력 잠금/staging/오류 rollback. 숫자로 끝나는 기존 파일명에서 첫 frame만 반영되는 경로도 수정 |
-| BUG-02 / 2 | P2, 4순위 | PNG/JPG/GIF 분석 성공. 같은 fixture의 BMP와 .aseprite는 image: unknown format | 수정 브랜치: PNG/JPEG/GIF Go decoder 유지, BMP/native signature의 Aseprite frame 1 렌더링 fallback 추가 |
+| BUG-02 / 2 | P2, 4순위 | PNG/JPG/GIF 분석 성공. 같은 fixture의 BMP와 .aseprite는 image: unknown format | PR #20 병합 완료: PNG/JPEG/GIF Go decoder 유지, BMP/native signature의 Aseprite frame 1 렌더링 fallback 추가 |
 
 P1은 무조건 운영 장애라는 뜻이 아니라, 이 작업 묶음에서 잘못된 수정 결과 또는 핵심 workflow 실패를 우선 처리한다는 분류다. BUG-05의 수정 계약은 [CAPABILITIES](CAPABILITIES.md#감색-계약-bug-0405-pr-16)에 기록한다. 팔레트 항목 수와 실제 렌더링 색 수를 같다고 가정하지 않는다. BUG-02는 dry-run의 기술적 선행 조건은 아니므로 독립적으로 처리할 수 있다.
 
@@ -128,19 +132,19 @@ P1은 무조건 운영 장애라는 뜻이 아니라, 이 작업 묶음에서 �
 4. `[BE][FIX] 참조 이미지 지원 형식 일치` — `fix/be-reference-format-support`, BUG-02.
    - [x] BMP/.aseprite 지원을 Aseprite 렌더링으로 보완한다. native는 첫 visible composite, GIF는 기존 첫 decoded image를 분석한다.
    - [x] PNG/JPG/GIF/BMP/.aseprite의 동일 fixture, 첫 frame, RGB/indexed/grayscale 합성, 손상된 입력·실행 실패·임시 파일 정리 및 read-only 원본 보존을 검증한다.
-   - [ ] 수정 PR을 develop에 병합한다.
+   - [x] PR #20을 develop `8d9bdde`에 병합했다.
 
-BUG-04/05 브랜치 검증 (2026-09-22): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 `go build ./...`, `go vet ./...`, `go test -race -cover ./...`, `go test -tags=integration ./...` 통과. pkg/tools integration 186.491초. darwin amd64/arm64, linux amd64/arm64, windows amd64 빌드 통과. 2색 저장·재열기 및 PNG export/reopen, RGB 픽셀 감색, 3종 알고리즘, grayscale/indexed 입력 모드 유지, 256색 경계, 투명 픽셀·반복 감색, cel 메타데이터, 오류 시 원본 바이트 보존과 기존 warnings를 확인했다. 이후 최소 지원 버전 전체 통합 및 macOS arm64 감색 회귀 검증도 완료했다. 환경·재현 방법은 아래 추가 검증 기록을 따른다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
+BUG-04/05 브랜치 검증 (2026-09-22): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 `go build ./...`, `go vet ./...`, `go test -race -cover ./...`, `go test -tags=integration ./...` 통과. pkg/tools integration 186.491초. darwin amd64/arm64, linux amd64/arm64, windows amd64 빌드 통과. 2색 저장·재열기 및 PNG export/reopen, RGB 픽셀 감색, 3종 알고리즘, grayscale/indexed 입력 모드 유지, 256색 경계, 투명 픽셀·반복 감색, cel 메타데이터, 오류 시 원본 바이트 보존과 기존 warnings를 확인했다. 이후 최소 지원 버전 전체 통합 및 macOS arm64 감색 회귀 검증도 완료했다. 환경·재현 방법은 아래 추가 검증 기록을 따른다.
 
 2026-09-22 추가 검증 (`c2a3b6b` 코드): 공식 `v1.3.17.2` 태그와 원격 commit `793fb6526540b4c6f5cf8381ae189241cb003fdf`의 일치를 확인했다. 해당 태그의 `src/ver/CMakeLists.txt` 기본 `1.x-dev`를 `1.3.17.2` 버전 메타데이터로 설정하고 CMake/Ninja로 재빌드한 별도 `pixel-mcp-ci:aseprite-1.3.17.2-verified` 이미지를 사용했다. 애플리케이션 동작 코드와 pixel-mcp capability 검사는 변경하지 않았다. Linux amd64 / Go 1.25.14에서 `--health`가 `1.3.17.2` / API `40`으로 성공했고, `go test -count=1 -tags=integration ./...` 전체 통과 (pkg/tools 199.779초). 기존 버전 불명 이미지는 이 검증 이미지와 구분한다.
 
-macOS arm64 추가 검증: 설치된 Aseprite `1.3.18.2-arm64` / API `41`에서 `--health` 및 감색·warnings 관련 10개 최상위 테스트 그룹 통과. Docker에서 `GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go test -c -tags=integration ./pkg/tools`로 만든 Mach-O 테스트 바이너리를 Mac 호스트에서 직접 실행했다. 실행 필터는 `TestQuantizationContract|TestBehavior_Quantization|TestOperationWarningsViaMCP`이며 전체 macOS suite 또는 macOS race 검증을 의미하지 않는다. Windows 네이티브 실행은 사용자 요청으로 보류한다.
+macOS arm64 추가 검증: 설치된 Aseprite `1.3.18.2-arm64` / API `41`에서 `--health` 및 감색·warnings 관련 10개 최상위 테스트 그룹 통과. Docker에서 `GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go test -c -tags=integration ./pkg/tools`로 만든 Mach-O 테스트 바이너리를 Mac 호스트에서 직접 실행했다. 실행 필터는 `TestQuantizationContract|TestBehavior_Quantization|TestOperationWarningsViaMCP`이며 전체 macOS suite 또는 macOS race 검증을 의미하지 않는다.
 
-BUG-01 검증 (2026-09-22): 최신 develop `a42c624`에서 endpoint 및 작은 양수 회귀 실패를 확인한 뒤 수정했다. Linux amd64 / Go 1.25.14 / Aseprite 1.3.18.3-dev에서 build, vet, `go test -count=1 -race -cover ./...`, `go test -count=1 -tags=integration ./...` 전체 통과 (pkg/tools integration 204.485초). `TestDitherDensity` 4개 그룹은 최소 Aseprite 1.3.17.2 소스 빌드에서도 통과 (17.472초), macOS arm64 / 설치된 Aseprite 1.3.18.2-arm64 네이티브 실행에서도 통과했다. macOS와 최소 버전은 이번 변경의 관련 회귀 범위이며 전체 suite 재실행을 뜻하지 않는다. Windows 네이티브 검증은 사용자 요청으로 보류한다.
+BUG-01 검증 (2026-09-22): 최신 develop `a42c624`에서 endpoint 및 작은 양수 회귀 실패를 확인한 뒤 수정했다. Linux amd64 / Go 1.25.14 / Aseprite 1.3.18.3-dev에서 build, vet, `go test -count=1 -race -cover ./...`, `go test -count=1 -tags=integration ./...` 전체 통과 (pkg/tools integration 204.485초). `TestDitherDensity` 4개 그룹은 최소 Aseprite 1.3.17.2 소스 빌드에서도 통과 (17.472초), macOS arm64 / 설치된 Aseprite 1.3.18.2-arm64 네이티브 실행에서도 통과했다. macOS와 최소 버전은 이번 변경의 관련 회귀 범위이며 전체 suite 재실행을 뜻하지 않는다.
 
-BUG-03 검증 (2026-09-23): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 build, vet, unit/race/coverage와 전체 integration 통과 (pkg/tools 208.782초). darwin amd64/arm64, linux amd64/arm64, windows amd64 빌드 통과. 최소 Aseprite 1.3.17.2 소스 빌드의 `TestExportSequence` 회귀 통과 (6.169초). macOS arm64 / Aseprite 1.3.18.2-arm64에서도 `TestOutputFiles` 파일 보호와 `TestExportSequence` 실제 export 회귀 통과. macOS의 symlink temp 경로 때문에 실패 주입이 누락되던 테스트 fixture는 경로 정규화 후 Linux race·macOS에서 재검증했다. Windows 네이티브 실행은 사용자 요청으로 보류한다. 전체 출력 교체의 crash 원자성과 자동 복구는 검증·보장 범위 밖이다.
+BUG-03 검증 (2026-09-23): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 build, vet, unit/race/coverage와 전체 integration 통과 (pkg/tools 208.782초). darwin amd64/arm64, linux amd64/arm64, windows amd64 빌드 통과. 최소 Aseprite 1.3.17.2 소스 빌드의 `TestExportSequence` 회귀 통과 (6.169초). macOS arm64 / Aseprite 1.3.18.2-arm64에서도 `TestOutputFiles` 파일 보호와 `TestExportSequence` 실제 export 회귀 통과. macOS의 symlink temp 경로 때문에 실패 주입이 누락되던 테스트 fixture는 경로 정규화 후 Linux race·macOS에서 재검증했다. 전체 출력 교체의 crash 원자성과 자동 복구는 검증·보장 범위 밖이다.
 
-BUG-02 검증 (2026-09-27): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 build·vet·unit/race/coverage·전체 integration 통과 (pkg/tools 215.537초). `TestReference` 8개 그룹은 최소 Aseprite 1.3.17.2 소스 빌드에서도 통과 (6.334초), macOS arm64 / Aseprite 1.3.18.2-arm64 네이티브 실행에서도 통과했다. macOS는 제거된 예전 임시 config 대신 이번 작업의 격리 config를 만든 뒤 검증했다. BMP/native만 Aseprite runtime을 사용하며 PNG/JPEG/GIF의 Go 경로·출력 구조와 기존 warnings 계약을 유지한다. 최소 버전/macOS는 관련 회귀 범위이며 Windows 네이티브 검증은 요청대로 보류한다.
+BUG-02 검증 (2026-09-27): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 build·vet·unit/race/coverage·전체 integration 통과 (pkg/tools 215.537초). `TestReference` 8개 그룹은 최소 Aseprite 1.3.17.2 소스 빌드에서도 통과 (6.334초), macOS arm64 / Aseprite 1.3.18.2-arm64 네이티브 실행에서도 통과했다. macOS는 제거된 예전 임시 config 대신 이번 작업의 격리 config를 만든 뒤 검증했다. BMP/native만 Aseprite runtime을 사용하며 PNG/JPEG/GIF의 Go 경로·출력 구조와 기존 warnings 계약을 유지한다. 최소 버전/macOS는 관련 회귀 범위다.
 
 공통: 최신 develop에서 원인별 수정·회귀 테스트, 기존 warnings 계약 유지, NEXT_STEPS/CAPABILITIES/CHANGELOG 갱신, PR 생성 후 병합 대기. 플러그인 저장소는 수정하지 않는다. 위 브랜치 분리는 권장 실행 단위이며 모든 수정이 완료됐다는 뜻이 아니다.
 
@@ -288,11 +292,14 @@ SAFE-01: PR #11로 develop `6c9ac5e`에 병합했으며 [응답 계약](WARNINGS
 
 분류: **pixel-mcp 책임**
 
-- [ ] dry-run이 원본 파일을 열거나 저장하지 않는 분석-only 경로인지 정의한다.
-- [ ] Aseprite 실행이 필요한 preview는 원본이 아닌 임시 복사본에서 수행한다.
-- [ ] `quantize_palette`, `apply_auto_shading`, `flatten_layers`부터 적용한다.
-- [ ] dry-run 결과와 실제 적용 결과의 summary가 일치하는 회귀 테스트를 추가한다.
-- [ ] 임시 파일 생성·실패·정리 정책을 문서화한다.
+- [x] 원본은 Go에서 읽어 복사하고 Aseprite에는 복사본만 여는 실행형 preview로 정의한다. [DRY_RUN 계약](DRY_RUN.md)을 따른다.
+- [x] preview의 모든 source Lua 실행을 임시 복사본에 연결하고 원본으로 commit하지 않는다.
+- [x] `quantize_palette`, `apply_auto_shading`, `flatten_layers`에 optional dry_run을 적용한다.
+- [x] dry-run과 실제 적용의 기존 응답·적용 후 상태 일치, 반복 preview와 원본 bytes/identity/mode/mtime 보존을 검증한다.
+- [ ] SAFE-02 PR을 develop에 병합한다.
+- [x] 임시 파일 생성·실패·정리, source 변경 감지와 읽기 전용 preview 정책을 문서화한다.
+
+SAFE-02 검증 (2026-09-27): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 build·vet·unit/race/coverage·전체 integration 통과 (pkg/tools 224.175초). 최종 source 검증의 취소 검사 보완 후 관련 helper race·MCP 회귀도 다시 통과했다. 최소 Aseprite 1.3.17.2 소스 빌드의 dry-run MCP 회귀 통과 (12.142초), macOS arm64 / Aseprite 1.3.18.2-arm64에서 파일 helper·감색 재현성·MCP dry-run 회귀 통과. 문서의 개발 검증 정책을 적용한다.
 
 ### snapshot/restore 도구
 
@@ -352,14 +359,14 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 분류: **Go 배포 계층**, Aseprite CLI와 별개
 
 - [ ] launcher가 OS/arch별 서버 binary를 선택하고 모든 argv/stdin/stdout/stderr를 전달한다.
-- [ ] Windows에서 WSL/Git Bash 의존성 없이 실행되는지 검증한다.
+- [ ] 플랫폼별 native launcher 실행 검증은 해당 환경 작업 시 별도 계획한다.
 - [ ] 새 native launcher를 darwin amd64/arm64, linux amd64/arm64, windows amd64로 cross-build한다. 기존 서버의 5종 빌드 검증 완료와 구분한다.
 - [ ] GoReleaser artifact에 server와 launcher를 함께 포함한다.
 - [ ] 지원하지 않는 OS/arch 오류에 기대 binary 이름과 실제 플랫폼을 표시한다.
 
 ### 테스트 matrix 확대
 
-- [ ] OS별 검증을 반복 가능한 CI matrix로 확장한다. Linux 전체 검사와 macOS 관련 회귀 실행 이력은 있으며, Windows 네이티브 실행은 사용자 요청으로 보류한다.
+- [ ] OS별 검증을 반복 가능한 CI matrix로 확장한다. Linux 전체 검사와 macOS 관련 회귀 실행 이력이 있다.
 - [x] 최소 지원 버전과 최신 Aseprite 버전을 모두 검증한다.
 - [ ] RGB, grayscale, indexed 각각에 공통 drawing/export contract test를 적용한다.
 - [ ] palette index 0과 transparent index를 별도 축으로 테스트한다.
@@ -380,9 +387,10 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[BE][FIX] 감색 결과 및 옵션 계약 수정` (BUG-04/05), PR #16 develop 병합.
 - 완료: `[BE][FIX] 명시적 dithering density 0 보존` (BUG-01), PR #17 develop 병합.
 - 완료: `[BE][FIX] 다중 프레임 PNG 출력 계약 수정` (BUG-03), PR #18 develop 병합.
-- 현재 작업: `[BE][FIX] 참조 이미지 지원 형식 일치` (BUG-02), 수정·검증 후 병합 대기.
-- 다음 구현 작업: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02).
-- BUG-02 병합 후 SAFE-02 dry-run → SAFE-03 snapshot/restore → SAFE-04 history/undo로 진행한다.
+- 완료: `[BE][FIX] 참조 이미지 지원 형식 일치` (BUG-02), PR #20 develop 병합.
+- 현재 작업: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02), 구현·검증 후 병합 대기.
+- 다음 구현 작업: `[SHARED][FEATURE] snapshot 및 restore` (SAFE-03).
+- SAFE-02 병합 후 SAFE-03 snapshot/restore → SAFE-04 history/undo로 진행한다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.

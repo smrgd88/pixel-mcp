@@ -548,3 +548,30 @@ func TestQuantizePaletteKeepsColorsWithinBudget(t *testing.T) {
 		t.Fatal("unknown algorithm must be rejected even within color budget")
 	}
 }
+
+func TestQuantizeKmeansReproducible(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 16, 16))
+	for y := 0; y < 16; y++ {
+		for x := 0; x < 16; x++ {
+			img.Set(x, y, color.RGBA{R: uint8(x * 16), G: uint8(y * 16), B: 80, A: 255})
+		}
+	}
+	first, _, err := QuantizePalette(img, 5, "kmeans", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 5; i++ {
+		next, _, err := QuantizePalette(img, 5, "kmeans", true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(first) != len(next) {
+			t.Fatal("palette size changed")
+		}
+		for j := range first {
+			if first[j] != next[j] {
+				t.Fatalf("non-reproducible kmeans palette: %v vs %v", first, next)
+			}
+		}
+	}
+}

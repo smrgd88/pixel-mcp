@@ -118,6 +118,10 @@ func samplePixels(img image.Image, maxSamples int) []color.Color {
 // kmeansClustering performs k-means clustering on LAB color values.
 // Returns k centroids representing the cluster centers.
 func kmeansClustering(pixels []colorful.Color, k int, maxIterations int) []colorful.Color {
+	return kmeansClusteringWithPermutation(pixels, k, maxIterations, rand.Perm)
+}
+
+func kmeansClusteringWithPermutation(pixels []colorful.Color, k int, maxIterations int, permute func(int) []int) []colorful.Color {
 	if len(pixels) == 0 || k <= 0 {
 		return nil
 	}
@@ -129,7 +133,7 @@ func kmeansClustering(pixels []colorful.Color, k int, maxIterations int) []color
 
 	// Initialize centroids randomly from pixel set
 	centroids := make([]colorful.Color, k)
-	indices := rand.Perm(len(pixels))
+	indices := permute(len(pixels))
 	for i := 0; i < k; i++ {
 		centroids[i] = pixels[indices[i]]
 	}

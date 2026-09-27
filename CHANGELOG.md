@@ -27,6 +27,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
+- Optional `dry_run` for `quantize_palette`, `apply_auto_shading`, and `flatten_layers`: execute the same operation on a disposable sprite copy, return before/after state and potential warnings, and preserve the source. Actual edit responses retain their existing shape. See `docs/DRY_RUN.md`.
+
 - Per-file operation locks and staged atomic publication for existing sprite edits and explicit single-file outputs. Multi-step MCP edits now publish only after handler success; failure/cancellation preserves the original. See `docs/FILE_PROTECTION.md` for multi-file export and crash-cleanup limits.
 
 - Aseprite version/API preflight before each Lua operation, requiring 1.3.17.2 and API 39. `--health` now emits JSON with detected versions, support floors, and capability error codes; existing tool schemas remain unchanged.
@@ -37,6 +39,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 - Capability inventory for all 50 MCP tools, tag provenance, known limitations, and a phased roadmap in `docs/CAPABILITIES.md` and `docs/ROADMAP.md`.
 
 ### Changed
+
+- Quantization uses request-local deterministic k-means initialization so repeated preview/apply calls on the same input reproduce the operation result. Reference analysis keeps its existing initialization.
 
 - Go baseline updated to 1.25 and MCP Go SDK to 1.4.1 (#5).
 - Documented Aseprite support floor of 1.3.17.2/API 39, with recorded validation on 1.3.17.2 and 1.3.18.3. Runtime capability enforcement is implemented in this Unreleased change.

@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"math/rand"
 	"sort"
 
 	"github.com/lucasb-eyer/go-colorful"
@@ -97,7 +98,8 @@ func QuantizePalette(img image.Image, targetColors int, algorithm string, preser
 					B: float64(b) / 65535.0,
 				}
 			}
-			centroids := kmeansClustering(colorfulPixels, targetColors, 100)
+			// Local deterministic initialization makes preview and apply reproducible.
+			centroids := kmeansClusteringWithPermutation(colorfulPixels, targetColors, 100, rand.New(rand.NewSource(0)).Perm)
 			paletteColors = make([]color.Color, len(centroids))
 			for i, c := range centroids {
 				r, g, b := c.RGB255()
