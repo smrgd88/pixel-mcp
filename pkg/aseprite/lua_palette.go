@@ -71,6 +71,8 @@ if not palette then
 	error("No palette found")
 end
 
+-- Aseprite clamps the mask during resize, even when that index is unused.
+local originalTransparent = spr.transparentColor
 -- Resize palette to match color count
 palette:resize(%d)
 
@@ -80,6 +82,7 @@ local colors = %s
 for i, color in ipairs(colors) do
 	palette:setColor(i - 1, color)  -- Palette is 0-indexed
 end
+if spr.colorMode == ColorMode.INDEXED then spr.transparentColor = originalTransparent end
 
 spr:saveAs(spr.filename)
 print("Palette set successfully")`, len(colors), colorList)
@@ -232,8 +235,10 @@ end
 
 -- Add new color to palette
 local newIndex = #palette
+local originalTransparent = spr.transparentColor
 palette:resize(#palette + 1)
 palette:setColor(newIndex, Color{r=%d, g=%d, b=%d, a=%d})
+if spr.colorMode == ColorMode.INDEXED then spr.transparentColor = originalTransparent end
 
 spr:saveAs(spr.filename)
 

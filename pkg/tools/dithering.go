@@ -19,7 +19,7 @@ type DrawWithDitherInput struct {
 	Color1      string      `json:"color1" jsonschema:"First color (hex #RRGGBB or #RRGGBBAA)"`
 	Color2      string      `json:"color2" jsonschema:"Second color (hex #RRGGBB or #RRGGBBAA)"`
 	Pattern     string      `json:"pattern" jsonschema:"Dithering pattern: bayer_2x2|bayer_4x4|bayer_8x8|checkerboard|floyd_steinberg|grass|water|stone|cloud|brick|dots|diagonal|cross|noise|horizontal_lines|vertical_lines"`
-	Density     *float64    `json:"density,omitempty" jsonschema:"Density threshold in [0,1]; omitted or null defaults to 0.5, 0 fills color1, 1 fills color2. Interior values depend on the pattern"`
+	Density     *float64    `json:"density,omitempty" jsonschema:"Density threshold in [0,1]; omitted or null defaults to 0.5, 0 fills color1, 1 fills color2. Interior values bias the Floyd gradient or select ordered texture ranks; .5 retains the legacy pattern, coverage is pattern-dependent"`
 }
 
 // RegionInput defines a rectangular region.
@@ -37,7 +37,7 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 		server,
 		&mcp.Tool{
 			Name:        "draw_with_dither",
-			Description: "Fill a region with one of 16 ordered, texture, or Floyd-Steinberg dithering patterns. Omitted or null density defaults to 0.5; explicit 0 fills color1 and 1 fills color2. Interior density values select a matrix threshold, so texture coverage need not equal the density or be 50/50. For floyd_steinberg, interior values retain the existing horizontal color1-to-color2 gradient and do not adjust its density.",
+			Description: "Fill a region with one of 16 ordered, texture, or Floyd-Steinberg dithering patterns. Omitted or null density defaults to 0.5; explicit 0 fills color1 and 1 fills color2. Interior density values control ordered matrix thresholds or ranked texture coverage. Texture .5 preserves the legacy pattern, not necessarily a 50/50 ratio. Floyd density biases a horizontal gradient toward color2; .5 preserves the legacy gradient for widths greater than one. Exact rendered color ratios are not guaranteed.",
 		},
 		maybeWrapWithTiming("draw_with_dither", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawWithDitherInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)

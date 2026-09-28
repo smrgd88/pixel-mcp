@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Palette, threshold and density review repairs (unreleased)
+
+- Preserve indexed transparent-mask identity across palette replacement/resizing and palette growth.
+- Distinguish omitted/null reference edge threshold (30) from explicit zero; wire AA threshold to a premultiplied RGBA contrast filter (default 128).
+- Apply Floyd interior density to the gradient mean and rank binary texture cells for intermediate coverage while preserving the existing .5 pattern; handle one-column error carry.
+- Use deterministic farthest-point palette seeds and update the first cluster mean before testing convergence, retaining rare sampled colors and the existing result cardinality.
+- Add red/green MCP/Aseprite regressions, boundary and source-preservation checks. See [review and verification](docs/PALETTE_THRESHOLD_REVIEW.md). This branch does not update the plugin's bundled binary.
+
 ## Review preservation fixes (unreleased)
 
 - Preserve nested groups and cel data/zIndex/color/extension properties during frame duplication, with correct requested placement and tag-boundary behavior.
@@ -40,7 +48,7 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Changed
 
-- Quantization uses request-local deterministic k-means initialization so repeated preview/apply calls on the same input reproduce the operation result. Reference analysis keeps its existing initialization.
+- Quantization and reference analysis share deterministic farthest-point k-means initialization (PR #22), so repeated preview/apply calls on the same input reproduce the operation result.
 
 - Go baseline updated to 1.25 and MCP Go SDK to 1.4.1 (#5).
 - Documented Aseprite support floor of 1.3.17.2/API 39, with recorded validation on 1.3.17.2 and 1.3.18.3. Runtime capability enforcement is implemented in this Unreleased change.

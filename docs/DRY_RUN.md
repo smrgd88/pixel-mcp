@@ -44,7 +44,7 @@
 
 ## 재현성과 경계
 
-- 감색의 k-means 초기값은 요청별 고정 permutation을 사용한다. 같은 입력/옵션에서 dry-run과 실제 실행의 결과를 재현하기 위한 변경이며, 참조 분석의 기존 k-means 초기화는 유지한다.
+- 감색과 참조 분석은 PR #22의 결정적 farthest-point k-means 초기화를 공유한다. 같은 입력/옵션에서 dry-run과 실제 실행의 결과를 재현하며, 첫 cluster 평균 갱신 전 조기 수렴을 방지한다.
 - 원본·옵션·실행 환경이 같을 때 작업 결과와 상태 요약이 실제 실행과 일치하는지 회귀 테스트한다. preview 후 원본이 바뀌면 다음 실제 실행은 새 원본을 사용한다. 오래된 preview를 적용하는 token/cache 계약은 제공하지 않는다.
 - 각 도구의 기존 입력 제약을 유지한다. 예를 들어 감색의 단일 프레임 범위를 dry-run으로 확대하지 않는다.
 - native 파일의 직렬화 bytes와 구조/픽셀 의미는 구분한다. would_change_file은 의미상 no-op 판정이 아니다.
@@ -54,3 +54,5 @@
 실제 MCP/Aseprite로 세 도구의 원본 bytes·identity·mode·mtime 보존, 반복 preview, 작업 결과 및 적용 후 상태 일치, optional schema와 기존 응답 호환성, 잘못된 입력과 복사본 변경 후 실패를 검사한다. 파일 helper에는 오류·취소·panic 정리, 읽기 전용/hard link, 외부 변경 감지, source 잠금 대기와 중첩 binding 거부 테스트를 둔다.
 
 2026-09-27 검증: Linux 전체 build/vet/race/integration 통과 (pkg/tools 224.175초), 최종 관련 helper race·MCP 집중 회귀 통과, 최소 Aseprite 1.3.17.2의 MCP dry-run 회귀 통과 (12.142초), macOS arm64/Aseprite 1.3.18.2-arm64의 helper·재현성·MCP 회귀 통과.
+
+2026-09-28 PR #22 통합 검증: develop `bd13cdb`를 병합하고 감색도 공유 farthest-point 초기화를 사용하도록 충돌을 해결했다. Linux Go 1.25.14/Aseprite 1.3.18.3-dev의 build·vet·전체 race·전체 integration 통과 (pkg/tools integration 279.337초). 최소 Aseprite 1.3.17.2 dry-run 회귀 통과 (12.296초), macOS arm64/Aseprite 1.3.18.2-arm64의 preview helper·palette 초기화/재현성·MCP dry-run 회귀 통과. 최소 버전과 macOS는 관련 회귀 범위다.

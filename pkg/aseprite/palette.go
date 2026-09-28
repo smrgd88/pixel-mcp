@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"math/rand"
 	"sort"
 
 	"github.com/lucasb-eyer/go-colorful"
@@ -118,10 +117,6 @@ func samplePixels(img image.Image, maxSamples int) []color.Color {
 // kmeansClustering performs k-means clustering on LAB color values.
 // Returns k centroids representing the cluster centers.
 func kmeansClustering(pixels []colorful.Color, k int, maxIterations int) []colorful.Color {
-	return kmeansClusteringWithPermutation(pixels, k, maxIterations, rand.Perm)
-}
-
-func kmeansClusteringWithPermutation(pixels []colorful.Color, k int, maxIterations int, permute func(int) []int) []colorful.Color {
 	if len(pixels) == 0 || k <= 0 {
 		return nil
 	}
@@ -131,15 +126,32 @@ func kmeansClusteringWithPermutation(pixels []colorful.Color, k int, maxIteratio
 		k = len(pixels)
 	}
 
-	// Initialize centroids randomly from pixel set
+	// Deterministic farthest-point initialization covers distinct sampled colors
+	// before duplicating seeds. Keep the historical k-entry result shape.
 	centroids := make([]colorful.Color, k)
-	indices := permute(len(pixels))
-	for i := 0; i < k; i++ {
-		centroids[i] = pixels[indices[i]]
+	centroids[0] = pixels[0]
+	nearest := make([]float64, len(pixels))
+	for i := range nearest {
+		nearest[i] = math.MaxFloat64
 	}
-
-	// Cluster assignments
+	for n := 1; n < k; n++ {
+		farthest, farthestDistance := 0, -1.0
+		for i, p := range pixels {
+			d := colorDistanceLab(p, centroids[n-1])
+			if d < nearest[i] {
+				nearest[i] = d
+			}
+			if nearest[i] > farthestDistance {
+				farthest, farthestDistance = i, nearest[i]
+			}
+		}
+		centroids[n] = pixels[farthest]
+	}
+	// Zero-filled assignments can falsely converge before the first mean update.
 	assignments := make([]int, len(pixels))
+	for i := range assignments {
+		assignments[i] = -1
+	}
 
 	// Iterate until convergence or max iterations
 	for iter := 0; iter < maxIterations; iter++ {

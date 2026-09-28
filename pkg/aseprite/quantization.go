@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"math/rand"
 	"sort"
 
 	"github.com/lucasb-eyer/go-colorful"
@@ -61,8 +60,8 @@ func QuantizePalette(img image.Image, targetColors int, algorithm string, preser
 		targetColors--
 	}
 
-	// Preserve an already-small color set exactly. In particular, random
-	// k-means seeds may otherwise duplicate a color and lose the other color.
+	// Preserve an already-small color set exactly without clustering or
+	// subsampling away rare colors.
 	exact := make([]color.Color, 0, targetColors)
 	seen := make(map[color.RGBA]bool)
 	for _, p := range pixels {
@@ -98,8 +97,8 @@ func QuantizePalette(img image.Image, targetColors int, algorithm string, preser
 					B: float64(b) / 65535.0,
 				}
 			}
-			// Local deterministic initialization makes preview and apply reproducible.
-			centroids := kmeansClusteringWithPermutation(colorfulPixels, targetColors, 100, rand.New(rand.NewSource(0)).Perm)
+			// Shared deterministic farthest-point initialization keeps preview and apply reproducible.
+			centroids := kmeansClustering(colorfulPixels, targetColors, 100)
 			paletteColors = make([]color.Color, len(centroids))
 			for i, c := range centroids {
 				r, g, b := c.RGB255()
