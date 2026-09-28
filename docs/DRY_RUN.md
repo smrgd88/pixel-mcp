@@ -1,6 +1,6 @@
 # 임시 복사본 dry-run (SAFE-02)
 
-`feature/shared-dry-run`에서 구현한 계약이며 병합·릴리스 상태는 [NEXT_STEPS](NEXT_STEPS.md)를 따른다.
+PR #21로 develop `1c410b6`에 병합했다 (Unreleased). 릴리스 상태는 [NEXT_STEPS](NEXT_STEPS.md)를 따른다.
 
 ## 입력과 응답
 

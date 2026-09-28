@@ -74,3 +74,7 @@ PR #18로 develop `363d6fa`에 병합한 계약이다. 기존 단일 파일 도�
 ## dry-run source 보호 (SAFE-02)
 
 세 대상 도구는 `dry_run=true`일 때 전용 preview wrapper에서 source 잠금을 취득하고 `WithSpritePreview`로 읽은 원본의 private 복사본을 Client에 연결한다. 실제 실행은 기존 `WithSpriteAccess(write=true)` 경로를 유지한다. preview에는 원본 교체 단계가 없으며 성공·오류·취소·panic unwind 시 복사본을 정리한다. 원본에 대한 외부 변경은 감지 시 오류이며 외부 변경을 되돌리지 않는다. 이미 연결된 sprite 작업 안에서 preview binding을 중첩하지 않는다. 상세 계약은 [DRY_RUN](DRY_RUN.md)을 따른다.
+
+## Snapshot restore
+
+SAFE-03의 네 snapshot 도구는 저장소와 source 잠금을 함께 예약하므로 일반 편집 wrapper를 거치지 않는다. restore는 이 문서의 기존 staging/원본 변경 감지/atomic replacement를 직접 재사용하며, 교체 전에 현재 파일의 snapshot을 발행한다. cross-volume은 원본 옆 staging으로 복사해 처리한다. 저장소 제한·실패 시 백업·만료 정책은 [SNAPSHOTS](SNAPSHOTS.md)를 따른다.

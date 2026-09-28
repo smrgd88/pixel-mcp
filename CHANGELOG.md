@@ -35,6 +35,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
+- Add `create_snapshot`, `list_snapshots`, `restore_snapshot`, and `delete_snapshot` with byte-exact copies, mandatory pre-restore backup, atomic replacement, private storage, and 100-entry/512 MiB/7-day retention. Optional `snapshot_dir` overrides the durable store. See `docs/SNAPSHOTS.md`.
+
 - Optional `dry_run` for `quantize_palette`, `apply_auto_shading`, and `flatten_layers`: execute the same operation on a disposable sprite copy, return before/after state and potential warnings, and preserve the source. Actual edit responses retain their existing shape. See `docs/DRY_RUN.md`.
 
 - Per-file operation locks and staged atomic publication for existing sprite edits and explicit single-file outputs. Multi-step MCP edits now publish only after handler success; failure/cancellation preserves the original. See `docs/FILE_PROTECTION.md` for multi-file export and crash-cleanup limits.

@@ -100,3 +100,7 @@ Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent in
 ## 라이선스
 
 [MIT](LICENSE)
+
+## Snapshot / restore (Unreleased)
+
+`create_snapshot`, `list_snapshots`, `restore_snapshot`, `delete_snapshot` provide recovery of saved sprite bytes across MCP calls. Restore creates a backup first. Copies expire after 7 days; the store is limited to 100 snapshots / 512 MiB. Optional absolute `snapshot_dir` config overrides `os.UserConfigDir()/pixel-mcp/snapshots`; this is separate from `temp_dir`. See [contract and limits](docs/SNAPSHOTS.md).

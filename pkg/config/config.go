@@ -36,6 +36,9 @@ import (
 //
 // The AsepritePath is REQUIRED and must be an absolute path to a real executable.
 type Config struct {
+	// SnapshotDir optionally overrides the durable private snapshot store.
+	SnapshotDir string `json:"snapshot_dir,omitempty"`
+
 	// AsepritePath is the absolute path to the Aseprite executable.
 	// REQUIRED. Must point to a real, executable file.
 	AsepritePath string `json:"aseprite_path"`
@@ -147,6 +150,7 @@ func ResolvePath(explicitPath string) (string, error) {
 
 // configJSON is a temporary struct for unmarshaling JSON with timeout as int (seconds)
 type configJSON struct {
+	SnapshotDir  string `json:"snapshot_dir"`
 	AsepritePath string `json:"aseprite_path"`
 	TempDir      string `json:"temp_dir"`
 	Timeout      int    `json:"timeout"` // timeout in seconds
@@ -169,6 +173,7 @@ func (c *Config) loadFromFile(configPath string) error {
 	}
 
 	// Convert to Config with proper timeout conversion
+	c.SnapshotDir = cj.SnapshotDir
 	c.AsepritePath = cj.AsepritePath
 	c.TempDir = cj.TempDir
 	c.Timeout = time.Duration(cj.Timeout) * time.Second
@@ -230,6 +235,9 @@ func (c *Config) setDefaults() error {
 // Returns an error if any validation check fails.
 // This method is automatically called by Load() before returning the config.
 func (c *Config) Validate() error {
+	if c.SnapshotDir != "" && !filepath.IsAbs(c.SnapshotDir) {
+		return fmt.Errorf("snapshot_dir must be absolute")
+	}
 	// Check if Aseprite executable exists
 	if _, err := os.Stat(c.AsepritePath); os.IsNotExist(err) {
 		return fmt.Errorf("aseprite executable not found at %s", c.AsepritePath)
