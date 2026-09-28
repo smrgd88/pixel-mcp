@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-09-27 · 코드 기준: `develop`의 `363d6fa0960ebd7d339fc1edca6beb538f44e8c4`
+기준일: 2026-09-28 · 코드 기준: `develop`의 `bd13cdb64d071ab69e0f4d17fc710196e6506570`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -16,29 +16,28 @@
 
 최신 develop에서 재현한 알려진 동작 오류를 SAFE-02 dry-run보다 먼저 처리한다. 잘못된 실제 결과와 모호한 감색 계약을 preview에 그대로 복제하지 않기 위한 순서다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
 
-완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18), BUG-02(PR #20). 아래는 남은 작업만 나열한다.
+완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18), BUG-02(PR #20), 팔레트·threshold·DITHER-01/02 후속 수정(PR #22). 아래는 남은 작업만 나열한다.
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | palette mask·threshold 및 DITHER-01/02 후속 수정 — 현재 브랜치 검증 | 실제 픽셀 보존, 인자 효과 및 결정적 palette 추출. [리뷰 기록](PALETTE_THRESHOLD_REVIEW.md) |
-| 2 | SAFE-02 dry-run — 다음 구현 작업 | 올바른 편집 동작을 임시 복사본에서 preview |
-| 3 | SAFE-03 snapshot/restore | 호출 간 복원을 위한 파일·보존 정책 구현 |
-| 4 | SAFE-04 작업 이력·undo | SAFE-03 snapshot과 성공한 변경 이력 연결 |
+| 1 | SAFE-02 dry-run — 구현 브랜치, 병합 대기 | 임시 복사본에서 같은 편집 실행과 전후 요약 |
+| 2 | SAFE-03 snapshot/restore — 다음 구현 작업 | 호출 간 복원을 위한 파일·보존 정책 구현 |
+| 3 | SAFE-04 작업 이력·undo | SAFE-03 snapshot과 성공한 변경 이력 연결 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
-디더링 후속 backlog (2026-09-23): **DITHER-01 Floyd–Steinberg 중간 density 반영**, **DITHER-02 Texture 패턴의 세밀한 밀도·비율 제어**. 현재 fix/be-palette-thresholds에서 구현·검증하며 아직 develop 병합/배포 완료를 뜻하지 않는다. 위 실행 순서는 유지한다. 설계 결정과 완료 조건은 [NEXT_STEPS의 디더링 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)를 따른다.
+디더링 후속 backlog (2026-09-23): **DITHER-01 Floyd–Steinberg 중간 density 반영**, **DITHER-02 Texture 패턴의 세밀한 밀도·비율 제어**. PR #22로 구현·검증 후 develop에 병합했으며 배포는 별도다. 위 실행 순서는 유지한다. 설계 결정과 완료 조건은 [NEXT_STEPS의 디더링 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)를 따른다.
 
 ## 별도 잔여·보류
 
 - 릴리스 전: OPS-01 CI 버전 artifact, upstream #19 제출 범위, 릴리스 절차·0.x 호환성 정책 및 배포 검증.
 - 후속 설계: 정확한 color2 비율을 강제하는 별도 모드. 이번 DITHER-01/02는 기존0.5 문양을 유지하는 중간값 조절이며 exact-ratio API는 추가하지 않는다.
-- 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, OPS-03 오류/request ID/로그 규칙. Windows 네이티브 실행은 사용자 요청으로 보류한다.
+- 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, OPS-03 오류/request ID/로그 규칙.
 - 기능 확장: R3 편집·조회 → R4 export·slice. spritesheet의 texture+JSON 일괄 보호도 R4 잔여다. R5 후보는 범위 선정 후 착수한다.
 - 후속 설계: export 세트 crash 복구·고아 staging/백업 정리, 파일시스템별 file_changed 관찰 재현. 현재 완료 범위에 포함하지 않는다.
 - upstream #16 indexed 검은 이미지 재현은 아래 재개 조건을 유지한다. 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다.
 
-상태·완료 조건은 [NEXT_STEPS의 남은 작업 요약](NEXT_STEPS.md#남은-작업-요약-2026-09-27)과 기존 상세 체크리스트에서 추적한다.
+상태·완료 조건은 [NEXT_STEPS의 남은 작업 요약](NEXT_STEPS.md#남은-작업-요약-2026-09-28)과 기존 상세 체크리스트에서 추적한다.
 
 ## 단계와 완료 조건
 
@@ -68,6 +67,8 @@ SAFE-01은 PR #11로 develop에 병합했다. GAP-10은 PR #13, SAFE-05는 PR #1
 R0의 CI 버전 기록은 `[OPS][CHORE] CI 실행 버전 기록`으로 다음 릴리스 전 마무리한다. upstream #19 제출 범위 결정도 R0 잔여다. 이는 SAFE-01/GAP-10 기능 작업과 별개의 운영 잔여 항목이다.
 
 Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3의 색상 모드 전환 전에 수행한다. 공통화 완료 여부는 auto shading 버그 수정 완료와 구분한다.
+
+검증 범위와 반복 보고 정책은 [NEXT_STEPS의 개발 검증 정책](NEXT_STEPS.md#개발-검증-정책)을 따른다.
 
 ## 보류와 재개 조건
 
@@ -99,9 +100,10 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] BUG-04/05 수정·회귀 검증 및 PR #16 병합
 - [x] BUG-01 수정·회귀 검증 및 PR #17 병합
 - [x] BUG-03 수정·회귀 검증 및 PR #18 병합
-- [ ] BUG-02 지원 형식 수정 및 실제 Aseprite 회귀 검증
-- [x] DITHER-01/02: 중간 밀도·texture 순위 제어 (현재 수정 브랜치에서 구현·검증, develop 병합/배포는 별도)
-- [ ] SAFE-02–04: dry-run·snapshot·history/undo
+- [x] BUG-02 지원 형식 수정·검증 및 PR #20 병합
+- [x] DITHER-01/02: 중간 밀도·texture 순위 제어 (PR #22 develop 병합, Unreleased)
+- [ ] SAFE-02: dry-run 구현 브랜치 검증·병합
+- [ ] SAFE-03–04: snapshot·history/undo
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정
 - [ ] 릴리스 절차 문서와 0.x 호환성 정책 확정

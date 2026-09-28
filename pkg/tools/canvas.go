@@ -328,9 +328,9 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 		server,
 		&mcp.Tool{
 			Name:        "flatten_layers",
-			Description: "Flatten all layers in a sprite into a single layer.",
+			Description: "Flatten all layers in a sprite into a single layer. Use dry_run=true to simulate on a disposable copy and return a before/after preview without modifying the source.",
 		},
-		maybeWrapWithTiming("flatten_layers", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input FlattenLayersInput) (*mcp.CallToolResult, *FlattenLayersOutput, error) {
+		maybeWrapWithDryRun("flatten_layers", client, logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input FlattenLayersInput) (*mcp.CallToolResult, *FlattenLayersOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("flatten_layers tool called", "sprite_path", input.SpritePath)
 
@@ -377,6 +377,7 @@ type DeleteFrameOutput struct {
 //
 // Flattens all layers in a sprite into a single layer.
 type FlattenLayersInput struct {
+	DryRun     bool   `json:"dry_run,omitempty" jsonschema:"Simulate on a disposable copy without modifying the source (default: false)"`
 	SpritePath string `json:"sprite_path" jsonschema:"Path to the Aseprite sprite file"` // Path to the sprite file to modify
 }
 
@@ -384,8 +385,10 @@ type FlattenLayersInput struct {
 //
 // Indicates whether the layers were successfully flattened.
 type FlattenLayersOutput struct {
-	Warnings []ToolWarning `json:"warnings,omitempty" jsonschema:"Potentially destructive effects of this completed operation; omitted when none apply"`
-	Success  bool          `json:"success" jsonschema:"Whether the layers were flattened successfully"` // True if the layers were flattened successfully
+	DryRun   bool           `json:"dry_run,omitempty" jsonschema:"True when only a temporary copy was modified"`
+	Preview  *DryRunPreview `json:"preview,omitempty" jsonschema:"Before/after state for a completed dry-run; omitted for actual edits"`
+	Warnings []ToolWarning  `json:"warnings,omitempty" jsonschema:"Potentially destructive effects of this completed operation; omitted when none apply"`
+	Success  bool           `json:"success" jsonschema:"Whether the layers were flattened successfully"` // True if the layers were flattened successfully
 }
 
 // generateTimestamp returns a Unix timestamp in nanoseconds suitable for unique filenames.

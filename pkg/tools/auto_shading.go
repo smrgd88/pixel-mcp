@@ -16,6 +16,7 @@ import (
 
 // ApplyAutoShadingInput defines the input parameters for the apply_auto_shading tool.
 type ApplyAutoShadingInput struct {
+	DryRun         bool    `json:"dry_run,omitempty" jsonschema:"Simulate on a disposable copy without modifying the source (default: false)"`
 	SpritePath     string  `json:"sprite_path" jsonschema:"Path to .aseprite file"`
 	LayerName      string  `json:"layer_name" jsonschema:"Layer to apply shading to"`
 	FrameNumber    int     `json:"frame_number" jsonschema:"Frame number (1-based)"`
@@ -27,10 +28,12 @@ type ApplyAutoShadingInput struct {
 
 // ApplyAutoShadingOutput defines the output for the apply_auto_shading tool.
 type ApplyAutoShadingOutput struct {
-	Success       bool     `json:"success" jsonschema:"Whether the operation succeeded"`
-	ColorsAdded   int      `json:"colors_added" jsonschema:"Number of colors added to palette"`
-	Palette       []string `json:"palette" jsonschema:"Final palette after shading"`
-	RegionsShaded int      `json:"regions_shaded" jsonschema:"Number of regions shaded"`
+	DryRun        bool           `json:"dry_run,omitempty" jsonschema:"True when only a temporary copy was modified"`
+	Preview       *DryRunPreview `json:"preview,omitempty" jsonschema:"Before/after state for a completed dry-run; omitted for actual edits"`
+	Success       bool           `json:"success" jsonschema:"Whether the operation succeeded"`
+	ColorsAdded   int            `json:"colors_added" jsonschema:"Number of colors added to palette"`
+	Palette       []string       `json:"palette" jsonschema:"Final palette after shading"`
+	RegionsShaded int            `json:"regions_shaded" jsonschema:"Number of regions shaded"`
 }
 
 // RegisterAutoShadingTools registers the apply_auto_shading tool with the MCP server.
@@ -39,9 +42,9 @@ func RegisterAutoShadingTools(server *mcp.Server, client *aseprite.Client, gen *
 		server,
 		&mcp.Tool{
 			Name:        "apply_auto_shading",
-			Description: "Automatically add shading to sprite based on light direction. Analyzes sprite geometry to identify surfaces/regions, determines which surfaces face toward/away from light, generates shadow and highlight colors for each base color (with optional hue shifting), and applies shading pixels with smooth transitions. Supports three styles: cell (hard-edged 2-3 bands), smooth (gradient with dithering), soft (subtle gradient). Indexed sprites preserve existing palette indices and the transparent index; distinct generated colors are appended when capacity allows, otherwise non-exact shades retain the original pixel index.",
+			Description: "Automatically add shading to sprite based on light direction. Analyzes sprite geometry to identify surfaces/regions, determines which surfaces face toward/away from light, generates shadow and highlight colors for each base color (with optional hue shifting), and applies shading pixels with smooth transitions. Supports three styles: cell (hard-edged 2-3 bands), smooth (gradient with dithering), soft (subtle gradient). Indexed sprites preserve existing palette indices and the transparent index; distinct generated colors are appended when capacity allows, otherwise non-exact shades retain the original pixel index. Use dry_run=true to simulate on a disposable copy and return a before/after preview without modifying the source.",
 		},
-		maybeWrapWithTiming("apply_auto_shading", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ApplyAutoShadingInput) (*mcp.CallToolResult, *ApplyAutoShadingOutput, error) {
+		maybeWrapWithDryRun("apply_auto_shading", client, logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ApplyAutoShadingInput) (*mcp.CallToolResult, *ApplyAutoShadingOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("apply_auto_shading tool called",
 				"sprite", input.SpritePath,

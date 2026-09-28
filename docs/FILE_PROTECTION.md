@@ -70,3 +70,7 @@ PR #18로 develop `363d6fa`에 병합한 계약이다. 기존 단일 파일 도�
 보장 경계: 협력하는 호출은 전체 경로 잠금 덕분에 완성된 결과를 관찰한다. 각 파일 교체는 atomic이지만 **세트 전체의 OS 차원 atomic/crash-atomic 교체는 아니다**. 외부 프로그램은 반영 중 일부 새 파일을 볼 수 있고, 강제 종료·전원 장애 시 일부만 반영될 수 있다. 이 경우 남은 staging/백업의 수동 확인이 필요하며 자동 crash 복구·TTL 정리는 제공하지 않는다. rollback은 내용·permission bits를 복원하며 원래 inode·mtime·ACL·확장 속성 전체를 복원하는 계약은 아니다. 비협력 writer의 마지막 검사 이후 경쟁에 대한 기존 한계도 유지한다.
 
 2026-09-23 BUG-03 검증: Linux amd64에서 전체 race·integration과 출력 세트 실패 주입 검증을 통과했다. macOS arm64에서도 일반 교체 실패·취소 rollback, 백업 보존, 중복/alias/read-only 거부, 겹치는 출력의 잠금 대기, 비협력 writer 보존을 직접 실행했다. 실제 export 회귀는 Linux의 Aseprite 1.3.18.3-dev/1.3.17.2 소스 빌드 및 macOS의 1.3.18.2-arm64에서 통과했다. Windows는 빌드만 검증했다.
+
+## dry-run source 보호 (SAFE-02)
+
+세 대상 도구는 `dry_run=true`일 때 전용 preview wrapper에서 source 잠금을 취득하고 `WithSpritePreview`로 읽은 원본의 private 복사본을 Client에 연결한다. 실제 실행은 기존 `WithSpriteAccess(write=true)` 경로를 유지한다. preview에는 원본 교체 단계가 없으며 성공·오류·취소·panic unwind 시 복사본을 정리한다. 원본에 대한 외부 변경은 감지 시 오류이며 외부 변경을 되돌리지 않는다. 이미 연결된 sprite 작업 안에서 preview binding을 중첩하지 않는다. 상세 계약은 [DRY_RUN](DRY_RUN.md)을 따른다.
