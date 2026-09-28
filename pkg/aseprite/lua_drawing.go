@@ -767,7 +767,7 @@ local matrixSize = 4`
 }
 local matrixSize = 4`
 	case "floyd_steinberg":
-		// Keep the existing horizontal gradient for interior values. Use the
+		// Bias the existing horizontal gradient for interior values. Use the
 		// shared matrix path for exact solid-fill endpoints.
 		if density != 0 && density != 1 {
 			return generateFloydSteinbergLua(escapedLayerName, frameNumber, x, y, width, height, c1, c2, density)
@@ -862,6 +862,21 @@ local levels = 0
 for _, row in ipairs(matrix) do
     for _, value in ipairs(row) do levels = math.max(levels, value + 1) end
 end
+-- Binary textures retain their original mask at density .5. Subdivide each
+-- half into deterministic ranks to expose intermediate coverage levels.
+if levels == 2 then
+ local groups = {[0]={}, [1]={}}
+ for my,row in ipairs(matrix) do for mx,value in ipairs(row) do
+  local x,y=mx-1,my-1
+  table.insert(groups[value],{x=mx,y=my,rank=((x*3+y*5) %% matrixSize)*matrixSize*matrixSize+y*matrixSize+x})
+ end end
+ for value=0,1 do
+  local cells=groups[value]
+  table.sort(cells,function(a,b) return a.rank<b.rank end)
+  for i,cell in ipairs(cells) do matrix[cell.y][cell.x]=value*.5+(i-.5)/(2*#cells) end
+ end
+ levels=1
+end
 local threshold = %s * levels
 
 -- Apply dithering pattern
@@ -905,8 +920,9 @@ print("Dithering applied successfully")`,
 // where X is the current pixel being processed.
 //
 // The implementation creates a horizontal gradient from color1 to color2 and applies error
-// diffusion to produce smooth transitions. Interior density values keep this gradient
-// unchanged; DrawWithDither handles 0 and 1 through the shared solid-fill path.
+// diffusion to produce smooth transitions. Density biases its mean toward color2;
+// .5 retains the existing gradient for widths > 1. A one-pixel-wide region uses
+// the requested mixture and one-dimensional error carry. Endpoints are solid fills.
 func generateFloydSteinbergLua(layerName string, frameNumber int, x, y, width, height int, c1, c2 Color, density float64) string {
 	return fmt.Sprintf(`local spr = app.activeSprite
 if not spr then
@@ -987,6 +1003,8 @@ else
 	color2 = app.pixelColor.rgba(color2_r, color2_g, color2_b, color2_a)
 end
 
+local regionWidth = %d
+local density = %s
 -- Floyd-Steinberg error diffusion
 app.transaction(function()
 	-- Create error buffer (width+2 to handle edges, 2 rows for current and next)
@@ -1012,12 +1030,16 @@ app.transaction(function()
 			-- Calculate gradient position (0.0 to 1.0 across width)
 			local gradient_pos
 			if %d == 1 then
-				gradient_pos = 0
+				gradient_pos = 0.5
 			else
 				gradient_pos = px / (%d - 1)
 			end
 
-			-- Calculate ideal gradient color at this position
+			-- Preserve the .5 gradient while moving its average to the requested density.
+            if density < .5 then gradient_pos=gradient_pos*(2*density)
+            else gradient_pos=1-(1-gradient_pos)*(2*(1-density)) end
+
+            -- Calculate ideal gradient color at this position
 			local ideal_r = color1_r + (color2_r - color1_r) * gradient_pos
 			local ideal_g = color1_g + (color2_g - color1_g) * gradient_pos
 			local ideal_b = color1_b + (color2_b - color1_b) * gradient_pos
@@ -1049,7 +1071,15 @@ app.transaction(function()
 				local err_g = new_g - actual_g
 				local err_b = new_b - actual_b
 
-				-- Distribute error to neighbors (Floyd-Steinberg weights)
+				-- For one-column regions the error has only one valid successor.
+                -- The normal 5/16 below plus this 11/16 carry preserves it.
+                if regionWidth == 1 then
+                    errors[1][px+1].r=errors[1][px+1].r+err_r*11/16
+                    errors[1][px+1].g=errors[1][px+1].g+err_g*11/16
+                    errors[1][px+1].b=errors[1][px+1].b+err_b*11/16
+                end
+
+                -- Distribute error to neighbors (Floyd-Steinberg weights)
 				if px < %d - 1 then
 					errors[0][px + 2].r = errors[0][px + 2].r + err_r * 7/16
 					errors[0][px + 2].g = errors[0][px + 2].g + err_g * 7/16
@@ -1086,7 +1116,15 @@ app.transaction(function()
 				local err_g = new_g - actual_g
 				local err_b = new_b - actual_b
 
-				-- Distribute error to neighbors
+				-- For one-column regions the error has only one valid successor.
+                -- The normal 5/16 below plus this 11/16 carry preserves it.
+                if regionWidth == 1 then
+                    errors[1][px+1].r=errors[1][px+1].r+err_r*11/16
+                    errors[1][px+1].g=errors[1][px+1].g+err_g*11/16
+                    errors[1][px+1].b=errors[1][px+1].b+err_b*11/16
+                end
+
+                -- Distribute error to neighbors
 				if px < %d - 1 then
 					errors[0][px + 2].r = errors[0][px + 2].r + err_r * 7/16
 					errors[0][px + 2].g = errors[0][px + 2].g + err_g * 7/16
@@ -1120,6 +1158,7 @@ print("Dithering applied successfully")`,
 		frameNumber, frameNumber,
 		c1.R, c1.G, c1.B, c1.A,
 		c2.R, c2.G, c2.B, c2.A,
+		width, strconv.FormatFloat(density, 'g', -1, 64),
 		width,  // line 915: error buffer width
 		height, // line 920: py loop
 		width,  // line 925: clear buffer width

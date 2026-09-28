@@ -16,23 +16,23 @@
 
 최신 develop에서 재현한 알려진 동작 오류를 SAFE-02 dry-run보다 먼저 처리한다. 잘못된 실제 결과와 모호한 감색 계약을 preview에 그대로 복제하지 않기 위한 순서다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
 
-완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18). 아래는 남은 작업만 나열한다.
+완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18), BUG-02(PR #20). 아래는 남은 작업만 나열한다.
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | BUG-02 참조 형식 지원 — 수정 브랜치, 병합 대기 | 광고된 BMP/.aseprite 지원과 decoder 불일치 해결 |
+| 1 | palette mask·threshold 및 DITHER-01/02 후속 수정 — 현재 브랜치 검증 | 실제 픽셀 보존, 인자 효과 및 결정적 palette 추출. [리뷰 기록](PALETTE_THRESHOLD_REVIEW.md) |
 | 2 | SAFE-02 dry-run — 다음 구현 작업 | 올바른 편집 동작을 임시 복사본에서 preview |
 | 3 | SAFE-03 snapshot/restore | 호출 간 복원을 위한 파일·보존 정책 구현 |
 | 4 | SAFE-04 작업 이력·undo | SAFE-03 snapshot과 성공한 변경 이력 연결 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
-디더링 후속 backlog (2026-09-23): **DITHER-01 Floyd–Steinberg 중간 density 반영**, **DITHER-02 Texture 패턴의 세밀한 밀도·비율 제어**. 구현 미비를 개선하는 별도 작업으로 등록하며 착수 순서는 미확정이다. 위 실행 순서는 유지한다. 설계 결정과 완료 조건은 [NEXT_STEPS의 디더링 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)를 따른다.
+디더링 후속 backlog (2026-09-23): **DITHER-01 Floyd–Steinberg 중간 density 반영**, **DITHER-02 Texture 패턴의 세밀한 밀도·비율 제어**. 현재 fix/be-palette-thresholds에서 구현·검증하며 아직 develop 병합/배포 완료를 뜻하지 않는다. 위 실행 순서는 유지한다. 설계 결정과 완료 조건은 [NEXT_STEPS의 디더링 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)를 따른다.
 
 ## 별도 잔여·보류
 
 - 릴리스 전: OPS-01 CI 버전 artifact, upstream #19 제출 범위, 릴리스 절차·0.x 호환성 정책 및 배포 검증.
-- 후속 개선: DITHER-01/02. API와 착수 순서는 미확정이다.
+- 후속 설계: 정확한 color2 비율을 강제하는 별도 모드. 이번 DITHER-01/02는 기존0.5 문양을 유지하는 중간값 조절이며 exact-ratio API는 추가하지 않는다.
 - 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, OPS-03 오류/request ID/로그 규칙. Windows 네이티브 실행은 사용자 요청으로 보류한다.
 - 기능 확장: R3 편집·조회 → R4 export·slice. spritesheet의 texture+JSON 일괄 보호도 R4 잔여다. R5 후보는 범위 선정 후 착수한다.
 - 후속 설계: export 세트 crash 복구·고아 staging/백업 정리, 파일시스템별 file_changed 관찰 재현. 현재 완료 범위에 포함하지 않는다.
@@ -100,7 +100,7 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] BUG-01 수정·회귀 검증 및 PR #17 병합
 - [x] BUG-03 수정·회귀 검증 및 PR #18 병합
 - [ ] BUG-02 지원 형식 수정 및 실제 Aseprite 회귀 검증
-- [ ] DITHER-01/02: 중간 밀도·texture 비율 제어 (후속 backlog, 착수 순서 미확정)
+- [x] DITHER-01/02: 중간 밀도·texture 순위 제어 (현재 수정 브랜치에서 구현·검증, develop 병합/배포는 별도)
 - [ ] SAFE-02–04: dry-run·snapshot·history/undo
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정

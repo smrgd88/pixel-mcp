@@ -177,7 +177,7 @@ Go에서는 `CapabilityError`를 `errors.As`로 확인할 수 있다. probe의 �
 | quantize_palette | PR #16으로 opaque palette index 0 보존 및 투명 인덱스 분리 수정 병합 | BUG-04 |
 | quantize_palette | PR #16으로 dither=false도 cel 픽셀 remap, convert_to_indexed=false는 입력 모드 유지로 수정 병합 | BUG-05 |
 
-BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로 develop `a7ffa0f`에 반영됐다. BUG-03은 PR #18로 develop `363d6fa`에 반영됐다. 마지막 BUG-02는 `fix/be-reference-format-support`에서 수정·검증 후 병합 대기 중이다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
+BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로 develop `a7ffa0f`에 반영됐다. BUG-03은 PR #18로 develop `363d6fa`에 반영됐다. BUG-02도 PR #20으로 develop `8d9bdde`에 반영됐다. 병합과 릴리스는 구분한다. 기존 warnings 계약과 파일 보호를 유지한다.
 
 ### 감색 계약 (BUG-04/05, PR #16)
 
@@ -192,11 +192,11 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로
 ### draw_with_dither density 계약 (BUG-01, PR #17)
 
 - 생략 또는 `null`은 기본값 0.5다. 명시적 `0`은 color1, `1`은 color2로 영역을 채운다. 입력 숫자는 [0,1]만 허용하며 잘못된 값/타입은 원본 변경 없이 거부한다. SDK의 optional pointer 추론에 맞춰 schema는 optional number/null이다.
-- Bayer·texture 패턴의 중간값은 matrix threshold다. 패턴의 분포·영역 크기에 따라 색상 비율이 달라지므로 density=0.5가 모든 패턴에서 정확한 50:50 비율을 뜻하지 않는다. 아주 작은 양수도 Lua 생성 시 0으로 반올림하지 않는다.
-- Floyd–Steinberg도 0/1은 단색 endpoint를 따른다. `0 < density < 1`은 기존 가로 color1→color2 그라디언트를 유지하고 density로 그라디언트를 조절하지 않는다. 중간값 조절 기능은 이번 수정에 포함하지 않는다.
+- Bayer 중간값은 기존 matrix threshold이며, texture는 0/1 문양의 각 절반을 결정적 순위로 세분화한다. 패턴의 분포·영역 크기에 따라 색상 비율이 달라지므로 density=0.5가 모든 패턴에서 정확한 50:50 비율을 뜻하지 않는다. 아주 작은 양수도 Lua 생성 시 0으로 반올림하지 않는다.
+- Floyd–Steinberg도 0/1은 단색 endpoint를 따른다. `0 < density < 1`은 가로 gradient의 평균을 color2 쪽 혼합량에 맞춰 조절한다. density=0.5는 폭>1의 기존 gradient를 유지한다. 폭1은 요청 mixture와 1차원 error carry를 사용한다.
 - 기존 색상 모드별 색 매핑·좌표 처리와 응답/warnings 계약을 유지한다. 이 수정은 모든 drawing/export 계약의 확대 검증을 뜻하지 않는다.
 
-위 Floyd 중간 density 무시와 texture의 제한된 밀도 단계는 Aseprite 지원 한계가 아니라 **pixel-mcp 구현 미비**다. [DITHER-01/02 후속 TODO](NEXT_STEPS.md#디더링-후속-todo)로 개선을 추적한다. 정확한 비율의 픽셀 단위 반올림과 문양 보존의 tradeoff는 별도 설계 제약이며, 새 동작·API는 아직 구현하거나 확정하지 않았다.
+DITHER-01/02는 현재 수정 브랜치에서 중간값 반영·문양 순위 세분화를 구현했다. texture의 0.5 문양은 그대로 유지하므로 모든 패턴에서 density를 정확한 색상 비율로 해석하면 안 된다. 새 인자나 별도 exact-ratio 모드는 추가하지 않는다. [수정 계약과 검증](PALETTE_THRESHOLD_REVIEW.md)을 따른다.
 
 ### export_sprite 파일 계약 (BUG-03, PR #18)
 
@@ -216,3 +216,11 @@ BUG-04/05는 PR #16으로 develop `a42c624`에 반영됐다. BUG-01은 PR #17로
 - 기존 분석 알고리즘·출력 필드·warnings 계약은 유지한다. 새로운 frame 선택 입력은 추가하지 않는다. BMP/native 입력은 설정된 지원 Aseprite 실행 파일이 필요하며 실행/버전 검사 실패 시 오류다.
 - source 읽기 잠금은 분석 호출 전체에 적용한다. 원본을 저장·모드 변환하지 않으며 원본의 bytes와 read-only 권한을 유지한다. 임시 PNG는 private 디렉터리에서 만들고 성공·실패·취소 시 정리한다.
 - 손상되거나 지원하지 않는 파일은 오류로 반환한다. extension만 바꾸어 잘못된 파일을 지원으로 처리하지 않으며, 다른 형식에 대한 무조건적인 Aseprite fallback은 수행하지 않는다.
+
+### 팔레트·threshold 후속 수정 (현재 브랜치, Unreleased)
+
+- `set_palette`와 `add_palette_color`는 indexed palette resize 전 transparentColor를 보관하고 색 설정 후 복구한다. 색 항목 교체 자체는 recoloring이며, 사용 중인 일반 index를 제거하는 임의 remap 기능을 추가한 것은 아니다.
+- `analyze_reference.edge_threshold`는 optional integer/null. 생략/null만 30이고 명시적0은 Sobel threshold0으로 전달한다.
+- `suggest_antialiasing.threshold`는 optional integer/null. 생략/null은128. 기존 계단 후보의 두 색을 premultiplied RGBA(8-bit 반올림)로 비교해 최대 채널 차이가 threshold보다 **큰** 후보만 반환/적용한다. 빈 픽셀은 투명이며 숨은 RGB는 대비를 만들지 않는다. fully opaque/transparent 경계의 대비는255다.
+- 참조 palette 추출은 결정적 farthest-point seed를 사용하고 첫 assignment 전에 수렴하지 않도록 한다. sampled 색이 충분히 구별되는 경우를 우선 seed로 선택하되, 기존 k개 결과 항목 수 계약은 유지한다. 고유색이 적으면 중복/usage=0 항목은 남을 수 있다. subsampling이나 근사 색 추출이 입력의 모든 색을 반드시 보존한다는 보장은 아니다.
+- MCP 도구50개와 기존 응답/warnings 구조는 유지한다. 두 threshold의 Go struct 필드는 *int로 바뀌므로 Go 직접 호출자는 pointer를 사용한다. JSON 숫자 호출은 유지된다.
