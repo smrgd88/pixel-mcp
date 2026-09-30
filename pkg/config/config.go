@@ -36,6 +36,8 @@ import (
 //
 // The AsepritePath is REQUIRED and must be an absolute path to a real executable.
 type Config struct {
+	// EnableHistory opts into automatic snapshots for successful in-place edits.
+	EnableHistory bool `json:"enable_history,omitempty"`
 	// SnapshotDir optionally overrides the durable private snapshot store.
 	SnapshotDir string `json:"snapshot_dir,omitempty"`
 
@@ -150,13 +152,14 @@ func ResolvePath(explicitPath string) (string, error) {
 
 // configJSON is a temporary struct for unmarshaling JSON with timeout as int (seconds)
 type configJSON struct {
-	SnapshotDir  string `json:"snapshot_dir"`
-	AsepritePath string `json:"aseprite_path"`
-	TempDir      string `json:"temp_dir"`
-	Timeout      int    `json:"timeout"` // timeout in seconds
-	LogLevel     string `json:"log_level"`
-	LogFile      string `json:"log_file"`
-	EnableTiming bool   `json:"enable_timing"`
+	EnableHistory bool   `json:"enable_history"`
+	SnapshotDir   string `json:"snapshot_dir"`
+	AsepritePath  string `json:"aseprite_path"`
+	TempDir       string `json:"temp_dir"`
+	Timeout       int    `json:"timeout"` // timeout in seconds
+	LogLevel      string `json:"log_level"`
+	LogFile       string `json:"log_file"`
+	EnableTiming  bool   `json:"enable_timing"`
 }
 
 // loadFromFile loads configuration from configPath.
@@ -173,6 +176,7 @@ func (c *Config) loadFromFile(configPath string) error {
 	}
 
 	// Convert to Config with proper timeout conversion
+	c.EnableHistory = cj.EnableHistory
 	c.SnapshotDir = cj.SnapshotDir
 	c.AsepritePath = cj.AsepritePath
 	c.TempDir = cj.TempDir

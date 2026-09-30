@@ -19,13 +19,14 @@ import (
 
 // Snapshot is an immutable byte copy of a saved sprite, not Aseprite's undo state.
 type Snapshot struct {
-	ID         string    `json:"snapshot_id"`
-	SpritePath string    `json:"sprite_path"`
-	CreatedAt  time.Time `json:"created_at"`
-	ExpiresAt  time.Time `json:"expires_at"`
-	Size       int64     `json:"size_bytes"`
-	SHA256     string    `json:"sha256"`
-	Label      string    `json:"label,omitempty"`
+	Operation  *OperationRecord `json:"operation,omitempty"`
+	ID         string           `json:"snapshot_id"`
+	SpritePath string           `json:"sprite_path"`
+	CreatedAt  time.Time        `json:"created_at"`
+	ExpiresAt  time.Time        `json:"expires_at"`
+	Size       int64            `json:"size_bytes"`
+	SHA256     string           `json:"sha256"`
+	Label      string           `json:"label,omitempty"`
 }
 
 // SnapshotStore serializes all store operations across processes. Limits apply
@@ -155,7 +156,7 @@ func readSnapshot(root, id string) (Snapshot, error) {
 		return m, fmt.Errorf("snapshot_invalid: metadata: %w", err)
 	}
 	hash, e := hex.DecodeString(m.SHA256)
-	if m.ID != id || !filepath.IsAbs(m.SpritePath) || m.Size <= 0 || e != nil || len(hash) != 32 || m.CreatedAt.IsZero() || !m.ExpiresAt.After(m.CreatedAt) {
+	if !validOperation(m.Operation) || (m.Operation != nil && m.Operation.BeforeSHA256 != m.SHA256) || m.ID != id || !filepath.IsAbs(m.SpritePath) || m.Size <= 0 || e != nil || len(hash) != 32 || m.CreatedAt.IsZero() || !m.ExpiresAt.After(m.CreatedAt) {
 		return m, fmt.Errorf("snapshot_invalid: invalid metadata")
 	}
 	path = filepath.Join(dir, "sprite")
@@ -398,7 +399,7 @@ func (s *SnapshotStore) Restore(ctx context.Context, path, id string) (Snapshot,
 	return s.restoreWithReplace(ctx, path, id, replaceFile)
 }
 
-func (s *SnapshotStore) restoreWithReplace(ctx context.Context, path, id string, replace func(string, string) error) (Snapshot, error) {
+func (s *SnapshotStore) restoreWithReplace(ctx context.Context, path, id string, replace func(string, string) error, expectedSourceHash ...string) (Snapshot, error) {
 	var backup Snapshot
 	if path == "" || !validSnapshotID(id) {
 		return backup, fmt.Errorf("snapshot_invalid: sprite_path and canonical UUID v4 required")
@@ -419,6 +420,18 @@ func (s *SnapshotStore) restoreWithReplace(ctx context.Context, path, id string,
 			return fmt.Errorf("snapshot_source_mismatch: restore only to original sprite_path")
 		}
 		return stageFileWithReplace(ctx, source, true, func(staged string) error {
+			// Undo's earlier lookup is not the transaction boundary: an outside
+			// editor may have changed the file before stageFile captured it.
+			if len(expectedSourceHash) > 0 {
+				current, err := snapshotSource(ctx, source, s.MaxBytes)
+				if err != nil {
+					return err
+				}
+				if hex.EncodeToString(current.hash[:]) != expectedSourceHash[0] {
+					return fmt.Errorf("history_conflict: file changed before restore staging")
+				}
+			}
+
 			// stageFile seeded a working copy; remove only that private staged copy.
 			if err := os.Remove(staged); err != nil {
 				return err

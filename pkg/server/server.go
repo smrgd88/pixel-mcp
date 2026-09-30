@@ -127,6 +127,7 @@ func (s *Server) Run(ctx context.Context) error {
 func (s *Server) registerTools() {
 	s.logger.Debug("Registering MCP tools")
 	tools.RegisterSnapshotTools(s.mcp, s.config, s.logger)
+	tools.RegisterHistoryTools(s.mcp, s.config, s.logger)
 
 	// Register canvas management tools
 	tools.RegisterCanvasTools(s.mcp, s.client, s.gen, s.config, s.logger)

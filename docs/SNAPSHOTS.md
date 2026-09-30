@@ -1,6 +1,6 @@
 # Snapshot / restore (SAFE-03)
 
-상태: 구현 브랜치, Unreleased. SAFE-02 dry-run은 PR #21로 develop `1c410b6`에 병합했다.
+상태: PR #23으로 develop `e0304bd`에 병합, Unreleased. SAFE-02 dry-run은 PR #21로 develop `1c410b6`에 병합했다.
 
 ## 목적과 범위
 
@@ -42,7 +42,7 @@ create는 private `.pending-<UUID>` 디렉터리의 데이터/metadata를 쓰고
 - metadata에 원본 절대 경로가 포함된다. 같은 계정의 악의적인 저장소 변조를 막는 암호화/인증 저장소는 아니다. checksum은 데이터 무결성 검사이며 서명이 아니다.
 - 손상/예상 밖 저장 항목은 조용히 덮어쓰거나 버리지 않고 오류로 반환한다. UUID 디렉터리가 남았다면 명시적인 delete로 손상 snapshot을 제거할 수 있다. 미지 파일은 운영자가 확인한다.
 
-기존 편집 응답과 warnings 계약은 변경하지 않는다. 신규 도구의 오류는 기존 MCP 오류 경로를 사용한다 (`snapshot_invalid`, `snapshot_capacity`, `snapshot_source_mismatch`, `file_changed` 등의 메시지; 만료/삭제/없는 ID는 조회 실패). SAFE-04의 자동 작업 이력·undo 연결은 다음 작업이다.
+기존 편집 응답과 warnings 계약은 변경하지 않는다. 신규 도구의 오류는 기존 MCP 오류 경로를 사용한다 (`snapshot_invalid`, `snapshot_capacity`, `snapshot_source_mismatch`, `file_changed` 등의 메시지; 만료/삭제/없는 ID는 조회 실패). SAFE-04 구현 브랜치에서는 metadata에 optional `operation`을 연결한다. 자동 복원본도 같은 보존 한도를 사용하며 [HISTORY](HISTORY.md)를 따른다.
 
 ## 검증과 셀프리뷰 (2026-09-28)
 

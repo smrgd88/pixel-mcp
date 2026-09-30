@@ -11,6 +11,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog"
 	"github.com/willibrandon/mtlog/core"
+	"github.com/willibrandon/pixel-mcp/pkg/aseprite"
+	"github.com/willibrandon/pixel-mcp/pkg/config"
 )
 
 // wrapWithTiming wraps a tool handler with timing and request tracking.
@@ -70,6 +72,21 @@ func maybeWrapWithTiming[I any, O any](
 	handler = wrapWithFileProtection(toolName, timeout, handler)
 	if enable {
 		return wrapWithTiming(toolName, logger, handler)
+	}
+	return handler
+}
+
+func configuredHistory(cfg *config.Config) *aseprite.SnapshotStore {
+	if !cfg.EnableHistory {
+		return nil
+	}
+	return aseprite.NewSnapshotStore(cfg.SnapshotDir)
+}
+
+func maybeWrapConfigured[I, O any](name string, logger core.Logger, cfg *config.Config, handler func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error)) func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error) {
+	handler = wrapWithFileProtection(name, cfg.Timeout, handler, configuredHistory(cfg))
+	if cfg.EnableTiming {
+		return wrapWithTiming(name, logger, handler)
 	}
 	return handler
 }

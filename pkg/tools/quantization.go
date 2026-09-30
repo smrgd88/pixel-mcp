@@ -47,7 +47,7 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 			Name:        "quantize_palette",
 			Description: "Reduce pixels to a quantized palette in single-frame sprites (tilemap layers are unsupported). Supports three algorithms: median_cut (fast, balanced quality), kmeans (highest quality, slower), octree (very fast, good for photos). Can apply Floyd-Steinberg dithering for smoother gradients. Always remaps pixels, even without dithering or indexed conversion. Non-dithered remapping preserves layers; dithering flattens them. Disabling indexed conversion preserves the input color mode. Palette size does not bound colors created by layer blending. Use dry_run=true to simulate on a disposable copy and return a before/after preview without modifying the source.",
 		},
-		maybeWrapWithDryRun("quantize_palette", client, logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input QuantizePaletteInput) (*mcp.CallToolResult, *QuantizePaletteOutput, error) {
+		maybeWrapWithDryRun("quantize_palette", client, logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input QuantizePaletteInput) (*mcp.CallToolResult, *QuantizePaletteOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("quantize_palette tool called",
 				"sprite", input.SpritePath,
