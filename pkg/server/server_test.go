@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"testing"
 
 	"github.com/willibrandon/mtlog"
@@ -105,4 +107,39 @@ func containsHelper(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+func TestSnapshotToolsRegistered(t *testing.T) {
+	cfg := testutil.LoadTestConfig(t)
+	s, err := New(cfg, mtlog.New(mtlog.WithSink(sinks.NewMemorySink())))
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, ct := mcp.NewInMemoryTransports()
+	ss, err := s.mcp.Connect(context.Background(), st, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ss.Close()
+	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "1"}, nil).Connect(context.Background(), ct, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cs.Close()
+	list, err := cs.ListTools(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list.Tools) != 54 {
+		t.Fatalf("registered %d tools, want 54", len(list.Tools))
+	}
+	names := map[string]bool{}
+	for _, tool := range list.Tools {
+		names[tool.Name] = true
+	}
+	for _, name := range []string{"create_snapshot", "list_snapshots", "restore_snapshot", "delete_snapshot"} {
+		if !names[name] {
+			t.Errorf("missing %s", name)
+		}
+	}
 }

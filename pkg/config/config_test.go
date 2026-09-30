@@ -264,3 +264,26 @@ func writeJSON(t *testing.T, path string, value any) {
 		t.Fatal(err)
 	}
 }
+
+func TestSnapshotDirectoryConfig(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.json")
+	dir := filepath.Join(t.TempDir(), "recovery")
+	data, err := json.Marshal(map[string]any{"snapshot_dir": dir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(path, data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	var cfg Config
+	if err = cfg.loadFromFile(path); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.SnapshotDir != dir {
+		t.Fatalf("snapshot_dir not preserved: %q", cfg.SnapshotDir)
+	}
+	cfg.SnapshotDir = "relative/path"
+	if err = cfg.Validate(); err == nil || !strings.Contains(err.Error(), "snapshot_dir") {
+		t.Fatalf("relative directory accepted: %v", err)
+	}
+}

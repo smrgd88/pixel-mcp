@@ -126,6 +126,7 @@ func (s *Server) Run(ctx context.Context) error {
 // This method is not intended for external use.
 func (s *Server) registerTools() {
 	s.logger.Debug("Registering MCP tools")
+	tools.RegisterSnapshotTools(s.mcp, s.config, s.logger)
 
 	// Register canvas management tools
 	tools.RegisterCanvasTools(s.mcp, s.client, s.gen, s.config, s.logger)

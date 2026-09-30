@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-09-28
 
-현재 기준: `develop`의 `bd13cdb64d071ab69e0f4d17fc710196e6506570` (PR #22까지 병합 반영). BUG-01~05 완료, SAFE-02는 `feature/shared-dry-run`에서 구현·검증 완료, 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `1c410b623fa413dd8e88a2eb7b255329415a5941` (PR #21/#22 병합 반영). BUG-01~05와 SAFE-02 완료. SAFE-03는 `feature/shared-snapshot-restore`에서 구현·검증 완료, 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -26,8 +26,8 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 | 구분 | 남은 작업 | 상태·완료 기준 |
 | --- | --- | --- |
-| 현재 작업 | SAFE-02 dry-run | 감색·자동 shading·flatten의 임시 복사본 실행, 전후 요약과 원본 보존; 구현·검증 완료, 병합 대기 |
-| 다음 순차 구현 | SAFE-03 → SAFE-04 | snapshot/restore → 작업 이력·undo. 원본 보호 기반 SAFE-05는 완료 |
+| 현재 작업 | SAFE-03 snapshot/restore | 네 도구·사전 백업·원자 복원·TTL/용량 제한. [계약](SNAPSHOTS.md) |
+| 다음 순차 구현 | SAFE-04 | snapshot 기반 작업 이력·undo. SAFE-02/05는 develop 반영 완료 |
 | develop 완료 | PR #22 팔레트·threshold·DITHER-01/02 수정 | 결정적 palette 추출 포함. 정확한 color2 비율을 강제하는 별도 모드는 범위 밖 |
 | 릴리스 전 운영 | OPS-01, upstream #19, 릴리스 절차 | CI 버전 artifact, upstream 제출 범위 결정, 0.x 호환성·RELEASING 절차 및 main/태그/artifact 배포 검증 |
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
@@ -95,7 +95,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 팔레트·threshold·디더링 후속 수정은 PR #22로 병합했다. SAFE-02 dry-run은 PR #21에서 병합 대기하며 다음 구현 작업은 SAFE-03 snapshot/restore다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 팔레트·threshold·디더링 후속 수정은 PR #22로 병합했다. SAFE-02 dry-run은 PR #21로 병합했다. 현재 SAFE-03 snapshot/restore를 구현하며 다음 작업은 SAFE-04 history/undo다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## 현재 우선 작업 — 알려진 동작 오류
 
@@ -293,7 +293,7 @@ SAFE-01: PR #11로 develop `6c9ac5e`에 병합했으며 [응답 계약](WARNINGS
 - [x] preview의 모든 source Lua 실행을 임시 복사본에 연결하고 원본으로 commit하지 않는다.
 - [x] `quantize_palette`, `apply_auto_shading`, `flatten_layers`에 optional dry_run을 적용한다.
 - [x] dry-run과 실제 적용의 기존 응답·적용 후 상태 일치, 반복 preview와 원본 bytes/identity/mode/mtime 보존을 검증한다.
-- [ ] SAFE-02 PR을 develop에 병합한다.
+- [x] SAFE-02 PR #21을 develop `1c410b6`에 병합했다 (2026-09-28).
 - [x] 임시 파일 생성·실패·정리, source 변경 감지와 읽기 전용 preview 정책을 문서화한다.
 
 SAFE-02 검증 (2026-09-27): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에서 build·vet·unit/race/coverage·전체 integration 통과 (pkg/tools 224.175초). 최종 source 검증의 취소 검사 보완 후 관련 helper race·MCP 회귀도 다시 통과했다. 최소 Aseprite 1.3.17.2 소스 빌드의 dry-run MCP 회귀 통과 (12.142초), macOS arm64 / Aseprite 1.3.18.2-arm64에서 파일 helper·감색 재현성·MCP dry-run 회귀 통과. 문서의 개발 검증 정책을 적용한다.
@@ -302,16 +302,18 @@ SAFE-02 검증 (2026-09-27): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에
 
 ### snapshot/restore 도구
 
-대상: [upstream #13](https://github.com/willibrandon/pixel-mcp/issues/13)
+분류: **pixel-mcp 책임 — 저장 파일 바이트 보관 및 복원**. [SNAPSHOTS 계약](SNAPSHOTS.md).
 
-분류: **공식 저장 API를 이용한 조합 구현**
+- [x] `create_snapshot`, `restore_snapshot`, `delete_snapshot`, `list_snapshots` 계약 정의.
+- [x] UUID v4, canonical sprite 경로, 시각·크기·SHA-256·label metadata 저장.
+- [x] restore 전 현재 파일 백업 필수; 실패 시 원본 보존.
+- [x] 원본 옆 staging으로 cross-volume 복사 후 atomic replacement; truncate fallback 금지.
+- [x] private 권한, 저장 경로 symlink/hard-link, path traversal 검증.
+- [x] 최대 100개/512 MiB/7일 TTL 및 만료·pending lazy cleanup. 미만료 eviction 없음.
+- [x] 실제 Aseprite 및 실패·동시성 회귀 검증 완료 (2026-09-28).
+- [ ] SAFE-03 PR을 develop에 병합한다.
 
-- [ ] `create_snapshot`, `restore_snapshot`, `delete_snapshot`, `list_snapshots` 계약을 먼저 정의한다.
-- [ ] snapshot ID는 UUID로 만들고 sprite 경로와 metadata를 함께 저장한다.
-- [ ] restore 전 현재 파일을 보호하는 2단계 교체 또는 추가 snapshot 정책을 정한다.
-- [ ] atomic rename 가능 여부와 cross-volume fallback을 처리한다.
-- [ ] 파일 권한, symlink, path traversal을 검증한다.
-- [ ] 최대 개수·TTL·용량 제한과 cleanup을 구현한다.
+검증: Linux Go 1.25.14/Aseprite 1.3.18.3-dev build·vet·전체 race/coverage·전체 integration 통과 (pkg/tools 279.354초). 최종 테스트 기대값 보정 후 관련 패키지 race와 MCP snapshot 회귀 재검증 통과. 최소 Aseprite 1.3.17.2 MCP 회귀 (1.056초), macOS arm64/Aseprite 1.3.18.2-arm64 snapshot 저장소·MCP 회귀 통과. Linux 서로 다른 파일시스템(/tmp와 /dev/shm) 복원도 통과. [계약과 리뷰 기록](SNAPSHOTS.md)을 따른다.
 
 ### operation history와 undo
 
@@ -388,9 +390,9 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[BE][FIX] 다중 프레임 PNG 출력 계약 수정` (BUG-03), PR #18 develop 병합.
 - 완료: `[BE][FIX] 참조 이미지 지원 형식 일치` (BUG-02), PR #20 develop 병합.
 - 완료: PR #22 팔레트·threshold·DITHER-01/02·palette 추출 초기화 수정.
-- 현재 작업: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02), 구현·검증 후 병합 대기.
-- 다음 구현 작업: `[SHARED][FEATURE] snapshot 및 restore` (SAFE-03).
-- SAFE-02 병합 후 SAFE-03 snapshot/restore → SAFE-04 history/undo로 진행한다.
+- 완료: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02), PR #21 develop 병합.
+- 현재 작업: `[SHARED][FEATURE] snapshot 및 restore` (SAFE-03).
+- 다음 작업: SAFE-04 history/undo. SAFE-03 병합 후 진행한다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
