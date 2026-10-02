@@ -15,6 +15,7 @@ import (
 	"github.com/willibrandon/mtlog"
 	"github.com/willibrandon/mtlog/core"
 	"github.com/willibrandon/mtlog/sinks"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"github.com/willibrandon/pixel-mcp/pkg/aseprite"
 	"github.com/willibrandon/pixel-mcp/pkg/config"
 	"github.com/willibrandon/pixel-mcp/pkg/server"
@@ -147,6 +148,9 @@ func createLogger(logLevel string, logFilePath string) core.Logger {
 
 	// Create logger with options based on log level
 	var opts []mtlog.Option
+	if logLevel != "debug" {
+		opts = append(opts, mtlog.WithFilter(diagnostics.RedactLogFilter{}))
+	}
 	opts = append(opts, mtlog.WithSink(consoleSink))
 
 	// Add file logging if path provided

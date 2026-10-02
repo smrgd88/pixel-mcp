@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -88,11 +89,11 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			if input.DurationMs < 1 || input.DurationMs > 65535 {
-				return nil, nil, fmt.Errorf("duration_ms must be between 1 and 65535, got %d", input.DurationMs)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "duration_ms must be between 1 and 65535, got %d", input.DurationMs)
 			}
 
 			// Generate Lua script
@@ -129,15 +130,15 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.TagName == "" {
-				return nil, nil, fmt.Errorf("tag_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "tag_name cannot be empty")
 			}
 
 			if input.FromFrame < 1 {
-				return nil, nil, fmt.Errorf("from_frame must be at least 1, got %d", input.FromFrame)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "from_frame must be at least 1, got %d", input.FromFrame)
 			}
 
 			if input.ToFrame < input.FromFrame {
-				return nil, nil, fmt.Errorf("to_frame must be >= from_frame, got from=%d to=%d", input.FromFrame, input.ToFrame)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "to_frame must be >= from_frame, got from=%d to=%d", input.FromFrame, input.ToFrame)
 			}
 
 			// Validate direction
@@ -147,7 +148,7 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 				"pingpong": true,
 			}
 			if !validDirections[input.Direction] {
-				return nil, nil, fmt.Errorf("invalid direction: %s (valid: forward, reverse, pingpong)", input.Direction)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid direction: %s (valid: forward, reverse, pingpong)", input.Direction)
 			}
 
 			// Generate Lua script
@@ -184,11 +185,11 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.SourceFrame < 1 {
-				return nil, nil, fmt.Errorf("source_frame must be at least 1, got %d", input.SourceFrame)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "source_frame must be at least 1, got %d", input.SourceFrame)
 			}
 
 			if input.InsertAfter < 0 {
-				return nil, nil, fmt.Errorf("insert_after must be non-negative, got %d", input.InsertAfter)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "insert_after must be non-negative, got %d", input.InsertAfter)
 			}
 
 			// Generate Lua script
@@ -227,19 +228,19 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.SourceFrame < 1 {
-				return nil, nil, fmt.Errorf("source_frame must be at least 1, got %d", input.SourceFrame)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "source_frame must be at least 1, got %d", input.SourceFrame)
 			}
 
 			if input.TargetFrame < 1 {
-				return nil, nil, fmt.Errorf("target_frame must be at least 1, got %d", input.TargetFrame)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target_frame must be at least 1, got %d", input.TargetFrame)
 			}
 
 			if input.SourceFrame == input.TargetFrame {
-				return nil, nil, fmt.Errorf("source_frame and target_frame cannot be the same")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "source_frame and target_frame cannot be the same")
 			}
 
 			// Generate Lua script
@@ -276,11 +277,11 @@ func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.SpritePath == "" {
-				return nil, nil, fmt.Errorf("sprite_path cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "sprite_path cannot be empty")
 			}
 
 			if input.TagName == "" {
-				return nil, nil, fmt.Errorf("tag_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "tag_name cannot be empty")
 			}
 
 			// Generate Lua script

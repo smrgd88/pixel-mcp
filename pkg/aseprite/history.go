@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"os"
 	"path/filepath"
 	"sort"
@@ -72,7 +72,7 @@ func writeSnapshotMetadata(ctx context.Context, root string, m Snapshot) error {
 		return err
 	}
 	if len(data) > 16384 {
-		return fmt.Errorf("history_invalid: metadata too large")
+		return diagnostics.Errorf("history_invalid", "history_invalid: metadata too large")
 	}
 	path := filepath.Join(dir, ".metadata-"+uuid.NewString())
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
@@ -107,7 +107,7 @@ func (s *SnapshotStore) recoverHistory(ctx context.Context, root, source string,
 		}
 		current, err := snapshotSource(ctx, source, s.MaxBytes)
 		if err != nil {
-			return fmt.Errorf("history_recovery_required: %w", err)
+			return diagnostics.Errorf("history_recovery_required", "history_recovery_required: %w", err)
 		}
 		hash := hex.EncodeToString(current.hash[:])
 		if op.State == "pending" {
@@ -117,7 +117,7 @@ func (s *SnapshotStore) recoverHistory(ctx context.Context, root, source string,
 			case op.BeforeSHA256:
 				m.Operation = nil
 			default:
-				return fmt.Errorf("history_recovery_required: current file matches neither endpoint")
+				return diagnostics.Errorf("history_recovery_required", "history_recovery_required: current file matches neither endpoint")
 			}
 		} else {
 			switch hash {
@@ -126,7 +126,7 @@ func (s *SnapshotStore) recoverHistory(ctx context.Context, root, source string,
 			case op.AfterSHA256:
 				op.State = "applied"
 			default:
-				return fmt.Errorf("history_recovery_required: current file matches neither undo endpoint")
+				return diagnostics.Errorf("history_recovery_required", "history_recovery_required: current file matches neither undo endpoint")
 			}
 		}
 		if err := writeSnapshotMetadata(ctx, root, m); err != nil {
@@ -142,13 +142,13 @@ func (s *SnapshotStore) recoverHistory(ctx context.Context, root, source string,
 // successful edit. Ordinary failed edits never appear in successful history.
 func (s *SnapshotStore) WithOperation(ctx context.Context, path, tool string, fn func(context.Context) error) error {
 	if tool == "" || len(tool) > 80 {
-		return fmt.Errorf("history_invalid: invalid tool identifier")
+		return diagnostics.Errorf("history_invalid", "history_invalid: invalid tool identifier")
 	}
 	return s.run(ctx, path, func(ctx context.Context, root, source string) error {
 		if _, bound, err := boundSprite(ctx, source); err != nil {
 			return err
 		} else if bound {
-			return fmt.Errorf("history_scope: source already bound")
+			return diagnostics.Errorf("history_scope", "history_scope: source already bound")
 		}
 		entries, err := s.inventory(ctx, root)
 		if err != nil {
@@ -192,7 +192,7 @@ func (s *SnapshotStore) WithOperation(ctx context.Context, path, tool string, fn
 				return err
 			}
 			if saved.SHA256 != hex.EncodeToString(before.hash[:]) {
-				return fmt.Errorf("file_changed: source changed before history backup")
+				return diagnostics.Errorf("file_changed", "file_changed: source changed before history backup")
 			}
 			saved.Operation = &OperationRecord{ID: uuid.NewString(), Tool: tool, Sequence: sequence, CreatedAt: time.Now().UTC(), State: "pending", BeforeSHA256: saved.SHA256, AfterSHA256: hex.EncodeToString(after.hash[:])}
 			return writeSnapshotMetadata(ctx, root, saved)
@@ -218,7 +218,7 @@ func (s *SnapshotStore) WithOperation(ctx context.Context, path, tool string, fn
 func (s *SnapshotStore) ListHistory(ctx context.Context, path string) ([]HistoryEntry, error) {
 	out := []HistoryEntry{}
 	if path == "" {
-		return out, fmt.Errorf("history_invalid: sprite_path required")
+		return out, diagnostics.Errorf("history_invalid", "history_invalid: sprite_path required")
 	}
 	err := s.run(ctx, path, func(ctx context.Context, root, source string) error {
 		entries, err := s.inventory(ctx, root)
@@ -250,7 +250,7 @@ func (s *SnapshotStore) UndoLast(ctx context.Context, path, expectedID string) (
 	var entry HistoryEntry
 	var backup Snapshot
 	if path == "" || !validSnapshotID(expectedID) {
-		return entry, backup, fmt.Errorf("history_invalid: sprite_path and expected_operation_id required")
+		return entry, backup, diagnostics.Errorf("history_invalid", "history_invalid: sprite_path and expected_operation_id required")
 	}
 	err := s.run(ctx, path, func(ctx context.Context, root, source string) error {
 		entries, err := s.inventory(ctx, root)
@@ -271,14 +271,14 @@ func (s *SnapshotStore) UndoLast(ctx context.Context, path, expectedID string) (
 			}
 		}
 		if latest.Operation == nil || latest.Operation.ID != expectedID {
-			return fmt.Errorf("history_operation_mismatch: no matching latest operation; refresh history")
+			return diagnostics.Errorf("history_operation_mismatch", "history_operation_mismatch: no matching latest operation; refresh history")
 		}
 		current, err := snapshotSource(ctx, source, s.MaxBytes)
 		if err != nil {
 			return err
 		}
 		if hex.EncodeToString(current.hash[:]) != latest.Operation.AfterSHA256 {
-			return fmt.Errorf("history_conflict: file changed after recorded operation")
+			return diagnostics.Errorf("history_conflict", "history_conflict: file changed after recorded operation")
 		}
 		backup, err = s.restoreWithReplace(ctx, source, latest.ID, func(staged, dest string) error {
 			latest.Operation.State = "undo_pending"

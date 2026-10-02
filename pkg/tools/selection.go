@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -124,11 +125,11 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.Width < 1 {
-				return nil, nil, fmt.Errorf("width must be at least 1, got %d", input.Width)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "width must be at least 1, got %d", input.Width)
 			}
 
 			if input.Height < 1 {
-				return nil, nil, fmt.Errorf("height must be at least 1, got %d", input.Height)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "height must be at least 1, got %d", input.Height)
 			}
 
 			// Validate mode
@@ -138,7 +139,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			}
 			validModes := map[string]bool{"replace": true, "add": true, "subtract": true, "intersect": true}
 			if !validModes[mode] {
-				return nil, nil, fmt.Errorf("invalid mode %q, must be one of: replace, add, subtract, intersect", mode)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid mode %q, must be one of: replace, add, subtract, intersect", mode)
 			}
 
 			// Generate Lua script
@@ -175,11 +176,11 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.Width < 1 {
-				return nil, nil, fmt.Errorf("width must be at least 1, got %d", input.Width)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "width must be at least 1, got %d", input.Width)
 			}
 
 			if input.Height < 1 {
-				return nil, nil, fmt.Errorf("height must be at least 1, got %d", input.Height)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "height must be at least 1, got %d", input.Height)
 			}
 
 			// Validate mode
@@ -189,7 +190,7 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 			}
 			validModes := map[string]bool{"replace": true, "add": true, "subtract": true, "intersect": true}
 			if !validModes[mode] {
-				return nil, nil, fmt.Errorf("invalid mode %q, must be one of: replace, add, subtract, intersect", mode)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid mode %q, must be one of: replace, add, subtract, intersect", mode)
 			}
 
 			// Generate Lua script
@@ -322,11 +323,11 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			// Generate Lua script
@@ -395,11 +396,11 @@ func RegisterSelectionTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			// Generate Lua script

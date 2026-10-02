@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,21 +13,21 @@ import (
 
 func exportSprite(ctx context.Context, client *aseprite.Client, gen *aseprite.LuaGenerator, input ExportSpriteInput) (*ExportSpriteOutput, error) {
 	if input.SpritePath == "" {
-		return nil, fmt.Errorf("sprite_path cannot be empty")
+		return nil, diagnostics.Errorf("invalid_arguments", "sprite_path cannot be empty")
 	}
 	if input.OutputPath == "" {
-		return nil, fmt.Errorf("output_path cannot be empty")
+		return nil, diagnostics.Errorf("invalid_arguments", "output_path cannot be empty")
 	}
 	format := strings.ToLower(input.Format)
 	if format != "png" && format != "gif" && format != "jpg" && format != "bmp" {
-		return nil, fmt.Errorf("invalid format: %s (valid: png, gif, jpg, bmp)", input.Format)
+		return nil, diagnostics.Errorf("invalid_arguments", "invalid format: %s (valid: png, gif, jpg, bmp)", input.Format)
 	}
 	ext := strings.ToLower(filepath.Ext(input.OutputPath))
 	if ext != "."+format && !(format == "jpg" && ext == ".jpeg") {
-		return nil, fmt.Errorf("output_path extension must match format %s", format)
+		return nil, diagnostics.Errorf("invalid_arguments", "output_path extension must match format %s", format)
 	}
 	if input.FrameNumber < 0 {
-		return nil, fmt.Errorf("frame_number must be non-negative")
+		return nil, diagnostics.Errorf("invalid_arguments", "frame_number must be non-negative")
 	}
 	// Planning takes only the source lock. Release it before acquiring the full
 	// sorted set, avoiding lock-order inversion with overlapping exports/edits.
@@ -44,7 +45,7 @@ func exportSprite(ctx context.Context, client *aseprite.Client, gen *aseprite.Lu
 		return nil, err
 	}
 	if count.Frames < 1 || input.FrameNumber > count.Frames {
-		return nil, fmt.Errorf("frame_number outside sprite frame range")
+		return nil, diagnostics.Errorf("invalid_arguments", "frame_number outside sprite frame range")
 	}
 	paths, frames := exportFramePaths(input.OutputPath, format, input.FrameNumber, count.Frames)
 	locks := append([]string{input.SpritePath, input.OutputPath}, paths...)
@@ -122,7 +123,7 @@ func validateExportSourceAliases(source string, paths []string) error {
 			return err
 		}
 		if dest == src || (other != nil && os.SameFile(info, other)) {
-			return fmt.Errorf("export output must not alias source")
+			return diagnostics.Errorf("invalid_arguments", "export output must not alias source")
 		}
 	}
 	return nil

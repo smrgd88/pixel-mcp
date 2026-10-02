@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -172,12 +173,12 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate index
 			if input.Index < 0 || input.Index > 255 {
-				return nil, nil, fmt.Errorf("index must be between 0 and 255, got %d", input.Index)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "index must be between 0 and 255, got %d", input.Index)
 			}
 
 			// Validate hex color format
 			if !isValidHexColor(input.Color) {
-				return nil, nil, fmt.Errorf("invalid color: %s (expected #RRGGBB format)", input.Color)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color: %s (expected #RRGGBB format)", input.Color)
 			}
 
 			// Generate Lua script to set palette color
@@ -214,7 +215,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate hex color format
 			if !isValidHexColor(input.Color) {
-				return nil, nil, fmt.Errorf("invalid color: %s (expected #RRGGBB format)", input.Color)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color: %s (expected #RRGGBB format)", input.Color)
 			}
 
 			// Generate Lua script to add palette color
@@ -261,7 +262,7 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 				"hue": true, "saturation": true, "brightness": true, "luminance": true,
 			}
 			if !validMethods[input.Method] {
-				return nil, nil, fmt.Errorf("invalid sort method: %s (must be one of: hue, saturation, brightness, luminance)", input.Method)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid sort method: %s (must be one of: hue, saturation, brightness, luminance)", input.Method)
 			}
 
 			// Generate Lua script to sort palette
@@ -298,17 +299,17 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if len(input.Colors) == 0 {
-				return nil, nil, fmt.Errorf("colors array cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "colors array cannot be empty")
 			}
 
 			if len(input.Colors) > 256 {
-				return nil, nil, fmt.Errorf("palette can have at most 256 colors, got %d", len(input.Colors))
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "palette can have at most 256 colors, got %d", len(input.Colors))
 			}
 
 			// Validate hex color format
 			for i, color := range input.Colors {
 				if !isValidHexColor(color) {
-					return nil, nil, fmt.Errorf("invalid color at index %d: %s (expected #RRGGBB format)", i, color)
+					return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color at index %d: %s (expected #RRGGBB format)", i, color)
 				}
 			}
 
@@ -347,17 +348,17 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if len(input.Palette) == 0 {
-				return nil, nil, fmt.Errorf("palette array cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "palette array cannot be empty")
 			}
 
 			if len(input.Palette) > 256 {
-				return nil, nil, fmt.Errorf("palette can have at most 256 colors, got %d", len(input.Palette))
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "palette can have at most 256 colors, got %d", len(input.Palette))
 			}
 
 			// Validate hex color format for palette
 			for i, color := range input.Palette {
 				if !isValidHexColor(color) {
-					return nil, nil, fmt.Errorf("invalid palette color at index %d: %s (expected #RRGGBB format)", i, color)
+					return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid palette color at index %d: %s (expected #RRGGBB format)", i, color)
 				}
 			}
 
@@ -368,12 +369,12 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 				"bottom_left": true, "bottom": true, "bottom_right": true,
 			}
 			if !validDirections[input.LightDirection] {
-				return nil, nil, fmt.Errorf("invalid light direction: %s (must be one of: top_left, top, top_right, left, right, bottom_left, bottom, bottom_right)", input.LightDirection)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid light direction: %s (must be one of: top_left, top, top_right, left, right, bottom_left, bottom, bottom_right)", input.LightDirection)
 			}
 
 			// Validate intensity
 			if input.Intensity < 0.0 || input.Intensity > 1.0 {
-				return nil, nil, fmt.Errorf("intensity must be between 0.0 and 1.0, got %f", input.Intensity)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "intensity must be between 0.0 and 1.0, got %f", input.Intensity)
 			}
 
 			// Validate style
@@ -381,12 +382,12 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 				"pillow": true, "smooth": true, "hard": true,
 			}
 			if !validStyles[input.Style] {
-				return nil, nil, fmt.Errorf("invalid style: %s (must be one of: pillow, smooth, hard)", input.Style)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid style: %s (must be one of: pillow, smooth, hard)", input.Style)
 			}
 
 			// Validate region
 			if input.Region.Width <= 0 || input.Region.Height <= 0 {
-				return nil, nil, fmt.Errorf("region dimensions must be positive, got width=%d height=%d", input.Region.Width, input.Region.Height)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "region dimensions must be positive, got width=%d height=%d", input.Region.Width, input.Region.Height)
 			}
 
 			// Generate Lua script to apply shading
@@ -434,17 +435,17 @@ func RegisterPaletteTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if len(input.Palette) == 0 {
-				return nil, nil, fmt.Errorf("palette array cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "palette array cannot be empty")
 			}
 
 			if len(input.Palette) > 256 {
-				return nil, nil, fmt.Errorf("palette can have at most 256 colors, got %d", len(input.Palette))
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "palette can have at most 256 colors, got %d", len(input.Palette))
 			}
 
 			// Validate hex color format
 			for i, color := range input.Palette {
 				if !isValidHexColor(color) {
-					return nil, nil, fmt.Errorf("invalid color at index %d: %s (expected #RRGGBB format)", i, color)
+					return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color at index %d: %s (expected #RRGGBB format)", i, color)
 				}
 			}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"math"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -451,15 +452,15 @@ func RegisterAntialiasingTools(server *mcp.Server, client *aseprite.Client, gen 
 
 			// Validate inputs
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be >= 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be >= 1, got %d", input.FrameNumber)
 			}
 
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name is required")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name is required")
 			}
 
 			if input.Threshold != nil && (*input.Threshold < 0 || *input.Threshold > 255) {
-				return nil, nil, fmt.Errorf("threshold must be 0-255, got %d", *input.Threshold)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "threshold must be 0-255, got %d", *input.Threshold)
 			}
 
 			// Execute antialiasing analysis

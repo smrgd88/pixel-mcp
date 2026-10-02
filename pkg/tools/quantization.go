@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"image"
 	"image/color"
 	"image/png"
@@ -69,7 +70,7 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 
 			// Validate inputs
 			if input.TargetColors < 2 || input.TargetColors > 256 {
-				return nil, nil, fmt.Errorf("target_colors must be between 2 and 256, got %d", input.TargetColors)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target_colors must be between 2 and 256, got %d", input.TargetColors)
 			}
 
 			validAlgorithms := map[string]bool{
@@ -78,12 +79,12 @@ func RegisterQuantizationTools(server *mcp.Server, client *aseprite.Client, gen 
 				"octree":     true,
 			}
 			if !validAlgorithms[input.Algorithm] {
-				return nil, nil, fmt.Errorf("invalid algorithm: %s (must be median_cut, kmeans, or octree)", input.Algorithm)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid algorithm: %s (must be median_cut, kmeans, or octree)", input.Algorithm)
 			}
 
 			// Check sprite file exists
 			if _, err := os.Stat(input.SpritePath); os.IsNotExist(err) {
-				return nil, nil, fmt.Errorf("sprite file not found: %s", input.SpritePath)
+				return nil, nil, diagnostics.Errorf("not_found", "sprite file not found: %s", input.SpritePath)
 			}
 
 			// Step 1: Export sprite to temporary PNG for analysis

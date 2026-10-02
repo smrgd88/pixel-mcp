@@ -1,12 +1,12 @@
 # 기능 지원 현황
 
-기준일: 2026-09-30 · 구현 기준: `develop`의 `e0304bd7854bd42ab8b13d107c162180f6161f90`
+기준일: 2026-10-02 · 구현 기준: `develop`의 `7f439a0df1ec0d2d24ef6dabba6de4d30c2484f9`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
 ## 기준과 상태
 
-- develop의 MCP 도구는 **54개**이며, SAFE-04 구현 브랜치는 이력/undo 2개를 추가해 **56개**다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
+- develop의 MCP 도구는 **56개**다. SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
 - `지원`은 MCP 입력으로 제공됨을 뜻한다. 공식 API 전체 옵션 지원이나 모든 조합의 실행 검증을 뜻하지 않는다.
 - 기능군은 `지원 / 부분 / 미지원 / 현재 구조 밖`, 개발 진행은 `예정 / 진행 / develop 반영 / 태그 포함`으로 구분한다.
 - 최초 태그는 로컬 `v0.1.0`부터 `v0.5.0`까지 코드에 도구가 존재하는지 확인한 결과다. GitHub Release 게시나 배포 artifact 검증을 의미하지 않는다.
@@ -80,8 +80,8 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-052 | snapshot/restore | `list_snapshots` | Unreleased | SAFE-03 (#23, develop 반영) | [snapshots.go](../pkg/tools/snapshots.go) |
 | MCP-053 | snapshot/restore | `restore_snapshot` | Unreleased | SAFE-03 (#23, develop 반영) | [snapshots.go](../pkg/tools/snapshots.go) |
 | MCP-054 | snapshot/restore | `delete_snapshot` | Unreleased | SAFE-03 (#23, develop 반영) | [snapshots.go](../pkg/tools/snapshots.go) |
-| MCP-055 | 작업 이력 | `list_operation_history` | Unreleased | SAFE-04 구현 브랜치 | [history.go](../pkg/tools/history.go) |
-| MCP-056 | 작업 이력 | `undo_last_operation` | Unreleased | SAFE-04 구현 브랜치 | [history.go](../pkg/tools/history.go) |
+| MCP-055 | 작업 이력 | `list_operation_history` | Unreleased | SAFE-04 (#24, develop 반영) | [history.go](../pkg/tools/history.go) |
+| MCP-056 | 작업 이력 | `undo_last_operation` | Unreleased | SAFE-04 (#24, develop 반영) | [history.go](../pkg/tools/history.go) |
 
 ## 공식 기능군 대비 차이
 
@@ -114,11 +114,11 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-01 | 위험 작업 warnings | develop 반영 / Unreleased (#11) | 3개 도구·4개 코드, [계약과 검증 범위](WARNINGS.md); 실제 클라이언트 UI 미검증 |
 | SAFE-02 | dry-run | develop 반영 / Unreleased (#21) | 세 도구의 임시 복사본 실행·전후 요약·정리. [DRY_RUN](DRY_RUN.md), R2 |
 | SAFE-03 | snapshot/restore | develop 반영 / Unreleased (#23) | 네 도구·사전 백업·TTL/용량/원자 복원. [SNAPSHOTS](SNAPSHOTS.md), R2 |
-| SAFE-04 | operation history·undo | 구현 브랜치 | opt-in 자동 이력·ID/해시 기반 undo. [HISTORY](HISTORY.md), R2 |
+| SAFE-04 | operation history·undo | develop 반영 / Unreleased (#24) | opt-in 자동 이력·ID/해시 기반 undo. [HISTORY](HISTORY.md), R2 |
 | SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체와 export 출력 세트의 일반 오류 rollback (#18), [검증과 제외 범위](FILE_PROTECTION.md), R2 |
 | OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
-| OPS-03 | 오류·request ID·로그 계약 통일 | 예정 | 기존 로깅과 timeout 처리는 존재, 전체 응답 표준화는 R1/R2 |
+| OPS-03 | 오류·request ID·로그 계약 통일 | 구현 브랜치 / 부분 | [ERRORS](ERRORS.md): 오류와 추적 경계. 성공 payload 일괄 표준화는 별도 검토 |
 
 ## 검증 근거와 갱신 규칙
 

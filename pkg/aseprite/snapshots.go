@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"io"
 	"os"
 	"path/filepath"
@@ -49,10 +49,10 @@ func privateSnapshotPath(path string, directory bool) error {
 		return err
 	}
 	if (directory && !info.IsDir()) || (!directory && !info.Mode().IsRegular()) {
-		return fmt.Errorf("snapshot_invalid: non-regular storage path")
+		return diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: non-regular storage path")
 	}
 	if runtime.GOOS != "windows" && info.Mode().Perm()&0077 != 0 {
-		return fmt.Errorf("snapshot_invalid: storage must be private")
+		return diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: storage must be private")
 	}
 	if !directory {
 		return checkSingleLink(path, info)
@@ -62,7 +62,7 @@ func privateSnapshotPath(path string, directory bool) error {
 
 func (s *SnapshotStore) root() (string, error) {
 	if s.MaxCount <= 0 || s.MaxBytes <= 0 || s.TTL <= 0 {
-		return "", fmt.Errorf("snapshot_invalid: invalid limits")
+		return "", diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: invalid limits")
 	}
 	dir := s.Dir
 	if dir == "" {
@@ -73,7 +73,7 @@ func (s *SnapshotStore) root() (string, error) {
 		dir = filepath.Join(base, "pixel-mcp", "snapshots")
 	}
 	if !filepath.IsAbs(dir) {
-		return "", fmt.Errorf("snapshot_invalid: snapshot directory must be absolute")
+		return "", diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: snapshot directory must be absolute")
 	}
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", err
@@ -113,14 +113,14 @@ func (s *SnapshotStore) run(ctx context.Context, source string, fn func(context.
 				return err
 			}
 			if !scopeOf(ctx).locked[pathKey(original)] {
-				return fmt.Errorf("file_changed: snapshot source target changed")
+				return diagnostics.Errorf("file_changed", "file_changed: snapshot source target changed")
 			}
 			rel, e := filepath.Rel(root, original)
 			if e != nil {
 				return e
 			}
 			if rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))) {
-				return fmt.Errorf("snapshot_invalid: source must be outside snapshot storage")
+				return diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: source must be outside snapshot storage")
 			}
 		}
 		return fn(ctx, root, original)
@@ -130,7 +130,7 @@ func (s *SnapshotStore) run(ctx context.Context, source string, fn func(context.
 func readSnapshot(root, id string) (Snapshot, error) {
 	var m Snapshot
 	if !validSnapshotID(id) {
-		return m, fmt.Errorf("snapshot_invalid: expected canonical UUID v4")
+		return m, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: expected canonical UUID v4")
 	}
 	dir := filepath.Join(root, id)
 	if err := privateSnapshotPath(dir, true); err != nil {
@@ -150,14 +150,14 @@ func readSnapshot(root, id string) (Snapshot, error) {
 		return m, err
 	}
 	if len(b) > 16384 {
-		return m, fmt.Errorf("snapshot_invalid: metadata too large")
+		return m, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: metadata too large")
 	}
 	if err = json.Unmarshal(b, &m); err != nil {
-		return m, fmt.Errorf("snapshot_invalid: metadata: %w", err)
+		return m, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: metadata: %w", err)
 	}
 	hash, e := hex.DecodeString(m.SHA256)
 	if !validOperation(m.Operation) || (m.Operation != nil && m.Operation.BeforeSHA256 != m.SHA256) || m.ID != id || !filepath.IsAbs(m.SpritePath) || m.Size <= 0 || e != nil || len(hash) != 32 || m.CreatedAt.IsZero() || !m.ExpiresAt.After(m.CreatedAt) {
-		return m, fmt.Errorf("snapshot_invalid: invalid metadata")
+		return m, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: invalid metadata")
 	}
 	path = filepath.Join(dir, "sprite")
 	if err := privateSnapshotPath(path, false); err != nil {
@@ -168,7 +168,7 @@ func readSnapshot(root, id string) (Snapshot, error) {
 		return m, err
 	}
 	if info.Size() != m.Size {
-		return m, fmt.Errorf("snapshot_invalid: size mismatch")
+		return m, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: size mismatch")
 	}
 	return m, nil
 }
@@ -197,7 +197,7 @@ func (s *SnapshotStore) inventory(ctx context.Context, root string) ([]Snapshot,
 		}
 		m, err := readSnapshot(root, id)
 		if err != nil {
-			return nil, fmt.Errorf("snapshot_invalid: store entry %s: %w", id, err)
+			return nil, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: store entry %s: %w", id, err)
 		}
 		if !time.Now().Before(m.ExpiresAt) {
 			if err := os.RemoveAll(filepath.Join(root, id)); err != nil {
@@ -236,7 +236,7 @@ func snapshotSource(ctx context.Context, path string, limit int64) (fileSnapshot
 	}
 	defer f.Close()
 	if info.Size() <= 0 || info.Size() > limit {
-		return fileSnapshot{}, fmt.Errorf("snapshot_capacity: empty source or byte limit exceeded")
+		return fileSnapshot{}, diagnostics.Errorf("snapshot_capacity", "snapshot_capacity: empty source or byte limit exceeded")
 	}
 	h := sha256.New()
 	n, err := io.Copy(h, io.LimitReader(snapshotReader{ctx, f}, limit+1))
@@ -244,7 +244,7 @@ func snapshotSource(ctx context.Context, path string, limit int64) (fileSnapshot
 		return fileSnapshot{}, err
 	}
 	if n > limit {
-		return fileSnapshot{}, fmt.Errorf("snapshot_capacity: source grew beyond byte limit")
+		return fileSnapshot{}, diagnostics.Errorf("snapshot_capacity", "snapshot_capacity: source grew beyond byte limit")
 	}
 	var hash [32]byte
 	copy(hash[:], h.Sum(nil))
@@ -264,7 +264,7 @@ func copySnapshotBytes(ctx context.Context, src, dst string, limit int64) (int64
 	h := sha256.New()
 	n, err := io.Copy(io.MultiWriter(out, h), io.LimitReader(snapshotReader{ctx, f}, limit+1))
 	if err == nil && n > limit {
-		err = fmt.Errorf("snapshot_capacity: byte limit exceeded")
+		err = diagnostics.Errorf("snapshot_capacity", "snapshot_capacity: byte limit exceeded")
 	}
 	if err == nil {
 		err = out.Sync()
@@ -279,21 +279,21 @@ func copySnapshotBytes(ctx context.Context, src, dst string, limit int64) (int64
 func (s *SnapshotStore) create(ctx context.Context, root, source, label string, existing []Snapshot) (Snapshot, error) {
 	var m Snapshot
 	if len(label) > 256 {
-		return m, fmt.Errorf("snapshot_invalid: label exceeds 256 bytes")
+		return m, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: label exceeds 256 bytes")
 	}
 	used := int64(0)
 	for _, item := range existing {
 		used += item.Size
 	}
 	if len(existing) >= s.MaxCount || used >= s.MaxBytes {
-		return m, fmt.Errorf("snapshot_capacity: delete snapshots or wait for expiry")
+		return m, diagnostics.Errorf("snapshot_capacity", "snapshot_capacity: delete snapshots or wait for expiry")
 	}
 	before, err := snapshotSource(ctx, source, s.MaxBytes-used)
 	if err != nil {
 		return m, err
 	}
 	if before.info.Size() <= 0 || before.info.Size() > s.MaxBytes-used {
-		return m, fmt.Errorf("snapshot_capacity: empty source or byte limit exceeded")
+		return m, diagnostics.Errorf("snapshot_capacity", "snapshot_capacity: empty source or byte limit exceeded")
 	}
 	id := uuid.NewString()
 	dir := filepath.Join(root, ".pending-"+id)
@@ -307,7 +307,7 @@ func (s *SnapshotStore) create(ctx context.Context, root, source, label string, 
 	}
 	after, err := snapshotSource(ctx, source, s.MaxBytes-used)
 	if err != nil || !os.SameFile(before.info, after.info) || before.hash != after.hash || before.info.Mode() != after.info.Mode() || hash != hex.EncodeToString(before.hash[:]) {
-		return m, fmt.Errorf("file_changed: source changed during snapshot")
+		return m, diagnostics.Errorf("file_changed", "file_changed: source changed during snapshot")
 	}
 	now := time.Now().UTC()
 	m = Snapshot{ID: id, SpritePath: source, CreatedAt: now, ExpiresAt: now.Add(s.TTL), Size: size, SHA256: hash, Label: label}
@@ -316,7 +316,7 @@ func (s *SnapshotStore) create(ctx context.Context, root, source, label string, 
 		return m, err
 	}
 	if len(data) > 16384 {
-		return m, fmt.Errorf("snapshot_invalid: metadata too large")
+		return m, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: metadata too large")
 	}
 	f, err := os.OpenFile(filepath.Join(dir, "metadata.json"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
@@ -344,7 +344,7 @@ func (s *SnapshotStore) create(ctx context.Context, root, source, label string, 
 func (s *SnapshotStore) Create(ctx context.Context, path, label string) (Snapshot, error) {
 	var out Snapshot
 	if path == "" {
-		return out, fmt.Errorf("snapshot_invalid: sprite_path required")
+		return out, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: sprite_path required")
 	}
 	err := s.run(ctx, path, func(ctx context.Context, root, source string) error {
 		entries, err := s.inventory(ctx, root)
@@ -378,7 +378,7 @@ func (s *SnapshotStore) List(ctx context.Context, path string) ([]Snapshot, erro
 // Delete only removes the explicitly named snapshot; it never edits a sprite.
 func (s *SnapshotStore) Delete(ctx context.Context, id string) error {
 	if !validSnapshotID(id) {
-		return fmt.Errorf("snapshot_invalid: expected canonical UUID v4")
+		return diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: expected canonical UUID v4")
 	}
 	return s.run(ctx, "", func(ctx context.Context, root, _ string) error {
 		dir := filepath.Join(root, id)
@@ -402,7 +402,7 @@ func (s *SnapshotStore) Restore(ctx context.Context, path, id string) (Snapshot,
 func (s *SnapshotStore) restoreWithReplace(ctx context.Context, path, id string, replace func(string, string) error, expectedSourceHash ...string) (Snapshot, error) {
 	var backup Snapshot
 	if path == "" || !validSnapshotID(id) {
-		return backup, fmt.Errorf("snapshot_invalid: sprite_path and canonical UUID v4 required")
+		return backup, diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: sprite_path and canonical UUID v4 required")
 	}
 	err := s.run(ctx, path, func(ctx context.Context, root, source string) error {
 		entries, err := s.inventory(ctx, root)
@@ -414,10 +414,10 @@ func (s *SnapshotStore) restoreWithReplace(ctx context.Context, path, id string,
 			return err
 		}
 		if !time.Now().Before(m.ExpiresAt) {
-			return fmt.Errorf("snapshot_expired")
+			return diagnostics.Errorf("snapshot_expired", "snapshot_expired")
 		}
 		if pathKey(source) != pathKey(m.SpritePath) {
-			return fmt.Errorf("snapshot_source_mismatch: restore only to original sprite_path")
+			return diagnostics.Errorf("snapshot_source_mismatch", "snapshot_source_mismatch: restore only to original sprite_path")
 		}
 		return stageFileWithReplace(ctx, source, true, func(staged string) error {
 			// Undo's earlier lookup is not the transaction boundary: an outside
@@ -428,7 +428,7 @@ func (s *SnapshotStore) restoreWithReplace(ctx context.Context, path, id string,
 					return err
 				}
 				if hex.EncodeToString(current.hash[:]) != expectedSourceHash[0] {
-					return fmt.Errorf("history_conflict: file changed before restore staging")
+					return diagnostics.Errorf("history_conflict", "history_conflict: file changed before restore staging")
 				}
 			}
 
@@ -441,7 +441,7 @@ func (s *SnapshotStore) restoreWithReplace(ctx context.Context, path, id string,
 				return err
 			}
 			if n != m.Size || hash != m.SHA256 {
-				return fmt.Errorf("snapshot_invalid: checksum mismatch")
+				return diagnostics.Errorf("snapshot_invalid", "snapshot_invalid: checksum mismatch")
 			}
 			backup, err = s.create(ctx, root, source, "before restore "+id, entries)
 			return err

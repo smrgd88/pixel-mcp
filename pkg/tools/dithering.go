@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog/core"
@@ -50,15 +51,15 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate inputs
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be >= 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be >= 1, got %d", input.FrameNumber)
 			}
 
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name is required")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name is required")
 			}
 
 			if input.Region.Width <= 0 || input.Region.Height <= 0 {
-				return nil, nil, fmt.Errorf("region width and height must be positive, got %dx%d",
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "region width and height must be positive, got %dx%d",
 					input.Region.Width, input.Region.Height)
 			}
 
@@ -82,15 +83,15 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 				"floyd_steinberg":  true,
 			}
 			if !validPatterns[input.Pattern] {
-				return nil, nil, fmt.Errorf("invalid pattern: %s (must be one of: bayer_2x2, bayer_4x4, bayer_8x8, checkerboard, grass, water, stone, cloud, brick, dots, diagonal, cross, noise, horizontal_lines, vertical_lines, floyd_steinberg)", input.Pattern)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid pattern: %s (must be one of: bayer_2x2, bayer_4x4, bayer_8x8, checkerboard, grass, water, stone, cloud, brick, dots, diagonal, cross, noise, horizontal_lines, vertical_lines, floyd_steinberg)", input.Pattern)
 			}
 
 			// Validate colors (basic hex format check)
 			if !isValidHexColor(input.Color1) {
-				return nil, nil, fmt.Errorf("invalid color1 format: %s (expected #RRGGBB or #RRGGBBAA)", input.Color1)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color1 format: %s (expected #RRGGBB or #RRGGBBAA)", input.Color1)
 			}
 			if !isValidHexColor(input.Color2) {
-				return nil, nil, fmt.Errorf("invalid color2 format: %s (expected #RRGGBB or #RRGGBBAA)", input.Color2)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color2 format: %s (expected #RRGGBB or #RRGGBBAA)", input.Color2)
 			}
 
 			// Default an unset optional value (omitted or null); zero is valid.
@@ -99,7 +100,7 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 				density = *input.Density
 			}
 			if density < 0 || density > 1 {
-				return nil, nil, fmt.Errorf("density must be between 0.0 and 1.0, got %f", density)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "density must be between 0.0 and 1.0, got %f", density)
 			}
 
 			// Generate Lua script for dithering
