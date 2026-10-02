@@ -11,6 +11,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog"
 	"github.com/willibrandon/mtlog/core"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"github.com/willibrandon/pixel-mcp/pkg/aseprite"
 	"github.com/willibrandon/pixel-mcp/pkg/config"
 )
@@ -30,7 +31,11 @@ func wrapWithTiming[I any, O any](
 ) func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error) {
 	return func(ctx context.Context, req *mcp.CallToolRequest, input I) (*mcp.CallToolResult, O, error) {
 		// Generate request ID for tracking
-		requestID := uuid.New().String()[:8] // Short ID for logs
+		requestID := diagnostics.RequestID(ctx)
+		if requestID == "" {
+			requestID = uuid.NewString()
+			ctx = diagnostics.WithRequestID(ctx, requestID)
+		}
 
 		// Add request context for all logs within this operation
 		ctx = mtlog.PushProperty(ctx, "RequestID", requestID)

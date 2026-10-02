@@ -1,12 +1,12 @@
 # 기능 로드맵
 
-기준일: 2026-09-30 · 코드 기준: `develop`의 `e0304bd7854bd42ab8b13d107c162180f6161f90`
+기준일: 2026-10-02 · 코드 기준: `develop`의 `7f439a0df1ec0d2d24ef6dabba6de4d30c2484f9`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
 ## 현재 위치
 
-develop에는 54개 MCP 도구가 등록되어 있으며 SAFE-04 구현 브랜치는 이력/undo 2개를 추가해 56개다. 기본 드로잉·애니메이션·선택·팔레트·변형·export와 자체 분석 기능을 제공한다. `v0.1.0`의 47개에서 `v0.4.0`에 감색/자동 shading 2개, `v0.5.0`에 flatten 1개가 추가됐다.
+develop에는 56개 MCP 도구가 등록되어 있다 (SAFE-04 PR #24 포함). 기본 드로잉·애니메이션·선택·팔레트·변형·export와 자체 분석 기능을 제공한다. `v0.1.0`의 47개에서 `v0.4.0`에 감색/자동 shading 2개, `v0.5.0`에 flatten 1개가 추가됐다.
 
 포크의 config 격리, draw_pixels 좌표, native linked cel, indexed shading 수정은 develop에 반영됐지만 `v0.5.0`에는 없다. 신규 릴리스 번호나 배포 일자는 확정하지 않는다. R0–R5는 작업 단계이며 버전 번호가 아니다.
 
@@ -14,14 +14,15 @@ develop에는 54개 MCP 도구가 등록되어 있으며 SAFE-04 구현 브랜�
 
 ## 다음 작업 순서
 
-알려진 동작 오류 수정과 SAFE-02 dry-run은 develop에 반영했다. SAFE-03 복원 기반도 PR #23으로 병합했고 현재 SAFE-04 이력·undo를 연결한다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
+알려진 동작 오류 수정과 SAFE-02 dry-run은 develop에 반영했다. SAFE-03 복원 기반도 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했고 현재 OPS-03 오류 코드·요청 추적을 정리한다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
 
 완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18), BUG-02(PR #20), 팔레트·threshold·DITHER-01/02 후속 수정(PR #22). 아래는 남은 작업만 나열한다.
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | SAFE-04 작업 이력·undo — 현재 구현 | SAFE-03 snapshot과 성공한 변경 이력 연결. [계약](HISTORY.md) |
-| 이후 | 운영·공통 계약 및 R3 범위 선정 | 잔여 OPS-01/03와 기능 확장 우선순위를 별도 결정 |
+| 1 | OPS-03 오류 코드·요청 추적 — 현재 구현 | 기존 성공 응답을 유지하며 클라이언트의 오류 판별과 로그 추적 개선. [계약](ERRORS.md) |
+| 2 | 공통 회귀 조합 점검 | 기존 테스트와 색상/계층/cel/export 조합 대조 |
+| 3 | R3 기능 확장 범위 선정 | 상세 구조 조회 등 기존 GAP 잔여. 배포 운영은 별도 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
@@ -36,7 +37,7 @@ develop에는 54개 MCP 도구가 등록되어 있으며 SAFE-04 구현 브랜�
 - 후속 설계: export 세트 crash 복구·고아 staging/백업 정리, 파일시스템별 file_changed 관찰 재현. 현재 완료 범위에 포함하지 않는다.
 - upstream #16 indexed 검은 이미지 재현은 아래 재개 조건을 유지한다. 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다.
 
-상태·완료 조건은 [NEXT_STEPS의 남은 작업 요약](NEXT_STEPS.md#남은-작업-요약-2026-09-30)과 기존 상세 체크리스트에서 추적한다.
+상태·완료 조건은 [NEXT_STEPS의 남은 작업 요약](NEXT_STEPS.md#남은-작업-요약-2026-10-02)과 기존 상세 체크리스트에서 추적한다.
 
 ## 단계와 완료 조건
 
@@ -53,7 +54,7 @@ R5의 확장 후보 전체를 하나의 릴리스에 묶지 않는다. GUI 플�
 
 ## 안전성 기능의 의존 순서
 
-SAFE-01은 PR #11로 develop에 병합했다. GAP-10은 PR #13, SAFE-05는 PR #14로 병합했다. SAFE-02는 PR #21로 병합했다. SAFE-03는 PR #23으로 병합했고 현재 SAFE-04를 구현한다. 실제 앱 UI 호환성 확인은 후속 검증으로 남긴다.
+SAFE-01은 PR #11로 develop에 병합했다. GAP-10은 PR #13, SAFE-05는 PR #14로 병합했다. SAFE-02는 PR #21로 병합했다. SAFE-03는 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했다. 실제 앱 UI 호환성 확인은 후속 검증으로 남긴다.
 
 1. `[SHARED][FEATURE] 위험 작업 warning 반환` — SAFE-01, upstream #15. 공통 optional warnings와 감색·flatten·색상 모드 변경·보간 scale 조건부터 고정한다.
 2. `[SHARED][FEATURE] Aseprite capability 사전 검사` — GAP-10. health 정보와 변경 전 지원 하한 검사를 연결한다.
@@ -103,7 +104,7 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] DITHER-01/02: 중간 밀도·texture 순위 제어 (PR #22 develop 병합, Unreleased)
 - [x] SAFE-02: dry-run 검증 및 PR #21 develop 병합
 - [x] SAFE-03: snapshot/restore 검증 및 PR #23 develop 병합
-- [ ] SAFE-04: history/undo
+- [x] SAFE-04: history/undo 검증 및 PR #24 develop 병합
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정
 - [ ] 릴리스 절차 문서와 0.x 호환성 정책 확정

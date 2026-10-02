@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"path/filepath"
 	"strings"
 	"time"
@@ -126,10 +127,10 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate dimensions
 			if input.TargetWidth < 1 || input.TargetWidth > 65535 {
-				return nil, nil, fmt.Errorf("target_width must be between 1 and 65535, got %d", input.TargetWidth)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target_width must be between 1 and 65535, got %d", input.TargetWidth)
 			}
 			if input.TargetHeight < 1 || input.TargetHeight > 65535 {
-				return nil, nil, fmt.Errorf("target_height must be between 1 and 65535, got %d", input.TargetHeight)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target_height must be between 1 and 65535, got %d", input.TargetHeight)
 			}
 
 			// Determine output path
@@ -212,7 +213,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate direction
 			if input.Direction != "horizontal" && input.Direction != "vertical" {
-				return nil, nil, fmt.Errorf("direction must be 'horizontal' or 'vertical', got: %s", input.Direction)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "direction must be 'horizontal' or 'vertical', got: %s", input.Direction)
 			}
 
 			// Validate target
@@ -220,7 +221,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 				input.Target = "sprite"
 			}
 			if input.Target != "sprite" && input.Target != "layer" && input.Target != "cel" {
-				return nil, nil, fmt.Errorf("target must be 'sprite', 'layer', or 'cel', got: %s", input.Target)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target must be 'sprite', 'layer', or 'cel', got: %s", input.Target)
 			}
 
 			// Generate Lua script
@@ -252,7 +253,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate angle
 			if input.Angle != 90 && input.Angle != 180 && input.Angle != 270 {
-				return nil, nil, fmt.Errorf("angle must be 90, 180, or 270, got: %d", input.Angle)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "angle must be 90, 180, or 270, got: %d", input.Angle)
 			}
 
 			// Validate target
@@ -260,7 +261,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 				input.Target = "sprite"
 			}
 			if input.Target != "sprite" && input.Target != "layer" && input.Target != "cel" {
-				return nil, nil, fmt.Errorf("target must be 'sprite', 'layer', or 'cel', got: %s", input.Target)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target must be 'sprite', 'layer', or 'cel', got: %s", input.Target)
 			}
 
 			// Generate Lua script
@@ -292,10 +293,10 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate scale factors
 			if input.ScaleX < 0.01 || input.ScaleX > 100.0 {
-				return nil, nil, fmt.Errorf("scale_x must be between 0.01 and 100.0, got: %.3f", input.ScaleX)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "scale_x must be between 0.01 and 100.0, got: %.3f", input.ScaleX)
 			}
 			if input.ScaleY < 0.01 || input.ScaleY > 100.0 {
-				return nil, nil, fmt.Errorf("scale_y must be between 0.01 and 100.0, got: %.3f", input.ScaleY)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "scale_y must be between 0.01 and 100.0, got: %.3f", input.ScaleY)
 			}
 
 			// Validate algorithm
@@ -303,7 +304,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 				input.Algorithm = "nearest"
 			}
 			if input.Algorithm != "nearest" && input.Algorithm != "bilinear" && input.Algorithm != "rotsprite" {
-				return nil, nil, fmt.Errorf("algorithm must be 'nearest', 'bilinear', or 'rotsprite', got: %s", input.Algorithm)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "algorithm must be 'nearest', 'bilinear', or 'rotsprite', got: %s", input.Algorithm)
 			}
 
 			// Generate Lua script
@@ -347,10 +348,10 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate crop bounds
 			if input.X < 0 || input.Y < 0 {
-				return nil, nil, fmt.Errorf("crop position must be non-negative, got: x=%d, y=%d", input.X, input.Y)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "crop position must be non-negative, got: x=%d, y=%d", input.X, input.Y)
 			}
 			if input.Width <= 0 || input.Height <= 0 {
-				return nil, nil, fmt.Errorf("crop dimensions must be positive, got: width=%d, height=%d", input.Width, input.Height)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "crop dimensions must be positive, got: width=%d, height=%d", input.Width, input.Height)
 			}
 
 			// Generate Lua script (validation of bounds against sprite dimensions happens in Lua)
@@ -382,10 +383,10 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate dimensions
 			if input.Width < 1 || input.Width > 65535 {
-				return nil, nil, fmt.Errorf("width must be between 1 and 65535, got: %d", input.Width)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "width must be between 1 and 65535, got: %d", input.Width)
 			}
 			if input.Height < 1 || input.Height > 65535 {
-				return nil, nil, fmt.Errorf("height must be between 1 and 65535, got: %d", input.Height)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "height must be between 1 and 65535, got: %d", input.Height)
 			}
 
 			// Validate anchor
@@ -400,7 +401,7 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 				"bottom_right": true,
 			}
 			if !validAnchors[input.Anchor] {
-				return nil, nil, fmt.Errorf("anchor must be 'center', 'top_left', 'top_right', 'bottom_left', or 'bottom_right', got: %s", input.Anchor)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "anchor must be 'center', 'top_left', 'top_right', 'bottom_left', or 'bottom_right', got: %s", input.Anchor)
 			}
 
 			// Generate Lua script
@@ -432,18 +433,18 @@ func RegisterTransformTools(server *mcp.Server, client *aseprite.Client, gen *as
 
 			// Validate frame number
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be >= 1, got: %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be >= 1, got: %d", input.FrameNumber)
 			}
 
 			// Validate thickness
 			if input.Thickness < 1 || input.Thickness > 10 {
-				return nil, nil, fmt.Errorf("thickness must be between 1 and 10, got: %d", input.Thickness)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "thickness must be between 1 and 10, got: %d", input.Thickness)
 			}
 
 			// Parse color
 			var color aseprite.Color
 			if err := color.FromHex(input.Color); err != nil {
-				return nil, nil, fmt.Errorf("invalid color format: %w", err)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color format: %w", err)
 			}
 
 			// Generate Lua script

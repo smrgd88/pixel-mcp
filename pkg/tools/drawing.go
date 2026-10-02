@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -162,15 +163,15 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			if len(input.Pixels) == 0 {
-				return nil, nil, fmt.Errorf("pixels array cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "pixels array cannot be empty")
 			}
 
 			// Convert pixel inputs to aseprite.Pixel types
@@ -221,21 +222,21 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			if input.Thickness < 1 || input.Thickness > 100 {
-				return nil, nil, fmt.Errorf("thickness must be between 1 and 100, got %d", input.Thickness)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "thickness must be between 1 and 100, got %d", input.Thickness)
 			}
 
 			// Parse color
 			var color aseprite.Color
 			if err := color.FromHex(input.Color); err != nil {
-				return nil, nil, fmt.Errorf("invalid color format: %w", err)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color format: %w", err)
 			}
 
 			// Generate Lua script
@@ -272,25 +273,25 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			if len(input.Points) < 2 {
-				return nil, nil, fmt.Errorf("at least 2 points are required, got %d", len(input.Points))
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "at least 2 points are required, got %d", len(input.Points))
 			}
 
 			if input.Thickness < 1 || input.Thickness > 100 {
-				return nil, nil, fmt.Errorf("thickness must be between 1 and 100, got %d", input.Thickness)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "thickness must be between 1 and 100, got %d", input.Thickness)
 			}
 
 			// Parse color
 			var color aseprite.Color
 			if err := color.FromHex(input.Color); err != nil {
-				return nil, nil, fmt.Errorf("invalid color format: %w", err)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color format: %w", err)
 			}
 
 			// Convert PointInput to aseprite.Point
@@ -333,21 +334,21 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			if input.Width < 1 || input.Height < 1 {
-				return nil, nil, fmt.Errorf("width and height must be at least 1, got width=%d height=%d", input.Width, input.Height)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "width and height must be at least 1, got width=%d height=%d", input.Width, input.Height)
 			}
 
 			// Parse color
 			var color aseprite.Color
 			if err := color.FromHex(input.Color); err != nil {
-				return nil, nil, fmt.Errorf("invalid color format: %w", err)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color format: %w", err)
 			}
 
 			// Generate Lua script
@@ -384,21 +385,21 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			if input.Radius < 1 {
-				return nil, nil, fmt.Errorf("radius must be at least 1, got %d", input.Radius)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "radius must be at least 1, got %d", input.Radius)
 			}
 
 			// Parse color
 			var color aseprite.Color
 			if err := color.FromHex(input.Color); err != nil {
-				return nil, nil, fmt.Errorf("invalid color format: %w", err)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color format: %w", err)
 			}
 
 			// Generate Lua script
@@ -435,21 +436,21 @@ func RegisterDrawingTools(server *mcp.Server, client *aseprite.Client, gen *asep
 
 			// Validate inputs
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be at least 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be at least 1, got %d", input.FrameNumber)
 			}
 
 			if input.Tolerance < 0 || input.Tolerance > 255 {
-				return nil, nil, fmt.Errorf("tolerance must be between 0 and 255, got %d", input.Tolerance)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "tolerance must be between 0 and 255, got %d", input.Tolerance)
 			}
 
 			// Parse color
 			var color aseprite.Color
 			if err := color.FromHex(input.Color); err != nil {
-				return nil, nil, fmt.Errorf("invalid color format: %w", err)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color format: %w", err)
 			}
 
 			// Generate Lua script

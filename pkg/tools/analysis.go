@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog/core"
@@ -74,10 +75,10 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 
 			// Validate inputs
 			if input.TargetWidth < 1 || input.TargetWidth > 65535 {
-				return nil, nil, fmt.Errorf("target_width must be between 1 and 65535, got %d", input.TargetWidth)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target_width must be between 1 and 65535, got %d", input.TargetWidth)
 			}
 			if input.TargetHeight < 1 || input.TargetHeight > 65535 {
-				return nil, nil, fmt.Errorf("target_height must be between 1 and 65535, got %d", input.TargetHeight)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "target_height must be between 1 and 65535, got %d", input.TargetHeight)
 			}
 
 			// Set defaults
@@ -86,7 +87,7 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 				paletteSize = 16
 			}
 			if paletteSize < 5 || paletteSize > 32 {
-				return nil, nil, fmt.Errorf("palette_size must be between 5 and 32, got %d", paletteSize)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "palette_size must be between 5 and 32, got %d", paletteSize)
 			}
 
 			brightnessLevels := input.BrightnessLevels
@@ -94,7 +95,7 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 				brightnessLevels = 5
 			}
 			if brightnessLevels < 2 || brightnessLevels > 10 {
-				return nil, nil, fmt.Errorf("brightness_levels must be between 2 and 10, got %d", brightnessLevels)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "brightness_levels must be between 2 and 10, got %d", brightnessLevels)
 			}
 
 			edgeThreshold := 30
@@ -102,7 +103,7 @@ func RegisterAnalysisTools(server *mcp.Server, client *aseprite.Client, gen *ase
 				edgeThreshold = *input.EdgeThreshold
 			}
 			if edgeThreshold < 0 || edgeThreshold > 255 {
-				return nil, nil, fmt.Errorf("edge_threshold must be between 0 and 255, got %d", edgeThreshold)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "edge_threshold must be between 0 and 255, got %d", edgeThreshold)
 			}
 
 			// Keep the existing Go decoders; render unsupported advertised

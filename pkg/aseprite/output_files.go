@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"io"
 	"os"
 	"path/filepath"
@@ -55,7 +56,7 @@ func withOutputFilesReplace(ctx context.Context, paths []string, fn func([]strin
 				return fmt.Errorf("output must not alias a bound source: %s", path)
 			}
 			if !scopeOf(ctx).locked[key] {
-				return fmt.Errorf("file_changed: output target changed before staging")
+				return diagnostics.Errorf("file_changed", "file_changed: output target changed before staging")
 			}
 			item := &stagedOutput{path: path, original: original}
 			items = append(items, item)
@@ -147,7 +148,7 @@ func withOutputFilesReplace(ctx context.Context, paths []string, fn func([]strin
 				continue
 			}
 			if err := replace(item.staged, item.original); err != nil {
-				return rollback(fmt.Errorf("file_commit_failed: %w", err))
+				return rollback(diagnostics.Errorf("file_commit_failed", "file_commit_failed: %w", err))
 			}
 			item.committed = true
 		}
@@ -219,7 +220,7 @@ func (item *stagedOutput) prepare(ctx context.Context) error {
 			return err
 		}
 		if backup.hash != item.before.hash {
-			return fmt.Errorf("file_changed: output changed while backing up")
+			return diagnostics.Errorf("file_changed", "file_changed: output changed while backing up")
 		}
 	}
 	return nil
@@ -231,17 +232,17 @@ func (item *stagedOutput) validateOriginal() error {
 		return err
 	}
 	if path != item.original {
-		return fmt.Errorf("file_changed: output path changed")
+		return diagnostics.Errorf("file_changed", "file_changed: output path changed")
 	}
 	current, err := snapshot(item.original)
 	if !item.existed {
 		if !os.IsNotExist(err) {
-			return fmt.Errorf("file_changed: output appeared during export")
+			return diagnostics.Errorf("file_changed", "file_changed: output appeared during export")
 		}
 		return nil
 	}
 	if err != nil || !os.SameFile(item.before.info, current.info) || item.before.hash != current.hash || item.before.info.Mode() != current.info.Mode() {
-		return fmt.Errorf("file_changed: output changed during export")
+		return diagnostics.Errorf("file_changed", "file_changed: output changed during export")
 	}
 	return checkSingleLink(item.original, current.info)
 }

@@ -1,6 +1,6 @@
 # 작업 이력 및 undo (SAFE-04)
 
-상태: 구현 브랜치 / Unreleased. SAFE-03 snapshot/restore는 PR #23으로 develop `e0304bd`에 병합됐다.
+상태: PR #24로 develop `7f439a0`에 병합 / Unreleased. SAFE-03 snapshot/restore는 PR #23으로 develop `e0304bd`에 병합됐다.
 
 ## 사용법과 범위
 

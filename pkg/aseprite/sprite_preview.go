@@ -3,6 +3,7 @@ package aseprite
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,7 +21,7 @@ func WithSpritePreview(ctx context.Context, path string, fn func(context.Context
 		scope := scopeOf(ctx)
 		key := pathKey(original)
 		if !scope.locked[key] {
-			return fmt.Errorf("file_changed: preview source target changed")
+			return diagnostics.Errorf("file_changed", "file_changed: preview source target changed")
 		}
 		if _, bound := scope.sprites[key]; bound {
 			return fmt.Errorf("sprite_preview_scope: source already bound to an operation")
@@ -35,11 +36,11 @@ func WithSpritePreview(ctx context.Context, path string, fn func(context.Context
 				return err
 			}
 			if currentPath != original {
-				return fmt.Errorf("file_changed: preview source path changed")
+				return diagnostics.Errorf("file_changed", "file_changed: preview source path changed")
 			}
 			current, err := snapshot(original)
 			if err != nil || !os.SameFile(before.info, current.info) || before.hash != current.hash || before.info.Mode() != current.info.Mode() {
-				return fmt.Errorf("file_changed: source changed during preview")
+				return diagnostics.Errorf("file_changed", "file_changed: source changed during preview")
 			}
 			return ctx.Err()
 		}
@@ -75,7 +76,7 @@ func WithSpritePreview(ctx context.Context, path string, fn func(context.Context
 			return err
 		}
 		if copied.hash != before.hash {
-			return fmt.Errorf("file_changed: source changed while copying for preview")
+			return diagnostics.Errorf("file_changed", "file_changed: source changed while copying for preview")
 		}
 		if err := validate(); err != nil {
 			return err

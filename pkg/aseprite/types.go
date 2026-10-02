@@ -13,6 +13,7 @@ package aseprite
 
 import (
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"regexp"
 	"strconv"
 	"strings"
@@ -66,7 +67,7 @@ func (c *Color) FromHex(hex string) error {
 	hex = strings.TrimPrefix(hex, "#")
 
 	if !hexColorPattern.MatchString("#" + hex) {
-		return fmt.Errorf("invalid hex color format: %q (expected #RRGGBB or #RRGGBBAA)", hex)
+		return diagnostics.Errorf("invalid_arguments", "invalid hex color format: %q (expected #RRGGBB or #RRGGBBAA)", hex)
 	}
 
 	// Parse RGB

@@ -52,6 +52,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Changed
 
+- Preserve successful tool payloads and warnings while adding namespaced request IDs in MCP response metadata. Normalize tool error text into a redacted JSON error/code envelope; preserve JSON-RPC validation errors with correlation data. Bundled CLI non-debug logs redact nonessential properties. See `docs/ERRORS.md`.
+
 - Quantization and reference analysis share deterministic farthest-point k-means initialization (PR #22), so repeated preview/apply calls on the same input reproduce the operation result.
 
 - Go baseline updated to 1.25 and MCP Go SDK to 1.4.1 (#5).
