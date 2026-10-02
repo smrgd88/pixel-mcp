@@ -33,7 +33,7 @@ func withInputPath[I any](input I, field, path string) I {
 	return v.Interface().(I)
 }
 
-func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handler func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error)) func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error) {
+func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handler func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error), stores ...*aseprite.SnapshotStore) func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error) {
 	return func(ctx context.Context, req *mcp.CallToolRequest, input I) (*mcp.CallToolResult, O, error) {
 		source := inputPath(input, "SpritePath")
 		if source == "" {
@@ -71,6 +71,17 @@ func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handle
 			sheetOutputs = []string{target, spritesheetDataPath(target)}
 			paths = append(paths, sheetOutputs[1])
 		}
+
+		var history *aseprite.SnapshotStore
+		if len(stores) > 0 && stores[0] != nil && historyEdit(tool, input) {
+			history = stores[0]
+			root, err := history.ReservationPath()
+			if err != nil {
+				var zero O
+				return nil, zero, err
+			}
+			paths = append(paths, root)
+		}
 		err := aseprite.WithFileLocks(ctx, paths, func(ctx context.Context) error {
 			// Keep argument validation and missing-file errors in the existing handlers.
 			if _, e := os.Stat(source); e != nil {
@@ -102,6 +113,9 @@ func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handle
 				}
 			}
 
+			if history != nil && !readOnly {
+				return history.WithOperation(ctx, source, tool, func(ctx context.Context) error { return call(ctx, input) })
+			}
 			return aseprite.WithSpriteAccess(ctx, source, !readOnly, func(ctx context.Context) error { return call(ctx, input) })
 		})
 		if err != nil {
@@ -157,4 +171,17 @@ func validateSheetOutputs(source string, outputs []string) error {
 		infos = append(infos, destInfo)
 	}
 	return nil
+}
+
+// Explicit exclusions mirror the existing protection wrapper: only existing
+// single-file edits are eligible; outputs/new files have different undo semantics.
+func historyEdit(tool string, input any) bool {
+	switch tool {
+	case "get_sprite_info", "get_pixels", "get_palette", "analyze_palette_harmonies", "analyze_reference", "export_sprite", "export_spritesheet", "save_as", "downsample_image":
+		return false
+	}
+	if aa, ok := input.(SuggestAntialiasingInput); ok && !aa.AutoApply {
+		return false
+	}
+	return true
 }

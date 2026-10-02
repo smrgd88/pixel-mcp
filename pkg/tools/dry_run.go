@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/willibrandon/mtlog/core"
 	"github.com/willibrandon/pixel-mcp/pkg/aseprite"
+	"github.com/willibrandon/pixel-mcp/pkg/config"
 )
 
 // DryRunPreview is an executed simulation, not an estimated or persistent edit.
@@ -40,13 +40,13 @@ func (o *FlattenLayersOutput) setDryRunPreview(p *DryRunPreview)    { o.DryRun =
 
 // This wrapper is deliberately registered only for operations whose source
 // mutations all go through Client.ExecuteLua and have no persistent side outputs.
-func maybeWrapWithDryRun[I dryRunInput, O dryRunOutput](name string, client *aseprite.Client, logger core.Logger, enable bool, timeout time.Duration, handler func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error)) func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error) {
-	apply := wrapWithFileProtection(name, timeout, handler)
+func maybeWrapWithDryRun[I dryRunInput, O dryRunOutput](name string, client *aseprite.Client, logger core.Logger, cfg *config.Config, handler func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error)) func(context.Context, *mcp.CallToolRequest, I) (*mcp.CallToolResult, O, error) {
+	apply := wrapWithFileProtection(name, cfg.Timeout, handler, configuredHistory(cfg))
 	wrapped := func(ctx context.Context, req *mcp.CallToolRequest, input I) (*mcp.CallToolResult, O, error) {
 		if !input.dryRunRequested() {
 			return apply(ctx, req, input)
 		}
-		ctx, cancel := context.WithTimeout(ctx, timeout)
+		ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 		defer cancel()
 		source := inputPath(input, "SpritePath")
 		var result *mcp.CallToolResult
@@ -87,7 +87,7 @@ func maybeWrapWithDryRun[I dryRunInput, O dryRunOutput](name string, client *ase
 		}
 		return result, output, nil
 	}
-	if enable {
+	if cfg.EnableTiming {
 		return wrapWithTiming(name, logger, wrapped)
 	}
 	return wrapped

@@ -35,6 +35,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
+- Opt-in `enable_history` records successful in-place sprite edits using SAFE-03 snapshots. Add `list_operation_history` and guarded `undo_last_operation`, with pending-transition recovery, before/after hashes, and retry protection through expected operation IDs. See `docs/HISTORY.md`.
+
 - Add `create_snapshot`, `list_snapshots`, `restore_snapshot`, and `delete_snapshot` with byte-exact copies, mandatory pre-restore backup, atomic replacement, private storage, and 100-entry/512 MiB/7-day retention. Optional `snapshot_dir` overrides the durable store. See `docs/SNAPSHOTS.md`.
 
 - Optional `dry_run` for `quantize_palette`, `apply_auto_shading`, and `flatten_layers`: execute the same operation on a disposable sprite copy, return before/after state and potential warnings, and preserve the source. Actual edit responses retain their existing shape. See `docs/DRY_RUN.md`.

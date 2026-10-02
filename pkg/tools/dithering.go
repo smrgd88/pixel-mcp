@@ -39,7 +39,7 @@ func RegisterDitheringTools(server *mcp.Server, client *aseprite.Client, gen *as
 			Name:        "draw_with_dither",
 			Description: "Fill a region with one of 16 ordered, texture, or Floyd-Steinberg dithering patterns. Omitted or null density defaults to 0.5; explicit 0 fills color1 and 1 fills color2. Interior density values control ordered matrix thresholds or ranked texture coverage. Texture .5 preserves the legacy pattern, not necessarily a 50/50 ratio. Floyd density biases a horizontal gradient toward color2; .5 preserves the legacy gradient for widths greater than one. Exact rendered color ratios are not guaranteed.",
 		},
-		maybeWrapWithTiming("draw_with_dither", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input DrawWithDitherInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
+		maybeWrapConfigured("draw_with_dither", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input DrawWithDitherInput) (*mcp.CallToolResult, *struct{ Success bool }, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("draw_with_dither tool called",
 				"sprite", input.SpritePath,

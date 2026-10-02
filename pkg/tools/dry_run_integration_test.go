@@ -183,7 +183,9 @@ func TestDryRunErrorAfterCopyMutationDoesNotPublish(t *testing.T) {
 	before, err := os.ReadFile(p)
 	require.NoError(t, err)
 	logger := mtlog.New(mtlog.WithMinimumLevel(core.ErrorLevel))
-	handler := maybeWrapWithDryRun("flatten_layers", f.client, logger, false, 5*time.Second, func(ctx context.Context, _ *mcp.CallToolRequest, input FlattenLayersInput) (*mcp.CallToolResult, *FlattenLayersOutput, error) {
+	cfg := testutil.LoadTestConfig(t)
+	cfg.Timeout = 5 * time.Second
+	handler := maybeWrapWithDryRun("flatten_layers", f.client, logger, cfg, func(ctx context.Context, _ *mcp.CallToolRequest, input FlattenLayersInput) (*mcp.CallToolResult, *FlattenLayersOutput, error) {
 		_, err := f.client.ExecuteLua(ctx, f.gen.FlattenLayers(), input.SpritePath)
 		if err != nil {
 			return nil, nil, err

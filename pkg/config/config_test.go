@@ -268,7 +268,7 @@ func writeJSON(t *testing.T, path string, value any) {
 func TestSnapshotDirectoryConfig(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.json")
 	dir := filepath.Join(t.TempDir(), "recovery")
-	data, err := json.Marshal(map[string]any{"snapshot_dir": dir})
+	data, err := json.Marshal(map[string]any{"snapshot_dir": dir, "enable_history": true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,6 +278,9 @@ func TestSnapshotDirectoryConfig(t *testing.T) {
 	var cfg Config
 	if err = cfg.loadFromFile(path); err != nil {
 		t.Fatal(err)
+	}
+	if !cfg.EnableHistory {
+		t.Fatal("enable_history not preserved")
 	}
 	if cfg.SnapshotDir != dir {
 		t.Fatalf("snapshot_dir not preserved: %q", cfg.SnapshotDir)

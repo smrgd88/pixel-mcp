@@ -95,7 +95,7 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "export_sprite",
 			Description: "Export sprite to PNG, GIF, JPG, or BMP. All-frame PNG/JPG/BMP exports use numbered files (stem_0001.ext etc.) and return files in frame order. exported_path and file_size identify the first real file. Single-frame exports and animated GIF retain a single output path. The output extension must match format.",
 		},
-		maybeWrapWithTiming("export_sprite", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ExportSpriteInput) (*mcp.CallToolResult, *ExportSpriteOutput, error) {
+		maybeWrapConfigured("export_sprite", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input ExportSpriteInput) (*mcp.CallToolResult, *ExportSpriteOutput, error) {
 			result, err := exportSprite(ctx, client, gen, input)
 			return nil, result, err
 		}),
@@ -108,7 +108,7 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "export_spritesheet",
 			Description: "Export animation frames as spritesheet with layout options.",
 		},
-		maybeWrapWithTiming("export_spritesheet", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ExportSpritesheetInput) (*mcp.CallToolResult, *ExportSpritesheetOutput, error) {
+		maybeWrapConfigured("export_spritesheet", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input ExportSpritesheetInput) (*mcp.CallToolResult, *ExportSpritesheetOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("export_spritesheet tool called", "sprite_path", input.SpritePath, "output_path", input.OutputPath, "layout", input.Layout)
 
@@ -178,7 +178,7 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "import_image",
 			Description: "Import an external image file as a layer in the sprite.",
 		},
-		maybeWrapWithTiming("import_image", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input ImportImageInput) (*mcp.CallToolResult, *ImportImageOutput, error) {
+		maybeWrapConfigured("import_image", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input ImportImageInput) (*mcp.CallToolResult, *ImportImageOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("import_image tool called", "sprite_path", input.SpritePath, "image_path", input.ImagePath, "layer", input.LayerName)
 
@@ -239,7 +239,7 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			Name:        "save_as",
 			Description: "Save sprite to a new .aseprite file path.",
 		},
-		maybeWrapWithTiming("save_as", logger, cfg.EnableTiming, cfg.Timeout, func(ctx context.Context, req *mcp.CallToolRequest, input SaveAsInput) (*mcp.CallToolResult, *SaveAsOutput, error) {
+		maybeWrapConfigured("save_as", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input SaveAsInput) (*mcp.CallToolResult, *SaveAsOutput, error) {
 			opLogger := logger.WithContext(ctx)
 			opLogger.Debug("save_as tool called", "sprite_path", input.SpritePath, "output_path", input.OutputPath)
 

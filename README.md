@@ -104,3 +104,7 @@ Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent in
 ## Snapshot / restore (Unreleased)
 
 `create_snapshot`, `list_snapshots`, `restore_snapshot`, `delete_snapshot` provide recovery of saved sprite bytes across MCP calls. Restore creates a backup first. Copies expire after 7 days; the store is limited to 100 snapshots / 512 MiB. Optional absolute `snapshot_dir` config overrides `os.UserConfigDir()/pixel-mcp/snapshots`; this is separate from `temp_dir`. See [contract and limits](docs/SNAPSHOTS.md).
+
+## Operation history / undo (Unreleased)
+
+Set `"enable_history": true` in the config to record successful in-place edits (default false). Use `list_operation_history` with `sprite_path`, then call `undo_last_operation` with that path and the latest applied `expected_operation_id`. External changes and stale IDs are rejected. Automatic copies share snapshot capacity and expiry; see [history contract](docs/HISTORY.md).
