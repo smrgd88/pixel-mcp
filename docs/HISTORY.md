@@ -64,3 +64,7 @@ undo는 최신 미복원 작업 ID와 현재 파일이 그 작업의 after 해�
 - 문서 상대 링크와 diff 공백 검사 통과. 과거 기록 전체가 만료/삭제되면 이력이 사라지고, 같은 저장소의 편집은 직렬화된다. 이러한 보존·동시성 한계는 위 계약을 따른다.
 
 최종 판정: PASS.
+
+## 레이어·그룹 후보
+
+`set_layer_properties`, `move_layer`, `create_layer_group`은 성공한 실제 변경만 각 tool 이름으로 기록한다. no-op·stale·잠금 거부·실패/취소는 기록하지 않는다. 새 구조 ID는 편집 후 재조회하며 byte-exact undo 후에도 다시 조회한다. [계약과 검증](LAYER_PROPERTIES.md).

@@ -2,7 +2,7 @@
 
 작업: `[BE][FEATURE] cel 위치 및 불투명도 편집 + 관련 문서 최신화`.
 기준: `origin/develop` `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f` (PR #29 RM-FIX-01 및 PR #30 상세 조회 병합 포함).
-`feature/be-cel-properties`에서 구현한 Unreleased 기능이다. develop 병합·태그·배포와 구분한다. 플러그인 저장소와 bundled binary는 이번 범위 밖이다.
+PR #31로 develop `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732`에 병합한 Unreleased 기능이다. 아래 검증·리뷰 기록은 병합 전 당시 이력이며 태그·배포와 구분한다. 플러그인 저장소와 bundled binary는 이번 범위 밖이다.
 
 ## 호출 계약
 
@@ -68,7 +68,7 @@ GUI 등 비협력 writer를 파일시스템 CAS처럼 배제하지는 않는다.
 
 픽셀 편집·image resize·layer 속성·cel unlink·tag 편집·색상 모드 변환·export 추가는 제외한다. Aseprite가 지원하는 저장 metadata의 보존을 검사하지만 미지의 future native chunk나 모든 extension metadata, ACL/xattr 전체의 byte 보존을 약속하지 않는다. GAP-02는 부분 완료이며 unlink와 GAP-01은 후속이다.
 
-## 검증
+## 검증 (PR #31 병합 전 당시 기록)
 
 실행 결과와 셀프리뷰는 아래 최종 기록을 따른다. 새 회귀는 세 모드의 저장·재열기, root/nested/중복 이름, boundary/zero/null/invalid 입력, native 링크와 독립 동일픽셀 이미지, stale·중복·동시 요청, 잠금/숨김/특수 레이어 거부, metadata/order/palette 보존, render 및 byte-exact undo를 검사한다. 실패 주입은 같은 공통 wrapper에서 실제 Lua 저장 뒤 오류·취소·외부 변경·snapshot 용량 부족을 검사한다. fixture 생성에 사용한 NewLayer reference는 바닥에 삽입되므로 저장된 구조를 기준으로 검사한다.
 

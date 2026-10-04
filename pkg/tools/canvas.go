@@ -118,6 +118,7 @@ type GetSpriteInfoOutput struct {
 // All tools operate on sprite files saved to disk. Canvas creation generates
 // a new .aseprite file in the configured temp directory.
 func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *aseprite.LuaGenerator, cfg *config.Config, logger core.Logger) {
+	registerLayerPropertyTools(server, client, gen, cfg, logger)
 	// Register create_canvas tool
 	mcp.AddTool(
 		server,

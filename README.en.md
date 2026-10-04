@@ -21,13 +21,13 @@ This README describes `develop`. Fork fixes and recovery features are **Unreleas
 
 ## MCP tools
 
-The `develop` baseline registers 57 tools through PR #30; this cel editing branch registers 58 with one new Unreleased tool (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
+The `develop` baseline registers 58 tools through PR #31; this layer/group candidate registers 61 with three new Unreleased tools (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
 
 ### Canvas and layers
 
-`create_canvas`, `add_layer`, `delete_layer`, `flatten_layers`, `get_sprite_info`
+`create_canvas`, `add_layer`, `delete_layer`, `flatten_layers`, `get_sprite_info`, `set_layer_properties`, `move_layer`, `create_layer_group`
 
-Create, remove, and flatten canvases and layers, and inspect sprite metadata.
+Create, remove, and flatten canvases and layers, and inspect sprite metadata. [Layer/group editing](docs/LAYER_PROPERTIES.md) uses a fresh structure revision for names, visibility, locking, raster opacity/blend, ordering, group creation and reparenting. Requery structural IDs after edits. New tools exclude group opacity/blend, special layers and recursive deletion.
 
 ### Drawing
 
