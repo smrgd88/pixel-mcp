@@ -165,7 +165,7 @@ Clients using a `mcpServers` JSON format can adapt this example in their own con
 
 ## Contributing
 
-For repository development, see the [English Codex contributor instructions](AGENTS.en.md) and [testing guide](docs/TESTING.md). Codex discovers the canonical [AGENTS.md](AGENTS.md); the English file is a synchronized translation.
+For repository development, see the [Codex contributor instructions](AGENTS.md) and [testing guide](docs/TESTING.md).
 
 ## License
 
