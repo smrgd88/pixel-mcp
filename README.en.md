@@ -21,7 +21,7 @@ This README describes `develop`. Fork fixes and recovery features are **Unreleas
 
 ## MCP tools
 
-The `develop` baseline registers 57 tools through PR #30; this cel editing branch registers 58 with one new Unreleased tool (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
+The `develop` baseline registers 58 tools through PR #31; this tag editing branch registers 60 with two new Unreleased tools (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
 
 ### Canvas and layers
 
@@ -57,9 +57,11 @@ Transform, resize, crop, and outline sprites.
 
 ### Animation
 
-`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`
+`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`, `get_sprite_tags`, `set_tag_properties`
 
 Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserves shared image identity after saving and rejects an already occupied target cel to protect its data.
+
+[Tag inspection and editing](docs/TAG_EDITING.md) reads saved order, names, inclusive ranges, directions, repeats and colors, and edits an existing tag using revision and tag_id. Refresh after range/tag changes. Existing create/delete contracts are unchanged.
 
 ### Inspection and file operations
 

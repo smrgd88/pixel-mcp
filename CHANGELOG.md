@@ -35,7 +35,9 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
-- Add `set_cel_properties` for revision-guarded sprite-absolute position and opacity edits, with explicit linked-set consent, saved-result verification, file protection and opt-in history/undo. Add `revision` to structure inspection without changing existing required inputs. The tool inventory is now 58 on this feature branch (57 in develop through PR #30). See [contract and verification](docs/CEL_PROPERTIES.md).
+- Add read-only `get_sprite_tags` and revision-guarded `set_tag_properties` for names, inclusive ranges, four playback directions and repeats. Preserve duplicate/empty existing names, metadata and native sharing; use saved order IDs and return the new ID after reordering. Existing `create_tag`/`delete_tag` contracts remain unchanged. This branch registers 60 tools (58 in develop through PR #31). See [contract and verification](docs/TAG_EDITING.md).
+
+- Add `set_cel_properties` for revision-guarded sprite-absolute position and opacity edits, with explicit linked-set consent, saved-result verification, file protection and opt-in history/undo. Add `revision` to structure inspection without changing existing required inputs. Merged into develop in PR #31; the baseline inventory is 58. See [contract and verification](docs/CEL_PROPERTIES.md).
 
 - Add read-only `get_sprite_structure` with recursive structural layer IDs, bounded layer/frame queries, cel existence/bounds/opacity/z-index and native image-sharing references. Preserve `get_sprite_info`; exclude queries from save/history. See [contract and verification](docs/SPRITE_STRUCTURE.md). Cel position/opacity editing is described above; unlink remains pending.
 
