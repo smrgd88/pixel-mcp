@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -269,6 +270,43 @@ func TestCelPropertiesSpecialLayers(t *testing.T) {
 			args := celArgs(t, f, p, tc.id, 1)
 			args["x"] = 1
 			rejectCel(t, f, p, args)
+		})
+	}
+}
+
+// A native-looking alias must not permit saveAs to pick a lossy encoder from
+// the canonical target name. In particular, a single-frame PNG can preserve the
+// selected cel pixels while silently discarding hidden layers and metadata.
+func TestCelPropertiesCanonicalSaveFormat(t *testing.T) {
+	for _, ext := range []string{".png", ".gif", ".bmp", ".ase", ".aseprite", ".ASE"} {
+		t.Run(ext, func(t *testing.T) {
+			f, _ := newStructureFixture(t)
+			p := f.sprite(aseprite.ColorModeRGB)
+			f.lua(p, `local s=app.activeSprite
+local im=Image(s.width,s.height);im:clear(app.pixelColor.rgba(123,45,67,255))
+s:newCel(s.layers[1],1,im,Point(0,0));s.layers[1]:cel(1).opacity=128
+local hidden=s:newLayer();hidden.name="keep hidden";hidden.isVisible=false
+s:newCel(hidden,1,Image(im),Point(0,0));s.data="keep metadata"
+s:saveAs(s.filename)`)
+			canonical := filepath.Join(t.TempDir(), "actual"+ext)
+			require.NoError(t, os.Rename(p, canonical))
+			require.NoError(t, os.Symlink(canonical, p))
+			args := celArgs(t, f, p, "1", 1)
+			args["opacity"] = 255
+			if ext == ".png" || ext == ".gif" || ext == ".bmp" {
+				rejectCel(t, f, p, args, "Native save filename required")
+			} else {
+				out := f.call("set_cel_properties", args)
+				require.Equal(t, true, out["success"])
+				require.Len(t, historyOperations(f, p), 1)
+			}
+			// Both rejection and successful native save preserve all unrelated data.
+			f.lua(p, `local s=app.activeSprite
+assert(#s.layers==2 and #s.frames==1 and s.data=="keep metadata")
+assert(s.layers[2].name=="keep hidden" and not s.layers[2].isVisible)`)
+			destination, err := os.Readlink(p)
+			require.NoError(t, err)
+			require.Equal(t, canonical, destination)
 		})
 	}
 }

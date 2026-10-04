@@ -16,6 +16,12 @@ func (g *LuaGenerator) SetCelProperties(layerID string, frame int, x, y, opacity
 	}
 	return fmt.Sprintf(`local spr=app.activeSprite
 if not spr then error("No active sprite") end
+-- Staging retains the canonical target basename, not a symlink alias name.
+-- saveAs chooses its encoder from this filename, so validate it before editing.
+local saveName=spr.filename:lower()
+if not saveName:match("%%.ase$") and not saveName:match("%%.aseprite$") then
+ error("Native save filename required")
+end
 local wanted,frame="%s",%d
 local x,y,opacity=%s,%s,%s
 local allowLinked=%t

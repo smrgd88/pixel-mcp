@@ -23,7 +23,7 @@
 
 | 입력 | 계약 |
 | --- | --- |
-| `sprite_path` | 필수. `.ase`/`.aseprite` 저장 파일. 대소문자 확장자 허용 |
+| `sprite_path` | 필수. `.ase`/`.aseprite` 저장 파일. 요청 경로와 symlink 해석 후 실제 저장 경로 모두 native 확장자여야 함. 대소문자 확장자 허용 |
 | `layer_id` | 필수. 조회의 1-based 형제 index 경로. 중복 이름·그룹 내부 대상을 이름 검색 없이 선택. 선행 0·이름 경로 거부 |
 | `frame_number` | 필수. 1…65535 범위 정수이며 실제 문서 frame 안에 기존 cel이 있어야 함 |
 | `expected_revision` | 필수. 조회 시 파일 전체 bytes의 SHA-256. 잘못된 형식 거부, 불일치는 `file_changed` |
@@ -58,7 +58,7 @@ GUI 등 비협력 writer를 파일시스템 CAS처럼 배제하지는 않는다.
 
 ## 오류·복구
 
-입력 형식은 MCP schema/RPC, Go 범위 검사는 `invalid_arguments`, stale revision은 `file_changed`, 대상/잠금/공유 동의/변경 없음/저장·재열기 검증 실패는 기존 `lua_error` 경로다. 누락 파일은 `not_found`. 기존 request ID, 정적 공개 오류 메시지, redaction, capability 검사 및 timeout/cancel을 사용한다. Lua 상세 이유는 debug 진단이고 공개 오류에 경로·사용자 metadata를 노출하지 않는다.
+입력 형식은 MCP schema/RPC, Go 범위 검사는 `invalid_arguments`, stale revision은 `file_changed`, 실제 저장 경로의 비native 확장자/대상/잠금/공유 동의/변경 없음/저장·재열기 검증 실패는 기존 `lua_error` 경로다. 누락 파일은 `not_found`. 기존 request ID, 정적 공개 오류 메시지, redaction, capability 검사 및 timeout/cancel을 사용한다. Lua 상세 이유는 debug 진단이고 공개 오류에 경로·사용자 metadata를 노출하지 않는다.
 
 오류·취소·precondition 불일치 시 이번 변경을 원본에 발행하지 않는다. 외부 writer가 만든 bytes는 되돌리지 않는다. `enable_history=true`이면 성공한 실제 변경만 `set_cel_properties` 이력으로 기록한다. 편집 전 snapshot, 용량/TTL, undo 전 백업과 expected operation ID 계약은 [HISTORY](HISTORY.md) 그대로다. 비활성 기본값에서는 자동 undo 사본을 만들지 않는다. Lua transaction은 process 간 native undo나 전원 장애 복구가 아니다.
 
@@ -85,7 +85,7 @@ GUI 등 비협력 writer를 파일시스템 CAS처럼 배제하지는 않는다.
 - 별도 PBT/fuzz suite는 저장소에서 발견하지 못했다. 고정 실제 native fixture와 경계값/관계/byte 불변식으로 검사했다. macOS 전체/race·앱 UI·특수 레이어의 편집/혼합 조합 전수 검사는 미실행이며, 지원 하한 전체 검사는 NEXT_STEPS 정책에 따라 반복하지 않았다. tilemap/reference/background **거부** 검증을 해당 기능 편집 지원으로 해석하지 않는다. 기본 suite의 모든 조건부 skip을 별도로 전수 감사하지는 않았다.
 - 로그와 바이너리: 로컬 `/tmp/pixel-mcp-cel-evidence/`의 `linux-full.log`, `linux-focused-and-cross.log`, `macos-tools.log`, `macos-server.log`, `macos-aseprite.log`(최초 실패), `macos-aseprite-canonical.log`(재검증). 임시 로컬 증거이며 배포 artifact는 아니다.
 
-### 셀프리뷰
+### 셀프리뷰 (초기 후보 b487647의 이력)
 
 `convergent-code-review` backend lens의 review-and-repair 모드로 base/initial HEAD/merge-base `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f` 이후 변경 24개 파일(Go 11, 문서 13)을 검토했다. schema/정수 직렬화 → 구조 ID와 revision → native 공유 집합 → transaction/재열기 → snapshot/atomic publish → diagnostics/기존 소비자 계약을 대조했다.
 
@@ -109,3 +109,23 @@ Notes:
 3. 위 미실행 범위와 macOS 기존 테스트의 canonical temp 전제를 유지한다. 독립 외부 리뷰·원격 PR CI는 로컬 검증과 별개이며 develop/main 병합·태그·배포는 이 작업에서 수행하지 않는다.
 
 판정: **PASS_WITH_NOTES**. GAP-02 전체 완료가 아니며, feature 브랜치와 워크트리는 미병합 상태이므로 정리하지 않는다.
+
+### 추가 셀프리뷰 및 canonical 저장 형식 수정 (2026-10-04)
+
+작업: `[BE][REVIEW] cel 속성 편집 재검토`. 기준/merge-base `eca9e83`, 시작 HEAD `b487647`. PR #31의 최초 HEAD에 대한 GitHub CI `test`가 통과한 것을 확인한 뒤, 이전 지적 목록과 별개로 PR 전체 24개 파일과 저장·식별·복구 경계를 다시 검토했다. 위 초기 리뷰에서 발견하지 못했던 다음 데이터 손실 경로를 실제 Aseprite로 재현했다.
+
+| ID | 우선순위·최종 상태 | 재현·원인·수정·검증 |
+| --- | --- | --- |
+| BE-P1-001 | P1 · VERIFIED | `alias.aseprite` symlink가 `.png` 이름의 native 문서를 가리킬 때 요청 경로만 검사해 통과했다. 1-frame/2-layer 문서의 cel opacity를 128→255로 바꾸면 `saveAs`가 canonical staging 이름으로 PNG를 선택했고, 대상 cel만 검사하는 재열기 검증도 통과했다. MCP는 success=true였지만 layer_count는 2→1, 파일은 native→PNG로 바뀌고 숨김 레이어·문서 metadata가 소실됐다. `lua_cel_properties.go`에서 실제 `spr.filename`의 native 확장자를 mutation 전에 확인하도록 수정했다. `TestCelPropertiesCanonicalSaveFormat`으로 `.png/.gif/.bmp` target 거부 시 bytes/inode/mode/mtime/history 및 metadata 보존, `.ase/.aseprite/.ASE` target의 정상 저장·공유 alias 보존을 검사했다 |
+
+- macOS 실제 Aseprite `1.3.18.2-arm64`에서 수정 전 MCP 재현을 수행했다. 임시 fixture만 사용했고 기존 사용자 문서는 변경하지 않았다. 자동 history가 꺼진 기본 설정에서도 손실되는 경로였다. 원인은 revision 일치나 atomic publication의 실패가 아니라, 이미 잘못된 형식으로 생성된 staging을 성공으로 간주한 것이었다.
+- Linux Docker Go 1.25.14/Aseprite `1.3.18.3-dev`: 새 6-case 실제 회귀 통과(4.268초). 이어 `go build -p 1 ./...`, `go vet -p 1 ./...`, 초기 검증과 같은 관련 aseprite/server/tools 필터의 `go test -p 1 -count=1 -race -tags=integration ... -v` 통과(tools 50.264초). `GOMAXPROCS=2`, 격리 config, timeout 30초를 유지했다.
+- 수정 소스로 macOS arm64 바이너리를 다시 빌드하고 `TestCelProperties|TestSpriteStructure|TestStructureInput`을 실행해 모두 통과했다. 새 canonical 파일명 검증과 기존 linked/undo/stale/오류·취소·history 회귀를 포함한다.
+- 전체 suite/전체 coverage는 이번 좁은 수정에서 로컬 재실행하지 않았다. 앞선 전체 통과 및 최초 PR CI와 위 수정 후 관련 검증을 구분한다. 수정 커밋의 GitHub CI는 push 후 별도로 실행된다. macOS 전체/race·앱 UI·하한 전체 suite 미실행 정책은 유지한다.
+- 초기 discovery 1회 → mutation cycle 1회 → repair-diff 1회 → closure 1회 → fresh-discovery 전체 1회, 총 review pass 4회. P1 1→0, P0/P2/P3 신규 0건, repair 이후·closure/fresh 신규 0건, repair 유발 결함·재개방·accepted/out-of-scope finding·미해결 0건. 기존 BE-P2-001은 재개방되지 않았다. 최종 후보 선택 이후 관련 변경/인증 무효화는 0회이며 이 결과 기록만 추가했다. 소요 시간은 별도 측정하지 않았다.
+- Reviewed: 기준부터 cel 기능·조회 revision·등록/diagnostics·회귀·문서 전체(24개 파일). Context: 기존 canonical path와 staging filename binding, Client, snapshot/history/atomic replace. Changed during repair: generator, cel integration test, 본 계약 문서 3개. Excluded: 다른 편집 도구의 전면 audit, plugin/binary·릴리스, layer/unlink/tag/mode/export 확장. 알려진 같은 결함을 다른 도구에도 확인했다는 뜻은 아니다.
+- 수정 후 최종 후보 manifest SHA-256은 `e1bfe7025209f7d87894f51151fe6970aa15c19ed885650890ba5ccbb57c2096`이다. 로그/manifest 및 수정 전 재현은 `/tmp/pixel-cel-rereview/`에 있다. `git diff --check`와 본 문서 상대 링크 검사 통과.
+
+Notes: 비협력 writer의 ABA/최종 검사 경쟁, 전체 공유 집합 비용·응답 크기, 위 미실행 범위는 그대로다. 실제 저장 target의 확장자가 `.ase`/`.aseprite`가 아닌 alias는 이제 명시적으로 거부하며, native 이름으로 저장한 후 조회해야 한다. feature 브랜치/워크트리는 유지하고 develop/main 병합은 수행하지 않는다.
+
+추가 리뷰 판정: **PASS_WITH_NOTES**. 재현된 P1을 수정·검증했으며 수정 diff와 전체 범위를 새로 검토한 결과 추가 차단 결함이 없어 종료한다.
