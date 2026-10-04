@@ -45,7 +45,10 @@ func readStructure(t *testing.T, f *behaviorFixture, args map[string]any) GetSpr
 	t.Helper()
 	r, err := f.session.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_sprite_structure", Arguments: args})
 	require.NoError(t, err)
-	require.False(t, r.IsError, "%+v", r.Content)
+	if r.IsError {
+		diagnostic, _ := json.Marshal(r)
+		t.Fatalf("get_sprite_structure failed: %s", diagnostic)
+	}
 	var out GetSpriteStructureOutput
 	require.NoError(t, json.Unmarshal([]byte(r.Content[0].(*mcp.TextContent).Text), &out))
 	return out

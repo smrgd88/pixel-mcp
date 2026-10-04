@@ -130,14 +130,14 @@ func TestSnapshotToolsRegistered(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 58 {
-		t.Fatalf("registered %d tools, want 58", len(list.Tools))
+	if len(list.Tools) != 59 {
+		t.Fatalf("registered %d tools, want 59", len(list.Tools))
 	}
 	names := map[string]bool{}
 	for _, tool := range list.Tools {
 		names[tool.Name] = true
 	}
-	for _, name := range []string{"create_snapshot", "list_snapshots", "restore_snapshot", "delete_snapshot", "list_operation_history", "undo_last_operation", "get_sprite_structure", "set_cel_properties"} {
+	for _, name := range []string{"create_snapshot", "list_snapshots", "restore_snapshot", "delete_snapshot", "list_operation_history", "undo_last_operation", "get_sprite_structure", "set_cel_properties", "unlink_cel"} {
 		if !names[name] {
 			t.Errorf("missing %s", name)
 		}
