@@ -1,6 +1,6 @@
 # 기능 지원 현황
 
-기준일: 2026-10-02 · 구현 기준: `develop`의 `7f439a0df1ec0d2d24ef6dabba6de4d30c2484f9`
+기준일: 2026-10-04 · 구현 기준: `develop`의 `65074051f5d3903124ead37367c7fc62d9e7e7f6`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -118,7 +118,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체와 export 출력 세트의 일반 오류 rollback (#18), [검증과 제외 범위](FILE_PROTECTION.md), R2 |
 | OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
-| OPS-03 | 오류·request ID·로그 계약 통일 | 구현 브랜치 / 부분 | [ERRORS](ERRORS.md): 오류와 추적 경계. 성공 payload 일괄 표준화는 별도 검토 |
+| OPS-03 | 오류·request ID·로그 계약 통일 | develop 반영 (PR #25) / 성공 payload 표준화 별도 | [ERRORS](ERRORS.md): 오류와 추적 경계. 성공 payload 일괄 표준화는 별도 검토 |
 
 ## 검증 근거와 갱신 규칙
 
