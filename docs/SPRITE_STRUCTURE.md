@@ -41,7 +41,7 @@
 | `opacity` | API가 제공하는 0–255 값. API가 nil인 group은 생략 |
 | `cels` | group은 `[]`. 나머지는 선택 frame마다 하나의 존재/부재 레코드 |
 
-`layer_id`는 런타임 메모리 ID나 파일에 저장하는 영구 UUID가 아니다. 같은 계층/형제 순서의 저장 파일을 재열면 동일하다. 이름만 바뀌어도 index 경로는 유지되지만 삽입·삭제·이동·재정렬 후에는 다른 레이어를 가리킬 수 있다. frame 번호도 삽입/삭제로 바뀐다. 파일을 편집하면 다시 조회해야 한다. 후속 cel 편집 작업에서 파일 전체 bytes의 SHA-256 `revision` 출력을 추가했다. Lua 조회 전후 해시를 비교하며, 페이지마다 revision이 다르면 처음부터 재조회한다. 서버가 페이지 snapshot을 고정·보관하지는 않는다. `set_cel_properties`만 구조 ID와 필수 `expected_revision`을 함께 수용하며, 기존 mutation tool 입력은 그대로다. 비협력 writer/ABA 및 내용 token의 한계는 [편집 계약](CEL_PROPERTIES.md#오래된-구조동시-변경-방어)을 따른다.
+`layer_id`는 런타임 메모리 ID나 파일에 저장하는 영구 UUID가 아니다. 같은 계층/형제 순서의 저장 파일을 재열면 동일하다. 이름만 바뀌어도 index 경로는 유지되지만 삽입·삭제·이동·재정렬 후에는 다른 레이어를 가리킬 수 있다. frame 번호도 삽입/삭제로 바뀐다. 파일을 편집하면 다시 조회해야 한다. 후속 cel 편집 작업에서 파일 전체 bytes의 SHA-256 `revision` 출력을 추가했다. Lua 조회 전후 해시를 비교하며, 페이지마다 revision이 다르면 처음부터 재조회한다. 서버가 페이지 snapshot을 고정·보관하지는 않는다. `set_cel_properties`는 구조 ID와 필수 `expected_revision`을 함께 수용하며, 기존 mutation tool 입력은 그대로다. 비협력 writer/ABA 및 내용 token의 한계는 [편집 계약](CEL_PROPERTIES.md#오래된-구조동시-변경-방어)을 따른다.
 
 | cel 필드 | 의미 |
 | --- | --- |
@@ -62,7 +62,7 @@
 
 RGB/grayscale/indexed의 group/raster를 검증한다. tilemap은 kind로 구분하나 편집·tileset/pixel 해석은 제공하지 않으며 이 작업의 검증 범위 밖이다. tilemap image 크기는 tile 단위일 수 있으므로 raster pixel 크기로 해석하지 않는다. reference layer의 확대 bounds가 아닌 native image 크기와 위치를 보고한다.
 
-선택·GUI 상태에 의존하지 않는 batch 조회이며 save/transaction/edit/history 기록을 수행하지 않는다. 파일 접근용 잠금·임시 Lua script는 공통 실행 기반의 부수 파일이다. 이 조회 도구는 편집하지 않는다. 후속 [cel 위치·opacity 편집](CEL_PROPERTIES.md)을 구현했으며 layer 편집, unlink, 태그 수정, 색상 모드 변환, R4 export 추가는 미구현이다. GAP-02 전체 완료가 아니다.
+선택·GUI 상태에 의존하지 않는 batch 조회이며 save/transaction/edit/history 기록을 수행하지 않는다. 파일 접근용 잠금·임시 Lua script는 공통 실행 기반의 부수 파일이다. 이 조회 도구는 편집하지 않는다. 후속 [cel 위치·opacity 편집](CEL_PROPERTIES.md)을 구현했으며 태그 상세 조회·수정은 [별도 브랜치](TAG_EDITING.md)에서 구현했다(미병합). layer 편집·unlink·R4 export 추가는 별도 진행 중이고 색상 모드 변환은 미구현이다. GAP-02 전체 완료가 아니다.
 
 ## 검증과 셀프리뷰 (PR #30 병합 전 당시 기록)
 

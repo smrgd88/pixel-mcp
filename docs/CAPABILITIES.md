@@ -1,12 +1,12 @@
 # 기능 지원 현황
 
-기준일: 2026-10-04 · 구현 기준: `develop`의 `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f`
+기준일: 2026-10-04 · 구현 기준: `develop`의 `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
 ## 기준과 상태
 
-- develop의 MCP 도구는 **57개**이며(PR #30 포함) 이번 cel 편집 브랜치는 **58개**다 (신규 편집은 미병합/Unreleased). SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
+- develop의 MCP 도구는 **58개**이며(PR #31 포함) 이번 태그 편집 브랜치는 **60개**다 (태그 신규 도구는 미병합/Unreleased). SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
 - `지원`은 MCP 입력으로 제공됨을 뜻한다. 공식 API 전체 옵션 지원이나 모든 조합의 실행 검증을 뜻하지 않는다.
 - 기능군은 `지원 / 부분 / 미지원 / 현재 구조 밖`, 개발 진행은 `예정 / 진행 / develop 반영 / 태그 포함`으로 구분한다.
 - 최초 태그는 로컬 `v0.1.0`부터 `v0.5.0`까지 코드에 도구가 존재하는지 확인한 결과다. GitHub Release 게시나 배포 artifact 검증을 의미하지 않는다.
@@ -83,7 +83,9 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-055 | 작업 이력 | `list_operation_history` | Unreleased | SAFE-04 (#24, develop 반영) | [history.go](../pkg/tools/history.go) |
 | MCP-056 | 작업 이력 | `undo_last_operation` | Unreleased | SAFE-04 (#24, develop 반영) | [history.go](../pkg/tools/history.go) |
 | MCP-057 | 상세 구조·cel 조회 | `get_sprite_structure` | Unreleased | GAP-02 조회 부분 (PR #30, develop 반영) | [structure.go](../pkg/tools/structure.go), [계약](SPRITE_STRUCTURE.md) |
-| MCP-058 | cel 위치·불투명도 | `set_cel_properties` | Unreleased | GAP-02 편집 부분 (이 브랜치, 미병합) | [cel_properties.go](../pkg/tools/cel_properties.go), [계약](CEL_PROPERTIES.md) |
+| MCP-058 | cel 위치·불투명도 | `set_cel_properties` | Unreleased | GAP-02 편집 부분 (PR #31, develop 반영) | [cel_properties.go](../pkg/tools/cel_properties.go), [계약](CEL_PROPERTIES.md) |
+| MCP-059 | 태그 상세 조회 | `get_sprite_tags` | Unreleased | GAP-03 (이 브랜치, 미병합) | [tags.go](../pkg/tools/tags.go), [계약](TAG_EDITING.md) |
+| MCP-060 | 태그 속성 수정 | `set_tag_properties` | Unreleased | GAP-03 (이 브랜치, 미병합) | [tags.go](../pkg/tools/tags.go), [계약](TAG_EDITING.md) |
 
 ## 공식 기능군 대비 차이
 
@@ -92,8 +94,8 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | ID | 공식 기능·근거 | 현재 상태와 제한 | 목표 |
 | --- | --- | --- | --- |
 | GAP-01 | [Layer](https://www.aseprite.org/api/layer/): 이름·가시성·잠금·opacity·blend mode·순서·그룹 | 부분: 추가·삭제·flatten만 제공, 속성과 그룹 편집 입력 없음 | R3 |
-| GAP-02 | [Sprite](https://www.aseprite.org/api/sprite/), [Cel](https://www.aseprite.org/api/cel/): 문서 구조·cel 관리 | 부분: 기본 정보·픽셀 조회와 link 제공. PR #30 상세 계층·cel 조회 develop 반영. 이번 브랜치에서 revision 사전조건과 위치/opacity 편집 구현; unlink는 미구현 ([조회](SPRITE_STRUCTURE.md), [편집](CEL_PROPERTIES.md)) | R3 |
-| GAP-03 | [Tag](https://www.aseprite.org/api/tag/): 애니메이션 태그 | 부분: 생성·삭제, forward/reverse/pingpong; 기존 태그 수정·상세 조회 도구 없음 | R3 |
+| GAP-02 | [Sprite](https://www.aseprite.org/api/sprite/), [Cel](https://www.aseprite.org/api/cel/): 문서 구조·cel 관리 | 부분: 기본 정보·픽셀 조회와 link 제공. PR #30 상세 계층·cel 조회 develop 반영. PR #31에서 revision 사전조건과 위치/opacity 편집 develop 반영; unlink는 미구현 ([조회](SPRITE_STRUCTURE.md), [편집](CEL_PROPERTIES.md)) | R3 |
+| GAP-03 | [Tag](https://www.aseprite.org/api/tag/): 애니메이션 태그 | 부분: 기존 생성·삭제 유지. 이번 브랜치에서 상세 조회와 revision 기반 이름/범위/방향/repeats 수정, pingpong_reverse 추가. 색상은 조회만, data/properties 편집 없음 ([계약](TAG_EDITING.md)); 미병합 | R3 |
 | GAP-04 | [CLI](https://www.aseprite.org/docs/cli/): 색상 모드 변환 | 부분: 생성 시 모드 선택·감색 시 indexed 변환; 범용 RGB/grayscale/indexed 전환 없음 | R3 |
 | GAP-05 | [CLI](https://www.aseprite.org/docs/cli/): export·sprite sheet | 부분: 4종 형식, 단일/전체 frame, 5종 sheet 배치·JSON; 태그/레이어/범위 선택 없음. trim/extrude는 false, 3종 padding은 동일 값 사용 | R4 |
 | GAP-06 | [Slice](https://www.aseprite.org/api/slice/): bounds·pivot·nine-slice | 미지원 | R4 |

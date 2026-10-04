@@ -76,8 +76,8 @@ RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 
 | 실제 R3 목록 | 다음 판단 |
 | --- | --- |
 | GAP-01 레이어 속성·그룹 | RM-FIX-01 이름 지정 정책은 PR #29로 반영. 구조 ID 기반 편집은 별도 범위 선정 |
-| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회 PR #30 develop 반영; 위치·opacity는 [CEL_PROPERTIES](CEL_PROPERTIES.md) 작업, unlink 후속 |
-| GAP-03 태그 상세 조회·기존 태그 수정 | frame 식별/범위 조회 이후 검토; 이번에 구현하지 않음 |
+| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회 PR #30 develop 반영; 위치·opacity PR #31 develop 반영 ([CEL_PROPERTIES](CEL_PROPERTIES.md)), unlink 별도 진행 |
+| GAP-03 태그 상세 조회·기존 태그 수정 | [별도 태그 작업](TAG_EDITING.md)에서 구현·후보 검증; 미병합, 본 공통 회귀 당시 검증과 별개 |
 | GAP-04 범용 색상 모드 전환 | indexed helper 공통화와 transparent index 불변식 확대가 선행; 현재 4-case 통과만으로 충족하지 않음 |
 
 남은 높은 위험 조합은 grayscale의 모든 도형·dither, linked cel의 팔레트 resize 및 snapshot/undo 복원 렌더링, 음수 위치 grayscale/indexed, blend/부분 alpha·layer/cel opacity·서로 다른 linked 위치, 프레임별 palette, 모든 export 형식의 실제 픽셀/animation timing이다. 새 기능 계약에 맞춰 선택적으로 추가한다. spritesheet texture+JSON 일괄 보호는 GAP-05/R4 잔여이며 이번 PNG sequence 검증과 혼동하지 않는다.

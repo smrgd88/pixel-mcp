@@ -21,7 +21,7 @@ pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprit
 
 ## 제공 MCP 도구
 
-`develop`에는 PR #30까지 57개 도구가 있고, 이번 cel 편집 브랜치는 신규 도구를 포함해 58개를 등록합니다 (편집 도구 미병합/Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
+`develop`에는 PR #31까지 58개 도구가 있고, 이번 태그 편집 브랜치는 신규 도구를 포함해 60개를 등록합니다 (태그 도구 미병합/Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
 
 ### 캔버스와 레이어
 
@@ -57,9 +57,11 @@ Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent in
 
 ### 애니메이션
 
-`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`
+`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`, `get_sprite_tags`, `set_tag_properties`
 
 프레임, 재생 시간, 태그와 Aseprite native linked cel을 관리합니다. `link_cel`은 저장 후에도 source/target이 같은 image를 공유하며, 데이터 보호를 위해 target cel이 이미 있으면 실패합니다.
+
+[태그 조회·수정](docs/TAG_EDITING.md)은 저장된 태그의 순서·이름·inclusive 범위·방향·repeats·색상을 조회하고 revision과 tag_id로 기존 태그를 수정합니다. 범위/태그 변경 후 다시 조회하세요. 기존 생성·삭제 계약은 유지합니다.
 
 ### 조회와 파일 입출력
 
