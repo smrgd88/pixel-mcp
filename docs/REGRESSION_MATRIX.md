@@ -50,9 +50,9 @@
 1. 16×16 문서, (5,3)의 2×2 회색 cel, 두 frame의 native link를 만든다. 숨김 레이어와 숨김 그룹에는 전체 화면 흰색 cel을 넣어 visibility 오류가 픽셀 비교에서 드러나게 한다.
 2. indexed는 mask=0/3을 나눠 설정하고 mask palette entry 자체는 불투명 magenta로 만든다. 따라서 palette alpha가 우연히 투명도를 대신하는 것을 막는다. mask=3에서는 흰색의 실제 index가 0인지도 직접 검사한다.
 3. 재열기 후 link identity·위치·계층 전제를 확인한다. 그룹 내부 drawing 실패와 원본 bytes 보존을 재현한다(RM-FIX-01).
-4. fixture의 paint를 루트로 옮긴 뒤 MCP draw_pixels로 frame 2의 내부 (5,3)와 cel 밖 (1,2)를 편집한다. 다시 그룹에 넣고 저장한다. 이는 그룹 내부 drawing 성공을 뜻하지 않는다.
+4. fixture의 paint를 루트로 옮긴 뒤 범위 밖 (16,0) 요청이 정확한 좌표 오류로 거부되고 원본 bytes가 보존되는지 확인한다. 이어 MCP draw_pixels로 frame 2의 내부 (5,3)와 cel 밖 (1,2)를 편집한다. 다시 그룹에 넣고 저장한다. 이는 그룹 내부 drawing 성공을 뜻하지 않는다.
 5. 별도 프로세스로 재열어 모드·native link·두 cel 위치 일치·frame duration·sprite data·숨김 계층 존재 및 mask/빈 픽셀 index를 assert한다.
-6. MCP export_sprite로 두 PNG를 생성하고 Go PNG decoder로 **각 256픽셀 전체**를 독립 상수 기대값과 비교한다. 비대상 3개의 회색 픽셀과 투명 배경, 두 흰 픽셀이 두 frame 모두 일치해야 한다. source bytes는 export 전후 동일해야 한다. 추가 거부 요청 후에도 bytes 동일성을 검사한다.
+6. MCP export_sprite로 두 PNG를 생성하고 Go PNG decoder로 **각 256픽셀 전체**를 독립 상수 기대값과 비교한다. 비대상 3개의 회색 픽셀과 투명 배경, 두 흰 픽셀이 두 frame 모두 일치해야 한다. source bytes는 export 전후 동일해야 한다.
 
 ## 별도 FIX 인계: RM-FIX-01
 
@@ -108,4 +108,14 @@ go test -count=1 -tags=integration ./...
 
 테스트·본 보고서와 NEXT_STEPS/ROADMAP/CAPABILITIES 동기화를 포함했다. production/GAP 기능 구현, develop/main 병합, 배포는 수행하지 않았다. 외부 독립 코드 리뷰는 아직 받지 않았다. 알려진 RM-FIX-01은 별도 작업으로 남는다. 문서 동기화는 이번 브랜치에 반영했으며 develop 통합은 별도 승인 대상이다. 현재 미병합 브랜치/워크트리는 정리하지 않는다.
 
-셀프리뷰(`6507405..08ef4cb`): 병합 차단 P0/P1 없음, PASS_WITH_NOTES. SHARED-P3-001은 마지막 범위 밖 좌표 요청이 그룹 내부 레이어 조회 오류로 먼저 실패하여 좌표 검사 자체를 검증하지 못하는 보강 권고다. 루트 레이어 상태에서 요청하고 좌표 오류 메시지와 원본 bytes 보존을 assert하는 수정이 권장되며 아직 적용하지 않았다. 신규 matrix와 기존 RGB 좌표 거부 테스트 재실행은 6.607초 통과했다. 문서 경로·상태 동기화 권고는 이번 문서 변경에 반영했다. 이 기록은 후속 테스트 변경에 대한 재리뷰를 대신하지 않는다.
+셀프리뷰(`6507405..08ef4cb`): 병합 차단 P0/P1 없음, PASS_WITH_NOTES. SHARED-P3-001은 마지막 범위 밖 좌표 요청이 그룹 내부 레이어 조회 오류로 먼저 실패하여 좌표 검사 자체를 검증하지 못하는 보강 권고다. 후속 수정에서 요청을 루트 레이어 상태로 옮기고 `Pixel coordinates must be within sprite bounds`와 요청 직전/직후 bytes 동일성을 assert하도록 보강했다. 신규 matrix와 기존 RGB 좌표 거부 테스트 재실행은 6.607초 통과했다. 문서 경로·상태 동기화 권고는 이번 문서 변경에 반영했다. 이 기록은 후속 테스트 변경에 대한 재리뷰를 대신하지 않는다.
+
+### 좌표 거부 검사 보강 및 재리뷰
+
+- SHARED-P3-001: **VERIFIED**. 루트로 옮긴 paint에 범위 밖 좌표를 요청하고 좌표 오류 문구·요청 전후 원본 bytes를 검증한다. 그룹 조회 실패 재현과 분리했으며 이후 정상 drawing·native link·PNG 전체 픽셀 검사는 유지한다.
+- Linux Go 1.25.14/Aseprite 1.3.18.3-dev: `go test -count=1 -tags=integration ./pkg/tools -run 'TestRegressionMatrix|TestIntegration_DrawPixels_RejectsCoordinatesOutsideSprite' -v` 통과, 6.459초. 신규 네 case와 기존 RGB 좌표 거부 검사를 실행했다.
+- macOS arm64/Aseprite 1.3.18.2-arm64: 동일 필터로 재빌드한 테스트 바이너리 실행 통과(신규 matrix 6.81초, 기존 좌표 거부 0.34초). 로그는 기존 임시 evidence 디렉터리의 `linux-repair.log`, `macos-repair.log`에 보존했다.
+- production 변경이 없는 테스트·문서 보강이므로 이전 전체 build/vet/race/integration 이력을 유지하고 관련 검사만 재실행했다. 전체 suite·macOS 전체/race·지원 하한은 반복하지 않았다.
+- 리뷰 범위: 기준 `6507405`부터 최종 변경까지 테스트 1개·문서 4개. 직접 helper와 drawing handler/Lua를 문맥으로 확인했다. 별도 RM-FIX-01 구현, 다른 도구 확장, 배포는 제외했다.
+- 이번 재리뷰 활동: 초기 범위/지적 확인 1회, 수정 cycle 1회, 수정 diff 검토 및 closure 1회(동일 pass), 전체 범위 fresh-discovery 1회, 총 review pass 3회. 최초 지적 P3 1건 → VERIFIED 1건. 신규 지적·수정 유발 결함·재개방·미해결 범위 내 지적은 0건. 최종 후보 선택 후 관련 변경/무효화 0회.
+- 판정: **PASS_WITH_NOTES**. 남은 Notes는 별도 FIX인 RM-FIX-01(그룹 내부 편집 미지원 현상)과 기존 미검증 교차 조합·앱 UI·macOS 전체/race다. 범위 내 수정이 검증되었고 새 병합 차단 결함이 없어 추가 수정 cycle을 진행하지 않는다. 독립 외부 리뷰와 develop 병합은 수행하지 않았다.

@@ -20,7 +20,7 @@ develop에는 56개 MCP 도구가 등록되어 있다 (SAFE-04 PR #24 포함). �
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | 공통 회귀 점검 마무리·병합 | 작업 브랜치 검증·셀프리뷰 완료, 좌표 거부 테스트 보강 권고 잔여. [결과](REGRESSION_MATRIX.md) |
+| 1 | 공통 회귀 점검 마무리·병합 | 작업 브랜치 검증·셀프리뷰 완료, 좌표 거부 테스트 보강 완료. [결과](REGRESSION_MATRIX.md) |
 | 별도 FIX | RM-FIX-01 그룹 내부 draw_pixels 조회 | 재현·원본 보존 확인. production 수정은 별도 BE 작업 |
 | 2 | R3 기능 확장 범위 선정 | 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회. 대상 식별 기반을 먼저 마련하며 구현 범위는 미확정. 배포 운영은 별도 |
 
@@ -107,7 +107,8 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] SAFE-04: history/undo 검증 및 PR #24 develop 병합
 - [x] OPS-03: 오류 코드·request ID·로그 계약 및 PR #25 develop 병합 (성공 payload 일괄 표준화 제외)
 - [x] 공통 회귀 조합 매핑·위험 조합 검증·R3 첫 후보 기록 (작업 브랜치, [결과](REGRESSION_MATRIX.md))
-- [ ] 좌표 거부 검사 보강 검토 및 회귀 점검 develop 병합
+- [x] 좌표 거부 검사 보강 (SHARED-P3-001)
+- [ ] 회귀 점검 develop 병합
 - [ ] RM-FIX-01 별도 수정 및 R3 첫 구현 범위 확정
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정

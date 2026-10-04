@@ -90,6 +90,16 @@ assert(math.abs(s.frames[2].duration-0.2)<0.001)
 			require.NoError(t, err)
 			require.Equal(t, original, unchanged)
 			f.lua(p, inspect+`layer.parent=s;s:saveAs(s.filename)`)
+			// The target must be at the root so layer lookup cannot mask bounds validation.
+			beforeRejectedDraw, err := os.ReadFile(p)
+			require.NoError(t, err)
+			result, err := f.session.CallTool(context.Background(), &mcp.CallToolParams{Name: "draw_pixels", Arguments: map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 1, "pixels": []map[string]any{{"x": 16, "y": 0, "color": "#FFFFFFFF"}}}})
+			require.NoError(t, err)
+			require.True(t, result.IsError)
+			require.Contains(t, result.Content[0].(*mcp.TextContent).Text, "Pixel coordinates must be within sprite bounds")
+			afterRejectedDraw, err := os.ReadFile(p)
+			require.NoError(t, err)
+			require.Equal(t, beforeRejectedDraw, afterRejectedDraw, "out-of-bounds draw changed source")
 			// Edit from the target frame and expand beyond the original cel bounds.
 			f.call("draw_pixels", map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 2, "pixels": []map[string]any{{"x": 1, "y": 2, "color": "#FFFFFFFF"}, {"x": 5, "y": 3, "color": "#FFFFFFFF"}}})
 			f.lua(p, `local s=app.activeSprite;local layer,group
@@ -134,12 +144,7 @@ end`, map[aseprite.ColorMode]string{aseprite.ColorModeRGB: "RGB", aseprite.Color
 			after, err := os.ReadFile(p)
 			require.NoError(t, err)
 			require.Equal(t, before, after, "export changed source")
-			result, err := f.session.CallTool(context.Background(), &mcp.CallToolParams{Name: "draw_pixels", Arguments: map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 1, "pixels": []map[string]any{{"x": 16, "y": 0, "color": "#FFFFFFFF"}}}})
-			require.NoError(t, err)
-			require.True(t, result.IsError)
-			after, err = os.ReadFile(p)
-			require.NoError(t, err)
-			require.Equal(t, before, after, "rejected draw changed source")
+
 		})
 	}
 }

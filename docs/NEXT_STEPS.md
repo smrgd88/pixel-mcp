@@ -26,7 +26,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 | 구분 | 남은 작업 | 상태·완료 기준 |
 | --- | --- | --- |
-| 병합 전 | 공통 회귀 조합 점검 | 4개 위험 조합 검증·셀프리뷰 완료. 좌표 거부 테스트 보강 권고 1건 잔여. [결과](REGRESSION_MATRIX.md) |
+| 병합 전 | 공통 회귀 조합 점검 | 4개 위험 조합 검증·셀프리뷰 완료. 좌표 거부 테스트 보강 완료. [결과](REGRESSION_MATRIX.md) |
 | 이후 작업 | R3 기능 확장 범위 선정 | 회귀 점검 결과를 바탕으로 GAP-01–04의 첫 구현 범위 선정. 릴리스 운영은 별도 |
 | develop 완료 | OPS-03 오류 코드·request ID·로그 계약 | PR #25 병합, 기존 성공 payload와 warnings 유지. [계약](ERRORS.md) |
 | develop 완료 | PR #22 팔레트·threshold·DITHER-01/02 수정 | 결정적 palette 추출 포함. 정확한 color2 비율을 강제하는 별도 모드는 범위 밖 |
@@ -51,7 +51,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 Linux 기본 검증과 변경 관련 macOS 회귀를 적용한다. 지원 하한 재실행과 플랫폼 확대는 위 개발 검증 정책을 따른다. 작업 커밋 `08ef4cb`에서 Linux build·vet·race/coverage·전체 integration과 macOS 관련 4개 조합을 검증했다. [축별 근거·미검증 범위](REGRESSION_MATRIX.md)를 참조한다. 전체 matrix 완료나 develop 병합·배포를 뜻하지 않는다.
 
-셀프리뷰: SHARED-P3-001 좌표 거부 검사는 그룹 조회 오류에 가려져 보강 권고 상태다. RM-FIX-01 그룹 내부 draw_pixels 조회 실패는 별도 BE FIX 대상이며 이번에 구현을 수정하지 않는다. R3 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회로, 실제 구현 범위는 아직 확정하지 않았다.
+셀프리뷰: SHARED-P3-001은 루트 레이어에서 좌표 오류 메시지·원본 bytes를 검사하도록 보강했다. RM-FIX-01 그룹 내부 draw_pixels 조회 실패는 별도 BE FIX 대상이며 이번에 구현을 수정하지 않는다. R3 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회로, 실제 구현 범위는 아직 확정하지 않았다.
 
 ## 판단 기준
 
@@ -417,7 +417,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[SHARED][FEATURE] snapshot 및 restore` (SAFE-03), PR #23 develop 병합.
 - 완료: `[SHARED][FEATURE] 작업 이력 및 undo` (SAFE-04), PR #24 develop 병합.
 - 완료: `[SHARED][REFACTOR] 오류 코드 및 요청 추적 계약` (OPS-03), PR #25 develop 병합.
-- 병합 전: `[SHARED][TEST] 공통 회귀 조합 점검` 검증·셀프리뷰 완료, 좌표 거부 검사 보강 권고 잔여. 이후 RM-FIX-01 수정과 R3 GAP-02 읽기 전용 조회 범위 선정을 진행한다.
+- 병합 전: `[SHARED][TEST] 공통 회귀 조합 점검` 검증·셀프리뷰 완료, 좌표 거부 검사 보강 완료. 이후 RM-FIX-01 수정과 R3 GAP-02 읽기 전용 조회 범위 선정을 진행한다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
