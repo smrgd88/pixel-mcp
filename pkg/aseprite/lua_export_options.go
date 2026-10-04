@@ -100,7 +100,15 @@ print("Exported successfully")`)
 // explicit staging paths for both outputs. Range selection never uses tag-name
 // matching in the exporter, which otherwise silently falls back to all frames.
 func (g *LuaGenerator) ExportSelectedSheet(texture, metadata, layout string, border, shape, inner int, trim, extrude bool, o ExportSelection) string {
-	return exportSelectionLua(o) + fmt.Sprintf(`local frames={}
+	return exportSelectionLua(o) + fmt.Sprintf(`-- A single-palette indexed sheet would reuse the source mask as transparency,
+-- even where a background renders that index opaquely. Convert only this
+-- in-memory document. Multiple palettes already make the native exporter use
+-- RGB; do not convert those because unique linked images can span palettes.
+if s.colorMode==ColorMode.INDEXED and #s.palettes==1 and s.backgroundLayer and s.backgroundLayer.isVisible then
+ app.transaction(function() app.command.ChangePixelFormat{ui=false,format="rgb"} end)
+ if s.colorMode~=ColorMode.RGB then error("Failed to prepare background export") end
+end
+local frames={}
 for i=first,last do table.insert(frames,s.frames[i]) end
 app.range.frames=frames
 if %t then
@@ -116,7 +124,10 @@ app.command.ExportSpriteSheet{
  type="%s",textureFilename="%s",dataFilename="%s",dataFormat="json",
  tag="**selected-frames**",layer="",splitLayers=false,splitTags=false,
  borderPadding=%d,shapePadding=%d,innerPadding=%d,
- trim=%t,extrude=%t,trimSprite=false,trimByGrid=false,
+ -- Native background trim removes the corner COLOR, including opaque pixels.
+ -- Keep its canvas; selection has already hidden any excluded background.
+ trim=%t and not (s.backgroundLayer and s.backgroundLayer.isVisible),
+ extrude=%t,trimSprite=false,trimByGrid=false,
  ignoreEmpty=false,mergeDuplicates=false,openGenerated=false,
  listLayers=true,listTags=true,listSlices=true
 }

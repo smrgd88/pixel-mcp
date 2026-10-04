@@ -12,7 +12,7 @@
 | tag, frame_start/end | 지원 | 거부; 기존 frame_number만 지원 | 지원 |
 | layer_id, include_hidden | 지원 | 거부 | 지원 |
 | expected_revision | 지원 | 지원 | 지원 |
-| trim | 투명 여백을 프레임별로 자름 | true 거부 | native cel trim |
+| trim | 투명 여백을 프레임별로 자름 | true 거부 | native cel trim; 선택 결과에 보이는 native background가 있으면 canvas 유지 |
 | extrude | 입력 없음 | 입력 없음 | bool, native 1px edge extrusion |
 | border/shape/inner_padding | 입력 없음 | 입력 없음 | 각각 정수 0–100 |
 | overwrite | 지원 | 지원 | texture+JSON 모두 적용 |
@@ -24,7 +24,7 @@ Sheet texture 확장자는 `.png/.jpg/.jpeg/.gif/.bmp`다. 확장자 없는 경�
 - `layer_id`: [get_sprite_structure](SPRITE_STRUCTURE.md)의 형제 index 경로와 `expected_revision`을 함께 전달한다. 이름 필터는 받지 않으므로 동일 이름·슬래시·따옴표·줄바꿈으로 다른 레이어를 선택하지 않는다. group은 하위 전체를 선택하며 부모 blend/opacity를 유지한다. 없는 ID는 오류다.
 - 기본 visibility는 저장된 target/조상의 hidden 상태를 모두 반영한다. `include_hidden=true`는 layer_id가 필요하며 target·선택 하위·조상만 임시로 보이게 한다. 선택 밖 sibling은 포함하지 않는다. locked는 읽기 export를 막지 않는다. GUI 선택 상태는 사용하지 않는다.
 - `expected_revision`: optional SHA-256 내용 token. layer_id에는 필수이고 다른 선택에도 사용할 수 있다. 구조나 파일 bytes가 바뀌면 `file_changed`로 거부하므로 새 구조 조회가 필요하다.
-- `trim=false`, `extrude=false`가 기본. 기존 `padding` 값은 border/shape/inner 세 값의 기본값이다. 개별 padding의 생략/null은 fallback, **명시적 0은 0으로 덮어쓴다**. shape는 shape 사이 여백, border는 sheet 바깥 여백, inner는 frame 안 투명 inset이다. native frame bounds에는 inner가 포함되고 extrude rim은 포함되지 않는다. inner>0이면 바깥 edge가 투명하므로 extrusion도 투명할 수 있다.
+- `trim=false`, `extrude=false`가 기본. Sheet의 선택 결과에 보이는 native background가 있으면 native의 모서리 색상 기준 trim을 끄고 canvas를 유지해 불투명 배경 픽셀을 보존한다. background가 숨겨졌거나 layer_id 선택에서 제외되면 기존 투명 여백 trim을 적용한다. 저장된 background 타입·이름·팔레트는 변경하지 않는다. 보이는 indexed background의 불투명 mask index가 PNG에서 투명해지지 않도록 단일 팔레트인 경우에만 메모리 문서를 RGB로 변환한다. 여러 팔레트는 native exporter가 이미 RGB로 렌더링하므로 변환하지 않아 linked frame별 색을 보존한다. 이 경우 texture는 RGBA이며 source의 indexed bytes는 그대로다. 기존 `padding` 값은 border/shape/inner 세 값의 기본값이다. 개별 padding의 생략/null은 fallback, **명시적 0은 0으로 덮어쓴다**. shape는 shape 사이 여백, border는 sheet 바깥 여백, inner는 frame 안 투명 inset이다. native frame bounds에는 inner가 포함되고 extrude rim은 포함되지 않는다. inner>0이면 바깥 edge가 투명하므로 extrusion도 투명할 수 있다.
 - 새 선택 또는 trim을 사용한 결과가 모두 투명이면 오류다. 일부 빈 프레임은 생략하지 않고 duration/순서를 보존하며 trim 시 1×1 투명 출력으로 남긴다. 기존 옵션만 사용한 빈 canvas export는 계속 허용한다.
 - `overwrite` 생략/null=true로 기존 교체 동작을 유지한다. false면 계획된 출력 중 하나라도 존재할 때 아무 파일도 발행하지 않는다. 시퀀스의 요청 base 및 목록 밖의 오래된 번호 파일은 삭제하거나 overwrite 대상으로 취급하지 않는다.
 
@@ -52,7 +52,7 @@ source는 저장하지 않는다. native linked image, frame별 palette, 계층�
 4. Sheet texture는 native decoder로 재열고 PNG/JPG/GIF는 Go decoder의 크기와 대조한다. JSON의 frame 수·duration·texture bounds·sourceSize·trim offsets·meta.size를 검사한 뒤에만 발행한다. 출력별 확장자는 요청한 형식과 맞아야 한다.
 5. 오류/취소 시 이미 발행된 출력은 역순 복구한다. 복구 실패의 `file_rollback_failed/error.recovery`는 PR #18 및 OPS-03과 동일하며 sheet 순번 1은 texture, 2는 JSON이다.
 
-Canvas/결과 한 변 32767 및 64 Mi pixels의 보수적 예산을 적용한다. trim 전 canvas와 padding/extrusion을 포함한 strip 크기를 사전 검사한다. rows/columns/packed는 가능한 가로·세로 strip extents의 둘레 사각형으로 예산을 검사하므로 실제 packing하면 들어갈 큰 요청도 거부할 수 있다. 더 작은 범위로 나눠 export한다. timeout은 30초 기본을 유지한다.
+Canvas/결과 한 변 32767 및 64 Mi pixels의 보수적 예산을 적용한다. trim 전 canvas와 padding/extrusion/border를 포함한 각 frame의 두 축 및 strip 크기를 사전 검사한다. rows/columns/packed는 가능한 가로·세로 strip extents의 둘레 사각형으로 예산을 검사하므로 실제 packing하면 들어갈 큰 요청도 거부할 수 있다. 더 작은 범위로 나눠 export한다. timeout은 30초 기본을 유지한다.
 
 일반 오류 rollback은 **세트 전체의 crash 원자성**이 아니다. 협력하는 호출은 경로 잠금을 통해 완성된 세트를 관찰하지만 외부 reader는 교체 도중 일부 새 파일을 볼 수 있다. 비협력 writer의 ABA/최종 검사 이후 경쟁, 강제 종료·전원 장애 자동 복구 및 고아 staging 정리는 후속이다. Source history는 출력 세트 undo가 아니다. GAP-06 slice/pivot/nine-slice 및 편집 도구는 이번 범위 밖이며 기존 native slice metadata를 확장/재해석하지 않는다.
 
@@ -110,3 +110,35 @@ Notes:
 3. Plugin pin/번들/exporter skill 동기화는 이 PR 병합 뒤 별도 작업이다. 독립 외부 리뷰와 develop/main 병합·배포는 수행하지 않는다.
 
 판정: **PASS_WITH_NOTES**.
+
+## 재리뷰 지적 수정 (e0ef590 이후)
+
+작업: `[BE][FIX] export 리뷰 지적 수정`. 기준/merge-base `96d8fa4`, 수정 시작 HEAD `e0ef590`. PR #35의 해당 HEAD CI가 통과했지만, 별도 read-only 재리뷰에서 다음 두 경로를 실제 MCP로 재현하여 BLOCKED로 판정했다. 이 기록은 앞선 후보의 PASS_WITH_NOTES를 대체한다.
+
+| ID | 우선순위·최종 상태 | 재현·원인·수정·검증 |
+| --- | --- | --- |
+| BE-P1-003 | P1 · VERIFIED | 16×16 native background의 파란 불투명 250px + 빨간 6px를 sheet trim이 2×3 빨강만 남기고 성공 반환했다. 같은 source의 export_sprite trim은 16×16이었다. Native exporter가 background의 corner color를 trim 기준으로 쓰기 때문이다. 선택 후 보이는 background가 있으면 sheet trim을 끄고 canvas를 유지한다. RGB/grayscale 및 indexed mask 0/3의 전체 픽셀·JSON offsets, locked background/명시적 ID 선택, background를 제외한 foreground trim을 검증 |
+| BE-P2-004 | P2 · VERIFIED | 1×32767 horizontal/32767×1 vertical에 padding을 더하면 짧은 축 검사가 생략돼 native export 후 operation_failed로 실패했다. padding/extrusion/border를 합친 두 축을 모두 사전 검사한다. 각 방향 × border/inner/extrude 실제 handler 검사에서 invalid_arguments와 출력 부모 디렉터리 미생성을 확인 |
+| BE-P1-005 | P1 · VERIFIED | cycle 1에서 canvas를 보존한 뒤, native indexed sheet가 background의 불투명 mask index를 투명하게 저장하는 별도 기존 문제를 확인했다. source의 단일 팔레트·보이는 background 조합만 **메모리에서** RGB로 변환한다. native가 이미 RGB로 출력하는 다중 팔레트 문서는 변환하지 않아 linked frame별 색이 합쳐지지 않게 한다. 단일/프레임별 palette × linked background × trim on/off의 PNG 픽셀·extruded rim·duration, 원본 bytes/native mode/link 보존 검증 통과 |
+
+- 수정 전 정식 회귀에서 grayscale/indexed의 2×3 축소와 두 배치의 operation_failed를 확인했다. RGB는 직전 실제 MCP probe에서 250px 손실을 확인했으며 정식 red 첫 실행에서는 별도 capability timeout이 발생했다. timeout을 늘리지 않았고 후속 green/최종 회귀는 통과했다.
+- cycle 1: background trim 및 양축 검사를 수정했다. RGB/grayscale 보존과 P2는 검증됐고, 새 indexed mask 문제(BE-P1-005)가 남았다. 이는 수정으로 새로 만든 결함이 아니라 같은 native 출력 경로에서 추가로 드러난 문제다.
+- cycle 2: 단일 팔레트 indexed background의 RGB 준비를 추가했다. 기존 frame-palette 회귀와 새 linked background의 단일/다중 palette 대조를 통과했다. 더 이상의 mutation 없이 closure 및 전체 fresh-discovery를 수행했다.
+- Linux amd64 Docker / Go 1.25.14 / Aseprite 1.3.18.3-dev: 전용 기존 컨테이너, config/temp 및 timeout=30, GOMAXPROCS=2/-p 1 유지. 최종 build·vet 및 앞 절과 같은 필터의 `-race -tags=integration` 검사 통과: aseprite 1.200초, tools 39.092초, server 3.924초. 출력 rollback/기존 sequence/공개 오류/등록 수와 native matrix 포함.
+- macOS arm64 / Go 1.25.0 / Aseprite 1.3.18.2-arm64: 최종 build·health 및 동일 관련 integration 통과. 실제 실행 시간은 로컬 `macos-repair-final.log`에 기록했다. 필터에는 새 Background/PaddedAxes 테스트가 포함된다.
+- 로컬 전체 suite/전체 coverage와 지원 하한 반복은 이 좁은 수정에서 재실행하지 않았다. 앞선 전체 결과·수정 전 CI와 최종 영향 범위 검증을 구분한다. 수정 commit의 CI는 push 후 별도 확인한다. macOS 전체/race 및 모든 형식×blend×mode 조합의 전수검사는 미실행이다.
+- 로그: `/tmp/pixel-export-review35/{red.log,green.log,green2.log,linked-green.log,linux-repair-final.log,macos-repair-final.log}`. 수정 전 실제 MCP probe·독립 PNG decoder 결과도 같은 임시 폴더에 보존했다. 기본 설정·다른 작업·plugin은 수정하지 않았다.
+
+`convergent-code-review` review-and-repair: 초기 지적 재확인 1회, repair cycle 2회, repair-diff 검토 2회, closure 1회, fresh-discovery 전체 1회, 총 review pass 5회. 초기 P1 1/P2 1, cycle 1 후 새 P1 1, cycle 2/closure/fresh 새 finding 0. 최종 VERIFIED 3, OPEN/REOPENED/ACCEPTED/OUT_OF_SCOPE 0. 이전 BE-P1-001/BE-P2-002는 재개방되지 않았다. 차단 P1은 초기 1 → cycle 1 잔여 1(원래 원인 해소·새 원인 확인) → cycle 2/closure/fresh 0으로 줄었다. 두 번째 cycle까지 실제 위험 감소를 검증했으며 새 차단 원인이 없어 종료했다. 전체 소요 시간은 측정하지 않았다.
+
+Reviewed: 기준부터 최종 후보까지 22개 파일(Go 9, 문서 13), export 계약·계획/렌더/메타데이터/출력 보호·회귀·문서. Context: 기존 lock/staging/rollback, native Render/DocExporter/SetPixelFormat 및 기존 fixture. Changed during repair: generator, 차원 검사, schema 설명, 새 background/경계 회귀, 본 계약과 CHANGELOG(6개 파일). Excluded: 다른 Top4, plugin·등록 도구 확장, GAP-06/GIF 구조, 병합/태그/배포.
+
+최종 후보(이 보고 추가 전) 22개 파일 manifest SHA-256: `6199d00dfec8ca78c46312dd6e510430a0808933a23f27ff59a871b01a20a4a5`. 이후 runtime/test/계약 변경과 인증 무효화는 0회다. 새 schema의 background 예외와 indexed background RGBA 출력 영향도 계약에 반영했다.
+
+Notes:
+
+1. 선택 결과에 보이는 native background가 있으면 canvas를 유지한다. foreground만 trim하려면 background를 제외하는 layer_id 선택을 사용한다. 단일 팔레트 indexed background texture는 RGB로 출력될 수 있으나 저장 source의 모드·팔레트·링크는 바뀌지 않는다.
+2. 기존 보수적 크기 예산, 비협력 writer 경쟁, 일반 오류 rollback과 crash 원자성의 차이, 위 미실행 범위는 유지한다.
+3. plugin pin/번들/exporter skill 동기화는 별도 후속이며, 이 background/출력 모드 계약도 함께 반영해야 한다. 병합·태그·배포는 수행하지 않는다.
+
+수정 후 판정: **PASS_WITH_NOTES**. 직전 read-only 재리뷰의 BLOCKED를 대체한다.

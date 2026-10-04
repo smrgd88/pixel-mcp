@@ -121,7 +121,7 @@ func validateExportDimensions(p exportPlan, layout string, border, shape, inner 
 	}
 	cw, ch := w+2*int64(inner)+rim, h+2*int64(inner)+rim
 	spanW, spanH := n*cw+(n-1)*int64(shape)+2*int64(border), n*ch+(n-1)*int64(shape)+2*int64(border)
-	if cw*ch*n > maxPixels || ((layout != "vertical") && spanW > maxSide) || ((layout != "horizontal") && spanH > maxSide) {
+	if cw+2*int64(border) > maxSide || ch+2*int64(border) > maxSide || cw*ch*n > maxPixels || ((layout != "vertical") && spanW > maxSide) || ((layout != "horizontal") && spanH > maxSide) {
 		return diagnostics.Errorf("invalid_arguments", "spritesheet exceeds conservative dimension budget")
 	}
 	// A native grid/packing result fits within these conservative strip extents.

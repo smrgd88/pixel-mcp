@@ -53,7 +53,7 @@ type ExportSpritesheetInput struct {
 	FrameStart       *int    `json:"frame_start,omitempty" jsonschema:"First inclusive source frame, 1-based; omitted defaults to 1"`
 	FrameEnd         *int    `json:"frame_end,omitempty" jsonschema:"Last inclusive source frame; omitted defaults to last frame"`
 	IncludeHidden    bool    `json:"include_hidden,omitempty" jsonschema:"Include hidden target and descendants; requires layer_id; default respects saved visibility"`
-	Trim             bool    `json:"trim,omitempty" jsonschema:"Trim transparent frame margins; default false"`
+	Trim             bool    `json:"trim,omitempty" jsonschema:"Trim transparent frame margins; visible native background keeps the full canvas; default false"`
 	Overwrite        *bool   `json:"overwrite,omitempty" jsonschema:"Replace existing planned outputs; omitted or null defaults to true; false rejects any existing destination"`
 
 	Extrude       bool `json:"extrude,omitempty" jsonschema:"Repeat edge pixels by one pixel outside each sheet frame; default false"`
