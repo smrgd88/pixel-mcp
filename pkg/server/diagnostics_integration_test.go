@@ -25,6 +25,10 @@ func TestToolDiagnosticsRealSuccessWarningsAndLuaError(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(b, &canvas))
 	require.NotEmpty(t, canvas.Path)
+	structure, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_sprite_structure", Arguments: map[string]any{"sprite_path": canvas.Path}})
+	require.NoError(t, err)
+	require.False(t, structure.IsError)
+	require.NotEmpty(t, structure.Meta[diagnostics.RequestIDMeta])
 	id := create.Meta[diagnostics.RequestIDMeta]
 	require.NotEmpty(t, id)
 	for _, tc := range []struct {
@@ -32,6 +36,9 @@ func TestToolDiagnosticsRealSuccessWarningsAndLuaError(t *testing.T) {
 		args map[string]any
 		code string
 	}{
+		{"get_sprite_structure", map[string]any{"sprite_path": canvas.Path, "page_size": 101}, "invalid_arguments"},
+		{"get_sprite_structure", map[string]any{"sprite_path": canvas.Path, "layer_id": "99"}, "lua_error"},
+		{"get_sprite_structure", map[string]any{"sprite_path": filepath.Join(t.TempDir(), "sensitive-name.aseprite")}, "not_found"},
 		{"delete_layer", map[string]any{"sprite_path": canvas.Path, "layer_name": "private-user-layer"}, "lua_error"},
 		{"get_sprite_info", map[string]any{"sprite_path": filepath.Join(t.TempDir(), "sensitive-name.aseprite")}, "not_found"},
 		{"delete_snapshot", map[string]any{"snapshot_id": "invalid-id"}, "snapshot_invalid"},

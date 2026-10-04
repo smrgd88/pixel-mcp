@@ -130,8 +130,8 @@ func TestSnapshotToolsRegistered(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 56 {
-		t.Fatalf("registered %d tools, want 56", len(list.Tools))
+	if len(list.Tools) != 57 {
+		t.Fatalf("registered %d tools, want 57", len(list.Tools))
 	}
 	names := map[string]bool{}
 	for _, tool := range list.Tools {
