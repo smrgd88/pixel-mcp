@@ -71,12 +71,12 @@ RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 
 
 ## 잔여와 R3 첫 구현 후보
 
-첫 후보는 **GAP-02 중 읽기 전용 상세 구조/cel 조회**다. 이번 결함에서 이름만으로 그룹 내부 대상을 고르는 한계가 드러났다. 계층 경로·layer 식별자, frame별 cel 존재/위치/opacity, linked 관계를 먼저 조회할 수 있어야 GAP-01 편집과 GAP-02 위치/opacity/unlink, R4 export 선택의 대상을 검증할 수 있다. 기존 get_sprite_info와 호환되는 별도/optional 계약, 재열기 기반 결과와 중복 이름 정책을 먼저 범위로 정한다. 회귀 작업 당시에는 후보였으나 사용자의 후속 지시로 별도 `feature/be-sprite-structure`에서 읽기 전용 조회를 구현했다. [확정 계약](SPRITE_STRUCTURE.md); 편집 기능 및 GAP-02 전체 완료는 후속이다.
+첫 후보는 **GAP-02 중 읽기 전용 상세 구조/cel 조회**다. 이번 결함에서 이름만으로 그룹 내부 대상을 고르는 한계가 드러났다. 계층 경로·layer 식별자, frame별 cel 존재/위치/opacity, linked 관계를 먼저 조회할 수 있어야 GAP-01 편집과 GAP-02 위치/opacity/unlink, R4 export 선택의 대상을 검증할 수 있다. 기존 get_sprite_info와 호환되는 별도/optional 계약, 재열기 기반 결과와 중복 이름 정책을 먼저 범위로 정한다. 회귀 작업 당시에는 후보였으나 사용자의 후속 지시로 별도 `feature/be-sprite-structure`에서 읽기 전용 조회를 구현하고 PR #30으로 develop `eca9e83`에 병합했다. [확정 계약](SPRITE_STRUCTURE.md); 위치·opacity는 [후속 구현](CEL_PROPERTIES.md), unlink 및 GAP-02 전체 완료는 후속이다.
 
 | 실제 R3 목록 | 다음 판단 |
 | --- | --- |
 | GAP-01 레이어 속성·그룹 | RM-FIX-01 이름 지정 정책은 PR #29로 반영. 구조 ID 기반 편집은 별도 범위 선정 |
-| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회는 별도 feature 브랜치 구현·미병합; 변경 기능은 후속 분리 |
+| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회 PR #30 develop 반영; 위치·opacity는 [CEL_PROPERTIES](CEL_PROPERTIES.md) 작업, unlink 후속 |
 | GAP-03 태그 상세 조회·기존 태그 수정 | frame 식별/범위 조회 이후 검토; 이번에 구현하지 않음 |
 | GAP-04 범용 색상 모드 전환 | indexed helper 공통화와 transparent index 불변식 확대가 선행; 현재 4-case 통과만으로 충족하지 않음 |
 

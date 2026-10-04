@@ -2,8 +2,8 @@
 
 작업: `[BE][FEATURE] 상세 구조 및 cel 조회`, `feature/be-sprite-structure`.
 기준: `origin/develop` `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2` (PR #27/#28 병합 포함).
-최신 통합 기준: `origin/develop` `2ced64ca0da429764cb39f7ced37f349917a4448` (PR #29 RM-FIX-01 병합). 최초 구현은 위 `2ec6c79`에서 독립적으로 완료했다.
-이 브랜치에서 구현한 Unreleased 조회 기능이며 develop 병합·배포와 구분한다.
+조회 구현 당시 최종 통합 기준: `origin/develop` `2ced64ca0da429764cb39f7ced37f349917a4448` (PR #29 RM-FIX-01 병합). 최초 구현은 위 `2ec6c79`에서 독립적으로 완료했다.
+현재 상태: PR #30으로 develop `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f`에 병합 완료 / Unreleased. 아래 검증·리뷰·통합 기록은 당시 이력이며 배포 완료를 뜻하지 않는다. 후속 [cel 편집](CEL_PROPERTIES.md)은 별도 작업이다.
 
 ## 호환성과 입력
 
@@ -41,7 +41,7 @@
 | `opacity` | API가 제공하는 0–255 값. API가 nil인 group은 생략 |
 | `cels` | group은 `[]`. 나머지는 선택 frame마다 하나의 존재/부재 레코드 |
 
-`layer_id`는 런타임 메모리 ID나 파일에 저장하는 영구 UUID가 아니다. 같은 계층/형제 순서의 저장 파일을 재열면 동일하다. 이름만 바뀌어도 index 경로는 유지되지만 삽입·삭제·이동·재정렬 후에는 다른 레이어를 가리킬 수 있다. frame 번호도 삽입/삭제로 바뀐다. 파일을 편집하면 다시 조회해야 한다. 페이지 사이 snapshot을 고정하는 token은 없으므로 외부 변경이 있으면 처음부터 재조회한다. 기존 mutation tool은 이 신규 `layer_id` 입력을 수용하지 않는다.
+`layer_id`는 런타임 메모리 ID나 파일에 저장하는 영구 UUID가 아니다. 같은 계층/형제 순서의 저장 파일을 재열면 동일하다. 이름만 바뀌어도 index 경로는 유지되지만 삽입·삭제·이동·재정렬 후에는 다른 레이어를 가리킬 수 있다. frame 번호도 삽입/삭제로 바뀐다. 파일을 편집하면 다시 조회해야 한다. 후속 cel 편집 작업에서 파일 전체 bytes의 SHA-256 `revision` 출력을 추가했다. Lua 조회 전후 해시를 비교하며, 페이지마다 revision이 다르면 처음부터 재조회한다. 서버가 페이지 snapshot을 고정·보관하지는 않는다. `set_cel_properties`만 구조 ID와 필수 `expected_revision`을 함께 수용하며, 기존 mutation tool 입력은 그대로다. 비협력 writer/ABA 및 내용 token의 한계는 [편집 계약](CEL_PROPERTIES.md#오래된-구조동시-변경-방어)을 따른다.
 
 | cel 필드 | 의미 |
 | --- | --- |
@@ -62,9 +62,9 @@
 
 RGB/grayscale/indexed의 group/raster를 검증한다. tilemap은 kind로 구분하나 편집·tileset/pixel 해석은 제공하지 않으며 이 작업의 검증 범위 밖이다. tilemap image 크기는 tile 단위일 수 있으므로 raster pixel 크기로 해석하지 않는다. reference layer의 확대 bounds가 아닌 native image 크기와 위치를 보고한다.
 
-선택·GUI 상태에 의존하지 않는 batch 조회이며 save/transaction/edit/history 기록을 수행하지 않는다. 파일 접근용 잠금·임시 Lua script는 공통 실행 기반의 부수 파일이다. layer/cel 편집, unlink, 태그 수정, 색상 모드 변환, R4 export 추가는 미구현이다. GAP-02 전체 완료가 아니다.
+선택·GUI 상태에 의존하지 않는 batch 조회이며 save/transaction/edit/history 기록을 수행하지 않는다. 파일 접근용 잠금·임시 Lua script는 공통 실행 기반의 부수 파일이다. 이 조회 도구는 편집하지 않는다. 후속 [cel 위치·opacity 편집](CEL_PROPERTIES.md)을 구현했으며 layer 편집, unlink, 태그 수정, 색상 모드 변환, R4 export 추가는 미구현이다. GAP-02 전체 완료가 아니다.
 
-## 검증과 셀프리뷰
+## 검증과 셀프리뷰 (PR #30 병합 전 당시 기록)
 
 검증 결과는 아래 최종 기록을 따른다. `TestSpriteStructureSavedModes`는 세 모드의 저장·재열기, 중복 이름 계층, 숨김/잠금, empty cel, non-zero/negative 위치, multi-frame, native link와 서로 다른 z-index, 픽셀이 같은 독립 이미지를 검사한다. Go가 조회 결과를 독립 상수와 비교한다. 성공·실패·페이지 반복 후 source bytes/inode/권한/mtime 및 사용자 metadata·history 불변을 검사한다.
 

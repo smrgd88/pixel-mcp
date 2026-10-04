@@ -21,7 +21,7 @@ This README describes `develop`. Fork fixes and recovery features are **Unreleas
 
 ## MCP tools
 
-The `develop` baseline registers 56 tools; this GAP-02 query branch registers 57 with one new Unreleased tool (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
+The `develop` baseline registers 57 tools through PR #30; this cel editing branch registers 58 with one new Unreleased tool (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
 
 ### Canvas and layers
 
@@ -57,7 +57,7 @@ Transform, resize, crop, and outline sprites.
 
 ### Animation
 
-`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`
+`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`
 
 Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserves shared image identity after saving and rejects an already occupied target cel to protect its data.
 
@@ -67,7 +67,7 @@ Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserv
 
 Verify pixels and work with PNG, GIF, JPG, BMP, spritesheets, and Aseprite files.
 
-[Detailed structure inspection](docs/SPRITE_STRUCTURE.md) returns read-only hierarchy and per-frame cel existence, position, size, opacity and native image sharing. Structural IDs remain valid while hierarchy order is unchanged; existing mutation tools do not accept them. Layer pages and frame windows each have a maximum of 100.
+[Detailed structure inspection](docs/SPRITE_STRUCTURE.md) returns read-only hierarchy and per-frame cel existence, position, size, opacity and native image sharing. Structural IDs are not persistent IDs. [Cel editing](docs/CEL_PROPERTIES.md) requires the returned `revision` to set position/opacity; changing the entire native linked set requires explicit `allow_linked=true`. Other mutation inputs are unchanged. Layer pages and frame windows each have a maximum of 100.
 
 ### Recovery and operation history (Unreleased)
 

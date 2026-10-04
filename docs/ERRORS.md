@@ -102,3 +102,7 @@ Reviewed: diagnostics 코드/서버 경계·CLI 로그 필터·Aseprite command/
 Reviewed: 기존 OPS-03 PR 범위와 rollback error/복구 참조/분류 우선순위/회귀/문서. Context: output staging/backup과 MCP error conversion. Changed during repair: diagnostics와 output_files, 관련 테스트 및 문서. Excluded: 자동 복구, 새로운 복구 도구, plugin 저장소, 원래 파일 교체 알고리즘 변경. 복구 폴더는 원래 canonical 출력 부모 기준이며 경로 alias가 바뀐 경우 원래 위치의 수동 확인이 필요하다.
 
 현재 최종 판정: PASS. 이전 BLOCKED 판정을 대체한다.
+
+## Cel 편집 후속
+
+Cel 편집의 `expected_revision` 불일치는 기존 `file_changed`를 사용한다. 입력 범위는 `invalid_arguments`, 잘못된 대상·locked·linked 동의 누락·변경 없음은 `lua_error`다. 새로운 공개 오류 코드/비정형 상세 payload를 추가하지 않는다. [CEL_PROPERTIES](CEL_PROPERTIES.md).

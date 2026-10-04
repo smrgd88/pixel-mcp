@@ -417,3 +417,30 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 	}
 	return nil
 }
+
+// SpriteRevision returns the SHA-256 of the currently bound sprite bytes.
+// Call under WithSpriteAccess so a writer hashes its private working copy and
+// cooperating readers/writers cannot race. This is a content token, not an ID.
+func SpriteRevision(ctx context.Context, path string) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	bound, ok, err := boundSprite(ctx, path)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		if _, err := os.Stat(path); err != nil {
+			return "", err
+		}
+		return "", diagnostics.Errorf("file_lock_scope", "sprite revision requires a bound sprite")
+	}
+	state, err := snapshot(bound)
+	if err != nil {
+		return "", err
+	}
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", state.hash), nil
+}

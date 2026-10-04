@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -29,6 +30,14 @@ func TestToolDiagnosticsRealSuccessWarningsAndLuaError(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, structure.IsError)
 	require.NotEmpty(t, structure.Meta[diagnostics.RequestIDMeta])
+
+	var structureData struct {
+		Revision string `json:"revision"`
+	}
+	rawStructure, err := json.Marshal(structure.StructuredContent)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(rawStructure, &structureData))
+	require.Len(t, structureData.Revision, 64)
 	id := create.Meta[diagnostics.RequestIDMeta]
 	require.NotEmpty(t, id)
 	for _, tc := range []struct {
@@ -36,6 +45,9 @@ func TestToolDiagnosticsRealSuccessWarningsAndLuaError(t *testing.T) {
 		args map[string]any
 		code string
 	}{
+		{"set_cel_properties", map[string]any{"sprite_path": canvas.Path, "layer_id": "1", "frame_number": 1, "expected_revision": strings.Repeat("0", 64), "x": 1}, "file_changed"},
+		{"set_cel_properties", map[string]any{"sprite_path": canvas.Path, "layer_id": "1", "frame_number": 1, "expected_revision": structureData.Revision, "opacity": 256}, "invalid_arguments"},
+		{"set_cel_properties", map[string]any{"sprite_path": canvas.Path, "layer_id": "99", "frame_number": 1, "expected_revision": structureData.Revision, "x": 1}, "lua_error"},
 		{"get_sprite_structure", map[string]any{"sprite_path": canvas.Path, "page_size": 101}, "invalid_arguments"},
 		{"get_sprite_structure", map[string]any{"sprite_path": canvas.Path, "layer_id": "99"}, "lua_error"},
 		{"get_sprite_structure", map[string]any{"sprite_path": filepath.Join(t.TempDir(), "sensitive-name.aseprite")}, "not_found"},
@@ -68,4 +80,39 @@ func TestToolDiagnosticsRealSuccessWarningsAndLuaError(t *testing.T) {
 	require.NotEmpty(t, payload["warnings"])
 	require.NotContains(t, payload, "request_id")
 	require.NotEqual(t, id, flatten.Meta[diagnostics.RequestIDMeta])
+}
+
+func TestCelPropertiesDiagnosticsSuccess(t *testing.T) {
+	cs, _ := diagnosticSession(t, true)
+	create, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "create_canvas", Arguments: map[string]any{"width": 8, "height": 8, "color_mode": "rgb"}})
+	require.NoError(t, err)
+	require.False(t, create.IsError)
+	var canvas struct {
+		Path string `json:"file_path"`
+	}
+	b, err := json.Marshal(create.StructuredContent)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(b, &canvas))
+	draw, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "draw_pixels", Arguments: map[string]any{"sprite_path": canvas.Path, "layer_name": "Layer 1", "frame_number": 1, "pixels": []map[string]any{{"x": 0, "y": 0, "color": "#FFFFFFFF"}}}})
+	require.NoError(t, err)
+	require.False(t, draw.IsError)
+	s, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "get_sprite_structure", Arguments: map[string]any{"sprite_path": canvas.Path}})
+	require.NoError(t, err)
+	require.False(t, s.IsError)
+	var state struct {
+		Revision string `json:"revision"`
+	}
+	b, err = json.Marshal(s.StructuredContent)
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(b, &state))
+	r, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "set_cel_properties", Arguments: map[string]any{"sprite_path": canvas.Path, "layer_id": "1", "frame_number": 1, "expected_revision": state.Revision, "opacity": 0}})
+	require.NoError(t, err)
+	require.False(t, r.IsError)
+	require.NotEmpty(t, r.Meta[diagnostics.RequestIDMeta])
+	require.NotEqual(t, s.Meta[diagnostics.RequestIDMeta], r.Meta[diagnostics.RequestIDMeta])
+	b, err = json.Marshal(r.StructuredContent)
+	require.NoError(t, err)
+	require.NotContains(t, string(b), canvas.Path)
+	require.NotContains(t, string(b), "request_id")
+	require.Contains(t, string(b), `"opacity":0`)
 }

@@ -21,7 +21,7 @@ pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprit
 
 ## 제공 MCP 도구
 
-`develop`의 56개 도구에 이 GAP-02 조회 브랜치의 신규 도구 1개를 더해 57개를 등록합니다 (신규 조회 미병합/Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
+`develop`에는 PR #30까지 57개 도구가 있고, 이번 cel 편집 브랜치는 신규 도구를 포함해 58개를 등록합니다 (편집 도구 미병합/Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
 
 ### 캔버스와 레이어
 
@@ -57,7 +57,7 @@ Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent in
 
 ### 애니메이션
 
-`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`
+`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`
 
 프레임, 재생 시간, 태그와 Aseprite native linked cel을 관리합니다. `link_cel`은 저장 후에도 source/target이 같은 image를 공유하며, 데이터 보호를 위해 target cel이 이미 있으면 실패합니다.
 
@@ -65,7 +65,7 @@ Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent in
 
 `get_sprite_structure`, `get_pixels`, `export_sprite`, `export_spritesheet`, `import_image`, `save_as`
 
-[상세 구조 조회](docs/SPRITE_STRUCTURE.md)는 계층과 frame별 cel 존재·위치·크기·opacity·native linked 관계를 읽기 전용으로 반환합니다. 구조 ID는 계층 순서가 바뀌기 전까지 유효하며 기존 편집 도구 입력으로 사용할 수 없습니다. 레이어 페이지(최대 100)와 frame 범위(최대 100)를 지원합니다.
+[상세 구조 조회](docs/SPRITE_STRUCTURE.md)는 계층과 frame별 cel 존재·위치·크기·opacity·native linked 관계를 읽기 전용으로 반환합니다. 구조 ID는 영구 ID가 아닙니다. [cel 편집](docs/CEL_PROPERTIES.md)은 조회의 `revision`을 필수 사전조건으로 받아 위치·opacity를 수정하며, linked 집합 전체 변경은 명시적 `allow_linked=true`가 필요합니다. 다른 편집 도구의 입력은 그대로입니다. 레이어 페이지(최대 100)와 frame 범위(최대 100)를 지원합니다.
 
 픽셀을 검증하고 PNG·GIF·JPG·BMP·스프라이트시트 및 Aseprite 파일을 입출력합니다.
 

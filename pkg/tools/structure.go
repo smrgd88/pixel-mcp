@@ -55,6 +55,7 @@ type StructureLayer struct {
 
 // GetSpriteStructureOutput reports a bounded page and continuation offsets.
 type GetSpriteStructureOutput struct {
+	Revision           string           `json:"revision"`
 	Width              int              `json:"width"`
 	Height             int              `json:"height"`
 	ColorMode          string           `json:"color_mode"`
@@ -87,8 +88,12 @@ func validateStructureInput(in GetSpriteStructureInput) (GetSpriteStructureInput
 }
 
 func registerStructureTool(server *mcp.Server, client *aseprite.Client, gen *aseprite.LuaGenerator, cfg *config.Config, logger core.Logger) {
-	mcp.AddTool(server, &mcp.Tool{Name: "get_sprite_structure", Description: "Read saved layer hierarchy and frame/cel existence, bounds, opacity and native image sharing. Structural layer IDs are sibling-index paths valid while hierarchy order is unchanged; existing mutation tools do not accept these IDs. Returns at most 100 layers x 100 frames, with exact layer filter and continuation offsets."}, maybeWrapConfigured("get_sprite_structure", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, in GetSpriteStructureInput) (*mcp.CallToolResult, *GetSpriteStructureOutput, error) {
+	mcp.AddTool(server, &mcp.Tool{Name: "get_sprite_structure", Description: "Read saved layer hierarchy and frame/cel existence, bounds, opacity and native image sharing. Structural layer IDs are sibling-index paths valid while hierarchy order is unchanged; set_cel_properties accepts these IDs with the returned revision precondition. Returns at most 100 layers x 100 frames, with exact layer filter and continuation offsets."}, maybeWrapConfigured("get_sprite_structure", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, in GetSpriteStructureInput) (*mcp.CallToolResult, *GetSpriteStructureOutput, error) {
 		in, err := validateStructureInput(in)
+		if err != nil {
+			return nil, nil, err
+		}
+		before, err := aseprite.SpriteRevision(ctx, in.SpritePath)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -100,6 +105,14 @@ func registerStructureTool(server *mcp.Server, client *aseprite.Client, gen *ase
 		if err := json.Unmarshal([]byte(raw), &out); err != nil {
 			return nil, nil, fmt.Errorf("failed to parse sprite structure: %w", err)
 		}
+		after, err := aseprite.SpriteRevision(ctx, in.SpritePath)
+		if err != nil {
+			return nil, nil, err
+		}
+		if before != after {
+			return nil, nil, diagnostics.Errorf("file_changed", "source changed during structure inspection")
+		}
+		out.Revision = before
 		return nil, &out, nil
 	}))
 }
