@@ -20,8 +20,9 @@ develop에는 56개 MCP 도구가 등록되어 있다 (SAFE-04 PR #24 포함). �
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | 공통 회귀 조합 점검 | 기존 테스트와 색상/계층/cel/export 조합 대조. [범위·완료 기준](NEXT_STEPS.md#다음-작업의-범위와-완료-기준) |
-| 2 | R3 기능 확장 범위 선정 | 점검 결과를 바탕으로 상세 구조 조회 등 GAP-01–04의 첫 구현 범위 결정. 배포 운영은 별도 |
+| 1 | 공통 회귀 점검 마무리·병합 | 작업 브랜치 검증·셀프리뷰 완료, 좌표 거부 테스트 보강 완료. [결과](REGRESSION_MATRIX.md) |
+| 별도 FIX | RM-FIX-01 그룹 내부 draw_pixels 조회 | 재현·원본 보존 확인. production 수정은 별도 BE 작업 |
+| 2 | R3 기능 확장 범위 선정 | 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회. 대상 식별 기반을 먼저 마련하며 구현 범위는 미확정. 배포 운영은 별도 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
@@ -44,7 +45,7 @@ develop에는 56개 MCP 도구가 등록되어 있다 (SAFE-04 PR #24 포함). �
 | --- | --- | --- | --- | --- |
 | R0 | 현황·릴리스 근거 정리, OPS-01 | 기능표/태그/Unreleased 동기화, CI Go·Aseprite 버전 artifact (로그 출력은 구현됨), draw_pixels upstream 제출 범위 결정 | 등록 도구 수와 기능표 일치; 버전 증거 보존; 제출 범위 기록 | 문서 초안 작성 완료, CI artifact·범위 결정 예정 |
 | R1 | 실행 계약 확립, SAFE-01·GAP-10·OPS-03 | warnings, capability preflight, 오류 분류 및 응답 규칙 설계 | 위험 작업별 경고·기존 클라이언트 호환 검증; 미지원 버전/API를 변경 전에 거부 | warnings develop 병합 완료. capability PR #13 병합 완료; 하한 health·전체 통합 실검증 완료 (2026-09-22) |
-| R2 | 원본 보호와 복구, SAFE-02–05·OPS-03 | path lock·atomic save 기반, 임시 복사본 dry-run, snapshot/restore, history/undo, request ID·redaction | 실패·취소·동시 요청 시 원본 보존; dry-run 원본 불변; snapshot 복원·history 일관성 회귀 통과 | SAFE-02–05 및 OPS-03 구현 develop 반영 완료 (PR #14/#21/#23/#24/#25). 공통 회귀 조합 점검 예정 |
+| R2 | 원본 보호와 복구, SAFE-02–05·OPS-03 | path lock·atomic save 기반, 임시 복사본 dry-run, snapshot/restore, history/undo, request ID·redaction | 실패·취소·동시 요청 시 원본 보존; dry-run 원본 불변; snapshot 복원·history 일관성 회귀 통과 | SAFE-02–05 및 OPS-03 구현 develop 반영 완료 (PR #14/#21/#23/#24/#25). 공통 회귀 점검은 작업 브랜치 검증 완료·병합 전; 잔여는 REGRESSION_MATRIX 참조 |
 | R3 | 편집·조회 빈 부분 해소, GAP-01–04 | 레이어 속성·그룹, 상세 구조 조회, cel 위치/opacity/unlink, 태그 조회·편집, 범용 색상 모드 전환 | 다중 레이어/프레임에서 정확한 대상 지정; 저장/재열기 검증; destructive 변경에 R1/R2 계약 적용 | R1/R2 기반 이후, 예정 |
 | R4 | 게임·UI 자산 export, GAP-05–06 | 태그/레이어/프레임 범위 export, trim/extrude/개별 padding, slices/pivot/nine-slice | 출력 이미지와 JSON의 frame·bounds·pivot 일치; overwrite/실패 보호 | R3 상세 조회 기반, 예정 |
 | R5 | 호환성·확장, GAP-07–09·GAP-11–12·OPS-02 | native launcher와 OS smoke, 색상/계층/client matrix 확대; tilemap/tileset·보정 필터·metadata·선택/brush/grid 확장 | 플랫폼별 실행 증거, 기능별 최소 API 및 batch 검증, 기존 도구 회귀 통과 | launcher/matrix는 독립 착수 가능. 확장 기능은 별도 계약·SPIKE 후 선정 |
@@ -105,7 +106,10 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] SAFE-03: snapshot/restore 검증 및 PR #23 develop 병합
 - [x] SAFE-04: history/undo 검증 및 PR #24 develop 병합
 - [x] OPS-03: 오류 코드·request ID·로그 계약 및 PR #25 develop 병합 (성공 payload 일괄 표준화 제외)
-- [ ] 공통 회귀 조합 점검 및 R3 첫 작업 범위 선정
+- [x] 공통 회귀 조합 매핑·위험 조합 검증·R3 첫 후보 기록 (작업 브랜치, [결과](REGRESSION_MATRIX.md))
+- [x] 좌표 거부 검사 보강 (SHARED-P3-001)
+- [ ] 회귀 점검 develop 병합
+- [ ] RM-FIX-01 별도 수정 및 R3 첫 구현 범위 확정
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정
 - [ ] 릴리스 절차 문서와 0.x 호환성 정책 확정
