@@ -75,8 +75,8 @@ RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 
 
 | 실제 R3 목록 | 다음 판단 |
 | --- | --- |
-| GAP-01 레이어 속성·그룹 | RM-FIX-01 이름 지정 정책은 PR #29로 반영. 구조 ID 기반 편집은 별도 범위 선정 |
-| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회 PR #30 develop 반영; 위치·opacity는 [CEL_PROPERTIES](CEL_PROPERTIES.md) 작업, unlink 후속 |
+| GAP-01 레이어 속성·그룹 | RM-FIX-01 이름 지정 정책은 PR #29로 반영. 구조 ID 기반 편집은 [레이어·그룹 후보](LAYER_PROPERTIES.md), 미병합 |
+| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회 PR #30 develop 반영; 위치·opacity는 [PR #31 develop 반영](CEL_PROPERTIES.md), unlink 별도 작업 |
 | GAP-03 태그 상세 조회·기존 태그 수정 | frame 식별/범위 조회 이후 검토; 이번에 구현하지 않음 |
 | GAP-04 범용 색상 모드 전환 | indexed helper 공통화와 transparent index 불변식 확대가 선행; 현재 4-case 통과만으로 충족하지 않음 |
 

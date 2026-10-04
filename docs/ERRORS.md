@@ -106,3 +106,5 @@ Reviewed: 기존 OPS-03 PR 범위와 rollback error/복구 참조/분류 우선�
 ## Cel 편집 후속
 
 Cel 편집의 `expected_revision` 불일치는 기존 `file_changed`를 사용한다. 입력 범위는 `invalid_arguments`, 잘못된 대상·locked·linked 동의 누락·변경 없음은 `lua_error`다. 새로운 공개 오류 코드/비정형 상세 payload를 추가하지 않는다. [CEL_PROPERTIES](CEL_PROPERTIES.md).
+
+레이어·그룹 편집 후보의 schema/RPC, `invalid_arguments`, `file_changed`, `not_found`, `lua_error` 구분 및 request ID·redaction은 [LAYER_PROPERTIES](LAYER_PROPERTIES.md)를 따른다. 새 오류 코드는 추가하지 않는다.

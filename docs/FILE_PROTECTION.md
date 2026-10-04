@@ -82,3 +82,7 @@ SAFE-03의 네 snapshot 도구는 저장소와 source 잠금을 함께 예약하
 ## Cel revision 사전조건
 
 `get_sprite_structure`는 같은 읽기 잠금 아래 Lua 실행 전후 원본 해시를 확인해 revision을 반환한다. `set_cel_properties`는 공통 잠금·staging/history 경로 안에서 실제 bound 작업 복사본의 해시를 expected_revision과 비교한다. stale·동시 요청·외부 변경 보호와 비협력 writer의 ABA/최종 검사 경계는 [CEL_PROPERTIES](CEL_PROPERTIES.md)를 따른다.
+
+## Layer revision 사전조건
+
+`set_layer_properties`, `move_layer`, `create_layer_group`도 기존 source/history lock·staging·bound revision·원본 변경 감지·atomic publish를 사용한다. 실패/취소는 원본을 발행하지 않는다. [계약과 검증](LAYER_PROPERTIES.md).
