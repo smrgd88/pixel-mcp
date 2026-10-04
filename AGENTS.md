@@ -1,5 +1,9 @@
 # pixel-mcp 개발 지침
 
+[English translation](AGENTS.en.md)
+
+Codex가 기본으로 읽는 지침은 이 `AGENTS.md`다. `AGENTS.en.md`는 영어 번역이며 별도 자동 로딩 파일이 아니다. 두 버전을 함께 갱신하고, 내용이 다르면 이 파일을 기준으로 번역을 수정한다.
+
 이 파일은 저장소 전체에 적용하는 Codex 작업 지침이다. 기존 `CLAUDE.md`의 프로젝트 설명을 바탕으로 현재 구현과 Git 운영 규칙에 맞췄다. 세부 계약은 아래 링크의 문서와 실제 코드를 확인한다. `README.original.md`는 과거 안내 백업이다.
 
 ## 작업 시작과 Git 운영
