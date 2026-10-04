@@ -124,7 +124,8 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 
 - 등록: [server.go](../pkg/server/server.go), 도구 표의 입력 schema/handler.
 - 구현: [Aseprite 계층](../pkg/aseprite), 실제 Lua generator와 Go 알고리즘.
-- 회귀 및 전체 검증 기록: [NEXT_STEPS](NEXT_STEPS.md), [TESTING](TESTING.md).
+- 회귀 및 전체 검증 기록: [NEXT_STEPS](NEXT_STEPS.md), [TESTING](TESTING.md), [공통 회귀 조합 점검](REGRESSION_MATRIX.md) (작업 브랜치 검증·병합 전).
+- 회귀 점검에서 그룹 내부 `draw_pixels` 대상 조회 실패(RM-FIX-01)를 재현했다. 원본 바이트는 보존되며, 별도 FIX 전까지 해당 조합은 편집 성공이 검증된 범위에 포함하지 않는다. 신규 4개 조합 통과를 모든 drawing/export 도구의 전체 matrix 완료로 해석하지 않는다.
 - `draw_pixels` 수정: PR #1 (`b1204b8`), native link: PR #6 (`941fe34`), indexed shading: PR #8 (`b444ff0`). 이 수정들은 기준일 현재 로컬 태그 `v0.5.0`에 포함되지 않는다.
 - 기능 변경 PR은 이 표의 상태·제한·버전과 `CHANGELOG.md`의 Unreleased를 함께 갱신한다. 테스트 통과 근거가 없으면 검증 완료로 표시하지 않는다.
 - develop 병합 시 `develop 반영`, 릴리스 태그 포함 확인 시 버전 기록. 배포 게시 상태는 별도로 확인한다.
