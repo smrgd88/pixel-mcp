@@ -1,6 +1,6 @@
 # 기능 지원 현황
 
-기준일: 2026-10-02 · 구현 기준: `develop`의 `7f439a0df1ec0d2d24ef6dabba6de4d30c2484f9`
+기준일: 2026-10-04 · 구현 기준: `develop`의 `65074051f5d3903124ead37367c7fc62d9e7e7f6`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -118,13 +118,14 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | SAFE-05 | 동일 파일 동시 수정·저장 실패 보호 | develop 반영 / Unreleased (#14) | 호출 단위 OS 잠금·staging·단일 파일 atomic 교체와 export 출력 세트의 일반 오류 rollback (#18), [검증과 제외 범위](FILE_PROTECTION.md), R2 |
 | OPS-01 | CI 실행 버전 artifact | 부분: 로그 출력 구현, artifact 예정 | [CI의 Report tool versions](../.github/workflows/ci.yml)에서 Go/Aseprite 버전 출력; 별도 artifact 보존은 R0 |
 | OPS-02 | native launcher·OS matrix | 예정 | 기존 Go 서버와 cross-build 설정 존재가 launcher 구현/Windows 동작 검증을 뜻하지 않음, R5 |
-| OPS-03 | 오류·request ID·로그 계약 통일 | 구현 브랜치 / 부분 | [ERRORS](ERRORS.md): 오류와 추적 경계. 성공 payload 일괄 표준화는 별도 검토 |
+| OPS-03 | 오류·request ID·로그 계약 통일 | develop 반영 (PR #25) / 성공 payload 표준화 별도 | [ERRORS](ERRORS.md): 오류와 추적 경계. 성공 payload 일괄 표준화는 별도 검토 |
 
 ## 검증 근거와 갱신 규칙
 
 - 등록: [server.go](../pkg/server/server.go), 도구 표의 입력 schema/handler.
 - 구현: [Aseprite 계층](../pkg/aseprite), 실제 Lua generator와 Go 알고리즘.
-- 회귀 및 전체 검증 기록: [NEXT_STEPS](NEXT_STEPS.md), [TESTING](TESTING.md).
+- 회귀 및 전체 검증 기록: [NEXT_STEPS](NEXT_STEPS.md), [TESTING](TESTING.md), [공통 회귀 조합 점검](REGRESSION_MATRIX.md) (작업 브랜치 검증·병합 전).
+- 회귀 점검에서 그룹 내부 `draw_pixels` 대상 조회 실패(RM-FIX-01)를 재현했다. 원본 바이트는 보존되며, 별도 FIX 전까지 해당 조합은 편집 성공이 검증된 범위에 포함하지 않는다. 신규 4개 조합 통과를 모든 drawing/export 도구의 전체 matrix 완료로 해석하지 않는다.
 - `draw_pixels` 수정: PR #1 (`b1204b8`), native link: PR #6 (`941fe34`), indexed shading: PR #8 (`b444ff0`). 이 수정들은 기준일 현재 로컬 태그 `v0.5.0`에 포함되지 않는다.
 - 기능 변경 PR은 이 표의 상태·제한·버전과 `CHANGELOG.md`의 Unreleased를 함께 갱신한다. 테스트 통과 근거가 없으면 검증 완료로 표시하지 않는다.
 - develop 병합 시 `develop 반영`, 릴리스 태그 포함 확인 시 버전 기록. 배포 게시 상태는 별도로 확인한다.

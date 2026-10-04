@@ -1,8 +1,8 @@
 # pixel-mcp 다음 작업 체크리스트
 
-작성일: 2026-08-31 · 현황 동기화: 2026-10-02
+작성일: 2026-08-31 · 현황 동기화: 2026-10-04
 
-현재 기준: `develop`의 `7f439a0df1ec0d2d24ef6dabba6de4d30c2484f9` (PR #24까지 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID 계약은 구현·검증 완료, 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `65074051f5d3903124ead37367c7fc62d9e7e7f6` (PR #25까지 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 작업 브랜치에서 검증·셀프리뷰를 마쳤으며 병합 전이다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -20,24 +20,38 @@
 
 macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검증한다. Windows 네이티브 테스트는 현재 개발 범위에서 제외하며 반복적인 미실행 알림·보류 목록·진행 차단 사유로 보고하지 않는다. Windows 환경 작업이나 명시적인 검증 요청이 있을 때 범위를 다시 정한다. 기존 cross-build 이력과 제품의 플랫폼 지원 계획은 별개다.
 
-## 남은 작업 요약 (2026-10-02)
+## 남은 작업 요약 (2026-10-04)
 
 상세 작업 항목은 아래 기존 체크리스트에 유지하고, 우선순위는 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 한다.
 
 | 구분 | 남은 작업 | 상태·완료 기준 |
 | --- | --- | --- |
-| 현재 작업 | OPS-03 오류 코드·request ID | 기존 성공 payload 유지, 오류 분류·응답/로그 상관관계. [계약](ERRORS.md) |
-| 이후 작업 | 공통 회귀 조합 점검 → R3 범위 선정 | 기존 색상/계층/cel/export 테스트의 빈 조합 대조. 릴리스 운영은 별도 |
+| 병합 전 | 공통 회귀 조합 점검 | 4개 위험 조합 검증·셀프리뷰 완료. 좌표 거부 테스트 보강 권고 1건 잔여. [결과](REGRESSION_MATRIX.md) |
+| 이후 작업 | R3 기능 확장 범위 선정 | 회귀 점검 결과를 바탕으로 GAP-01–04의 첫 구현 범위 선정. 릴리스 운영은 별도 |
+| develop 완료 | OPS-03 오류 코드·request ID·로그 계약 | PR #25 병합, 기존 성공 payload와 warnings 유지. [계약](ERRORS.md) |
 | develop 완료 | PR #22 팔레트·threshold·DITHER-01/02 수정 | 결정적 palette 추출 포함. 정확한 color2 비율을 강제하는 별도 모드는 범위 밖 |
 | 릴리스 전 운영 | OPS-01, upstream #19, 릴리스 절차 | CI 버전 artifact, upstream 제출 범위 결정, 0.x 호환성·RELEASING 절차 및 main/태그/artifact 배포 검증 |
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
-| 공통 계약 | OPS-03 | success/warnings/details, 오류 분류, request ID, 로그·민감 정보 정책 통일 |
+| 공통 계약 후속 | 성공 payload의 success/details 일괄 표준화 | OPS-03 오류·추적 완료 범위 밖. 별도 호환성 검토 후 범위 결정 |
 | 편집·조회 확장 | GAP-01–04 (R3) | 레이어 속성·그룹, 구조/cel 관리, 태그 조회·편집, 범용 색상 모드 전환. indexed helper 공통화 검증 포함 |
 | export 확장 | GAP-05–06 (R4) | 범위/trim/extrude/padding, slice/pivot/nine-slice, spritesheet texture+JSON 일괄 보호 |
 | 장기 확장 | GAP-07–09·11–13 (R5/별도 SPIKE) | tilemap/tileset, 보정 필터, metadata, 선택/brush/grid, GUI·지속 세션. 범위 선정 후 착수 |
 | 보류·검토 후보 | upstream #16, export crash 복구 | #16은 지원 버전 재현 시 재개. 출력 세트의 crash 복구·고아 staging/백업 자동 정리는 후속 설계 대상으로 착수 미확정 |
 
 검증 관찰 잔여: Docker 호스트 bind mount에서 관찰한 `file_changed` 거부의 원인은 미확정이다. 컨테이너 내부 filesystem과 macOS 네이티브 회귀 통과 이력과 구분하며, 파일시스템별 재현 조건 확인 대상으로 남긴다.
+
+## 공통 회귀 점검 결과와 완료 기준
+
+작업: `[SHARED][TEST] 공통 회귀 조합 점검` · 작업 브랜치: `test/shared-regression-matrix`
+
+- [x] 기존 테스트를 RGB/grayscale/indexed, palette index 0/transparent index, non-zero/linked cel, group/hidden layer, multi-frame 및 drawing/export 축에 매핑한다.
+- [x] 각 조합의 테스트 이름·검증 내용·실행 환경을 기록하고, 검증됨/미검증/지원 범위 밖을 구분한다. 모든 축의 전체 곱을 무조건 추가하지 않는다.
+- [x] 원본 보존, 실제 저장·재열기와 렌더링 결과를 기준으로 위험도가 높은 공백을 선정하고 필요한 회귀 테스트를 추가·실행한다.
+- [x] 발견한 구현 결함은 원인별 FIX 작업으로 분리하고, 남은 공백과 R3 첫 작업 후보를 근거와 함께 기록한다.
+
+Linux 기본 검증과 변경 관련 macOS 회귀를 적용한다. 지원 하한 재실행과 플랫폼 확대는 위 개발 검증 정책을 따른다. 작업 커밋 `08ef4cb`에서 Linux build·vet·race/coverage·전체 integration과 macOS 관련 4개 조합을 검증했다. [축별 근거·미검증 범위](REGRESSION_MATRIX.md)를 참조한다. 전체 matrix 완료나 develop 병합·배포를 뜻하지 않는다.
+
+셀프리뷰: SHARED-P3-001 좌표 거부 검사는 그룹 조회 오류에 가려져 보강 권고 상태다. RM-FIX-01 그룹 내부 draw_pixels 조회 실패는 별도 BE FIX 대상이며 이번에 구현을 수정하지 않는다. R3 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회로, 실제 구현 범위는 아직 확정하지 않았다.
 
 ## 판단 기준
 
@@ -95,7 +109,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 팔레트·threshold·디더링 후속 수정은 PR #22로 병합했다. SAFE-02 dry-run은 PR #21로 병합했다. SAFE-03는 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했다. 현재 OPS-03 오류 코드·요청 추적을 구현한다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 팔레트·threshold·디더링 후속 수정은 PR #22로 병합했다. SAFE-02 dry-run은 PR #21로 병합했다. SAFE-03는 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했다. OPS-03 오류 코드·요청 추적도 PR #25로 병합했다. 공통 회귀 조합 점검 결과와 남은 보강 사항은 [결과 문서](REGRESSION_MATRIX.md)를 따른다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## 현재 우선 작업 — 알려진 동작 오류
 
@@ -369,6 +383,8 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 
 ### 테스트 matrix 확대
 
+2026-10-04 작업 브랜치 점검: [REGRESSION_MATRIX](REGRESSION_MATRIX.md)에 기존 테스트 매핑, 추가 4개 조합, 별도 FIX 및 잔여를 기록했다. 아래 광범위한 항목 전체를 완료한 것은 아니다.
+
 - [ ] OS별 검증을 반복 가능한 CI matrix로 확장한다. Linux 전체 검사와 macOS 관련 회귀 실행 이력이 있다.
 - [x] 최소 지원 버전과 최신 Aseprite 버전을 모두 검증한다.
 - [ ] RGB, grayscale, indexed 각각에 공통 drawing/export contract test를 적용한다.
@@ -384,7 +400,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - [x] 번들 CLI non-debug 로그 속성/exception 비노출 및 공개 오류 고정 문구를 적용한다. [범위](ERRORS.md).
 - [x] OPS-03 오류·추적 범위의 전체 회귀·실제 Aseprite 검증 완료.
 - [x] BE-P1-001 rollback 실패 정보 손실 수정·회귀 및 재리뷰 완료 (2026-10-04). [수정 근거](ERRORS.md#be-p1-001-수정-검증-2026-10-04).
-- [ ] OPS-03 오류·추적 PR develop 병합.
+- [x] OPS-03 오류·추적 PR #25 develop `6507405` 병합 (2026-10-04).
 
 2026-10-02 검증: Linux Go 1.25.14/Aseprite 1.3.18.3-dev의 build·vet·전체 race/coverage·전체 integration 통과 (pkg/tools 283.820초). 추가 request ID 주입 방어·shared result 보존·실제 timeout·CLI 파일 로그 회귀도 별도 통과. 최소 Aseprite 1.3.17.2와 macOS arm64/Aseprite 1.3.18.2-arm64에서 실제 Lua 오류 분류 및 서버 응답 관련 회귀 통과. 두 환경은 관련 회귀 범위다.
 
@@ -400,7 +416,8 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02), PR #21 develop 병합.
 - 완료: `[SHARED][FEATURE] snapshot 및 restore` (SAFE-03), PR #23 develop 병합.
 - 완료: `[SHARED][FEATURE] 작업 이력 및 undo` (SAFE-04), PR #24 develop 병합.
-- 현재 작업: `[SHARED][REFACTOR] 오류 코드 및 요청 추적 계약` (OPS-03). 다음은 공통 회귀 조합 점검 후 R3 기능 확장 범위 선정.
+- 완료: `[SHARED][REFACTOR] 오류 코드 및 요청 추적 계약` (OPS-03), PR #25 develop 병합.
+- 병합 전: `[SHARED][TEST] 공통 회귀 조합 점검` 검증·셀프리뷰 완료, 좌표 거부 검사 보강 권고 잔여. 이후 RM-FIX-01 수정과 R3 GAP-02 읽기 전용 조회 범위 선정을 진행한다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.

@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-10-02 · 코드 기준: `develop`의 `7f439a0df1ec0d2d24ef6dabba6de4d30c2484f9`
+기준일: 2026-10-04 · 코드 기준: `develop`의 `65074051f5d3903124ead37367c7fc62d9e7e7f6`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -14,15 +14,15 @@ develop에는 56개 MCP 도구가 등록되어 있다 (SAFE-04 PR #24 포함). �
 
 ## 다음 작업 순서
 
-알려진 동작 오류 수정과 SAFE-02 dry-run은 develop에 반영했다. SAFE-03 복원 기반도 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했고 현재 OPS-03 오류 코드·요청 추적을 정리한다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
+알려진 동작 오류 수정과 SAFE-02 dry-run은 develop에 반영했다. SAFE-03 복원 기반도 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했고 OPS-03 오류 코드·요청 추적도 PR #25로 병합했다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
 
 완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18), BUG-02(PR #20), 팔레트·threshold·DITHER-01/02 후속 수정(PR #22). 아래는 남은 작업만 나열한다.
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
-| 1 | OPS-03 오류 코드·요청 추적 — 현재 구현 | 기존 성공 응답을 유지하며 클라이언트의 오류 판별과 로그 추적 개선. [계약](ERRORS.md) |
-| 2 | 공통 회귀 조합 점검 | 기존 테스트와 색상/계층/cel/export 조합 대조 |
-| 3 | R3 기능 확장 범위 선정 | 상세 구조 조회 등 기존 GAP 잔여. 배포 운영은 별도 |
+| 1 | 공통 회귀 점검 마무리·병합 | 작업 브랜치 검증·셀프리뷰 완료, 좌표 거부 테스트 보강 권고 잔여. [결과](REGRESSION_MATRIX.md) |
+| 별도 FIX | RM-FIX-01 그룹 내부 draw_pixels 조회 | 재현·원본 보존 확인. production 수정은 별도 BE 작업 |
+| 2 | R3 기능 확장 범위 선정 | 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회. 대상 식별 기반을 먼저 마련하며 구현 범위는 미확정. 배포 운영은 별도 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
@@ -32,12 +32,12 @@ develop에는 56개 MCP 도구가 등록되어 있다 (SAFE-04 PR #24 포함). �
 
 - 릴리스 전: OPS-01 CI 버전 artifact, upstream #19 제출 범위, 릴리스 절차·0.x 호환성 정책 및 배포 검증.
 - 후속 설계: 정확한 color2 비율을 강제하는 별도 모드. 이번 DITHER-01/02는 기존0.5 문양을 유지하는 중간값 조절이며 exact-ratio API는 추가하지 않는다.
-- 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, OPS-03 오류/request ID/로그 규칙.
+- 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, 성공 payload의 success/details 일괄 표준화 검토. OPS-03 오류/request ID/로그 계약은 PR #25로 병합 완료했다.
 - 기능 확장: R3 편집·조회 → R4 export·slice. spritesheet의 texture+JSON 일괄 보호도 R4 잔여다. R5 후보는 범위 선정 후 착수한다.
 - 후속 설계: export 세트 crash 복구·고아 staging/백업 정리, 파일시스템별 file_changed 관찰 재현. 현재 완료 범위에 포함하지 않는다.
 - upstream #16 indexed 검은 이미지 재현은 아래 재개 조건을 유지한다. 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다.
 
-상태·완료 조건은 [NEXT_STEPS의 남은 작업 요약](NEXT_STEPS.md#남은-작업-요약-2026-10-02)과 기존 상세 체크리스트에서 추적한다.
+상태·완료 조건은 [NEXT_STEPS의 남은 작업 요약](NEXT_STEPS.md#남은-작업-요약-2026-10-04)과 기존 상세 체크리스트에서 추적한다.
 
 ## 단계와 완료 조건
 
@@ -45,7 +45,7 @@ develop에는 56개 MCP 도구가 등록되어 있다 (SAFE-04 PR #24 포함). �
 | --- | --- | --- | --- | --- |
 | R0 | 현황·릴리스 근거 정리, OPS-01 | 기능표/태그/Unreleased 동기화, CI Go·Aseprite 버전 artifact (로그 출력은 구현됨), draw_pixels upstream 제출 범위 결정 | 등록 도구 수와 기능표 일치; 버전 증거 보존; 제출 범위 기록 | 문서 초안 작성 완료, CI artifact·범위 결정 예정 |
 | R1 | 실행 계약 확립, SAFE-01·GAP-10·OPS-03 | warnings, capability preflight, 오류 분류 및 응답 규칙 설계 | 위험 작업별 경고·기존 클라이언트 호환 검증; 미지원 버전/API를 변경 전에 거부 | warnings develop 병합 완료. capability PR #13 병합 완료; 하한 health·전체 통합 실검증 완료 (2026-09-22) |
-| R2 | 원본 보호와 복구, SAFE-02–05·OPS-03 | path lock·atomic save 기반, 임시 복사본 dry-run, snapshot/restore, history/undo, request ID·redaction | 실패·취소·동시 요청 시 원본 보존; dry-run 원본 불변; snapshot 복원·history 일관성 회귀 통과 | R1 이후. undo는 snapshot 이후 |
+| R2 | 원본 보호와 복구, SAFE-02–05·OPS-03 | path lock·atomic save 기반, 임시 복사본 dry-run, snapshot/restore, history/undo, request ID·redaction | 실패·취소·동시 요청 시 원본 보존; dry-run 원본 불변; snapshot 복원·history 일관성 회귀 통과 | SAFE-02–05 및 OPS-03 구현 develop 반영 완료 (PR #14/#21/#23/#24/#25). 공통 회귀 점검은 작업 브랜치 검증 완료·병합 전; 잔여는 REGRESSION_MATRIX 참조 |
 | R3 | 편집·조회 빈 부분 해소, GAP-01–04 | 레이어 속성·그룹, 상세 구조 조회, cel 위치/opacity/unlink, 태그 조회·편집, 범용 색상 모드 전환 | 다중 레이어/프레임에서 정확한 대상 지정; 저장/재열기 검증; destructive 변경에 R1/R2 계약 적용 | R1/R2 기반 이후, 예정 |
 | R4 | 게임·UI 자산 export, GAP-05–06 | 태그/레이어/프레임 범위 export, trim/extrude/개별 padding, slices/pivot/nine-slice | 출력 이미지와 JSON의 frame·bounds·pivot 일치; overwrite/실패 보호 | R3 상세 조회 기반, 예정 |
 | R5 | 호환성·확장, GAP-07–09·GAP-11–12·OPS-02 | native launcher와 OS smoke, 색상/계층/client matrix 확대; tilemap/tileset·보정 필터·metadata·선택/brush/grid 확장 | 플랫폼별 실행 증거, 기능별 최소 API 및 batch 검증, 기존 도구 회귀 통과 | launcher/matrix는 독립 착수 가능. 확장 기능은 별도 계약·SPIKE 후 선정 |
@@ -105,6 +105,10 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] SAFE-02: dry-run 검증 및 PR #21 develop 병합
 - [x] SAFE-03: snapshot/restore 검증 및 PR #23 develop 병합
 - [x] SAFE-04: history/undo 검증 및 PR #24 develop 병합
+- [x] OPS-03: 오류 코드·request ID·로그 계약 및 PR #25 develop 병합 (성공 payload 일괄 표준화 제외)
+- [x] 공통 회귀 조합 매핑·위험 조합 검증·R3 첫 후보 기록 (작업 브랜치, [결과](REGRESSION_MATRIX.md))
+- [ ] 좌표 거부 검사 보강 검토 및 회귀 점검 develop 병합
+- [ ] RM-FIX-01 별도 수정 및 R3 첫 구현 범위 확정
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정
 - [ ] 릴리스 절차 문서와 0.x 호환성 정책 확정

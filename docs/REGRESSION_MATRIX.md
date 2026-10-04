@@ -9,9 +9,9 @@
 
 [NEXT_STEPS](NEXT_STEPS.md#테스트-matrix-확대)의 미완료 목록은 ① OS별 CI matrix ② RGB/grayscale/indexed 공통 drawing/export ③ palette index 0/transparent index ④ non-zero/linked cel, group/hidden layer, multi-frame ⑤ 클라이언트별 JSON 호환성이다. 최소 지원 버전 검증은 이미 완료 표시다. 이번 작업은 ②–④의 기존 증거 대조와 위험 조합 보강이며 ①·⑤ 전체 완료를 주장하지 않는다.
 
-[ROADMAP](ROADMAP.md#다음-작업-순서)의 순서는 OPS-03 → 이 점검 → R3 범위 선정이다. 현재 기준 문서의 OPS-03 진행·병합 대기 표시는 오래된 상태지만 실제 기준 커밋은 PR #25 병합이다. BUG-01–05, DITHER-01/02, SAFE-01–05, GAP-10 구현도 기준에 포함된다. 릴리스 완료를 뜻하지 않는다.
+[ROADMAP](ROADMAP.md#다음-작업-순서)의 기존 순서는 OPS-03 → 이 점검 → R3 범위 선정이다. 이번 문서 동기화에서 OPS-03 PR #25 병합 완료와 본 작업의 검증 완료·병합 전 상태를 반영했다. BUG-01–05, DITHER-01/02, SAFE-01–05, GAP-10 구현도 기준에 포함된다. 릴리스 완료를 뜻하지 않는다.
 
-인계에서 언급한 `docs-shared-post-ops-next-steps` 경로는 작업 시작 시 존재하지 않았고 `git worktree list --porcelain`에도 없었다. 그 문서 변경의 내용이나 보존 상태는 확인할 수 없다. 다른 워크트리를 수정하지 않았으며, 본 결과만 별도 파일로 추가한다. 해당 문서 변경이 회수되면 OPS-03 완료·기준 커밋 갱신과 이 결과 링크를 함께 병합해야 한다. 기존 세 문서의 matrix 체크박스를 일괄 완료 처리하면 안 된다.
+별도 문서 작업은 `shared-docs-post-ops-next-steps` 워크트리의 `docs/shared-post-ops-next-steps` 브랜치, 커밋 `0460cede14578840d8f4a7744370463d4e7a4afc`로 확인했다. 해당 커밋의 세 문서 동기화를 이번 브랜치에 반영하고 회귀 점검 결과까지 갱신했다. 별도 워크트리는 수정하지 않았다. 기존 광범위 matrix 체크박스는 일괄 완료 처리하지 않는다.
 
 ## 판정과 실행 근거 읽는 법
 
@@ -106,4 +106,6 @@ go test -count=1 -tags=integration ./...
 
 ## 완료 상태
 
-테스트와 본 보고서만 추가했다. production/GAP 기능 구현, develop/main 병합, 배포는 수행하지 않았다. 외부 독립 코드 리뷰는 아직 받지 않았다. 알려진 RM-FIX-01은 별도 작업으로 남는다. 문서 변경 회수·병합 및 리뷰 후 develop 통합을 결정할 수 있으며, 현재 미병합 브랜치/워크트리는 정리하지 않는다.
+테스트·본 보고서와 NEXT_STEPS/ROADMAP/CAPABILITIES 동기화를 포함했다. production/GAP 기능 구현, develop/main 병합, 배포는 수행하지 않았다. 외부 독립 코드 리뷰는 아직 받지 않았다. 알려진 RM-FIX-01은 별도 작업으로 남는다. 문서 동기화는 이번 브랜치에 반영했으며 develop 통합은 별도 승인 대상이다. 현재 미병합 브랜치/워크트리는 정리하지 않는다.
+
+셀프리뷰(`6507405..08ef4cb`): 병합 차단 P0/P1 없음, PASS_WITH_NOTES. SHARED-P3-001은 마지막 범위 밖 좌표 요청이 그룹 내부 레이어 조회 오류로 먼저 실패하여 좌표 검사 자체를 검증하지 못하는 보강 권고다. 루트 레이어 상태에서 요청하고 좌표 오류 메시지와 원본 bytes 보존을 assert하는 수정이 권장되며 아직 적용하지 않았다. 신규 matrix와 기존 RGB 좌표 거부 테스트 재실행은 6.607초 통과했다. 문서 경로·상태 동기화 권고는 이번 문서 변경에 반영했다. 이 기록은 후속 테스트 변경에 대한 재리뷰를 대신하지 않는다.
