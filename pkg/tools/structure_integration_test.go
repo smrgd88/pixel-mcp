@@ -30,6 +30,8 @@ func newStructureFixture(t *testing.T) (*behaviorFixture, string) {
 	s := mcp.NewServer(&mcp.Implementation{Name: "structure-test", Version: "1"}, nil)
 	RegisterInspectionTools(s, c, g, cfg, logger)
 	RegisterCanvasTools(s, c, g, cfg, logger)
+	RegisterAnimationTools(s, c, g, cfg, logger)
+	RegisterSnapshotTools(s, cfg, logger)
 	RegisterHistoryTools(s, cfg, logger)
 	st, ct := mcp.NewInMemoryTransports()
 	ss, err := s.Connect(context.Background(), st, nil)

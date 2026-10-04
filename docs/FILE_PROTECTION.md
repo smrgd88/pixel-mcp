@@ -78,3 +78,7 @@ PR #18로 develop `363d6fa`에 병합한 계약이다. 기존 단일 파일 도�
 ## Snapshot restore
 
 SAFE-03의 네 snapshot 도구는 저장소와 source 잠금을 함께 예약하므로 일반 편집 wrapper를 거치지 않는다. restore는 이 문서의 기존 staging/원본 변경 감지/atomic replacement를 직접 재사용하며, 교체 전에 현재 파일의 snapshot을 발행한다. cross-volume은 원본 옆 staging으로 복사해 처리한다. 저장소 제한·실패 시 백업·만료 정책은 [SNAPSHOTS](SNAPSHOTS.md)를 따른다.
+
+## Cel revision 사전조건
+
+`get_sprite_structure`는 같은 읽기 잠금 아래 Lua 실행 전후 원본 해시를 확인해 revision을 반환한다. `set_cel_properties`는 공통 잠금·staging/history 경로 안에서 실제 bound 작업 복사본의 해시를 expected_revision과 비교한다. stale·동시 요청·외부 변경 보호와 비협력 writer의 ABA/최종 검사 경계는 [CEL_PROPERTIES](CEL_PROPERTIES.md)를 따른다.

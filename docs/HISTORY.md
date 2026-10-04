@@ -11,9 +11,9 @@
 3. 목록의 최신 `state=applied` 항목의 `operation_id`를 `undo_last_operation`의 `expected_operation_id`에 전달한다. `sprite_path`도 필수다.
 4. 성공하면 `success`, 되돌린 `operation` (`state=undone`), `backup_snapshot`을 반환한다.
 
-두 도구는 `enable_history=false`에서도 등록된다. 기록을 끈 뒤에도 기존 이력을 확인하거나 undo할 수 있다. list 응답은 `operations` 배열과 `recording_enabled`다. 도구 수는 develop의 54개에서 이 구현 브랜치의 56개로 늘어난다.
+두 도구는 `enable_history=false`에서도 등록된다. 기록을 끈 뒤에도 기존 이력을 확인하거나 undo할 수 있다. list 응답은 `operations` 배열과 `recording_enabled`다. SAFE-04 도입 당시 도구 수는 54개에서 56개로 늘어났다. 현재 inventory는 [CAPABILITIES](CAPABILITIES.md)를 따른다.
 
-대상은 기존 파일의 단일 sprite 편집 경로다: 그림·레이어/프레임·선택/clipboard·팔레트·변형·감색·자동 shading·적용형 antialiasing·기존 sprite로의 image import. selection과 clipboard도 파일에 저장되므로 포함한다. 실패한 handler, 실제 파일 bytes가 같은 no-op, dry-run은 기록하지 않는다. get/analyze, export, save_as, downsample 출력, 새 canvas 생성, 수동 snapshot 생성/복원·삭제는 자동 편집 이력 대상이 아니다. raw Aseprite/Go API나 GUI의 미저장 작업도 대상이 아니다.
+대상은 기존 파일의 단일 sprite 편집 경로다: 그림·cel 위치/opacity(`set_cel_properties`)·레이어/프레임·선택/clipboard·팔레트·변형·감색·자동 shading·적용형 antialiasing·기존 sprite로의 image import. selection과 clipboard도 파일에 저장되므로 포함한다. 실패한 handler, 실제 파일 bytes가 같은 no-op, dry-run은 기록하지 않는다. get/analyze, export, save_as, downsample 출력, 새 canvas 생성, 수동 snapshot 생성/복원·삭제는 자동 편집 이력 대상이 아니다. raw Aseprite/Go API나 GUI의 미저장 작업도 대상이 아니다.
 
 ## 데이터와 보존
 

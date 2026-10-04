@@ -20,7 +20,7 @@
 - `code`는 안정적인 기계 판독용 식별자다. 클라이언트는 알 수 없는 코드도 표시할 수 있어야 한다. `message`는 표시용 설명이며 분기 조건으로 사용하지 않는다.
 - 성공한 작업이 가질 수 있는 손실 가능성을 알린다. 실제 픽셀 손실량이나 변경 전후 차이를 측정한 결과가 아니다.
 - 응답은 **작업 완료 후** 반환된다. `dry_run=true`인 감색/flatten에서는 복사본 실행 완료 후 같은 코드를 반환하며 실제 적용 시의 잠재 효과를 뜻한다. 원본이 변경됐다는 뜻이 아니다. [SAFE-02 계약](DRY_RUN.md)을 함께 확인한다. 승인·backup·undo는 이 경고 자체의 기능이 아니다.
-- 오류 반환 경로는 기존 오류 계약을 유지하며 성공 warnings를 붙이지 않는다. 경고가 없다고 모든 작업이 무손실이거나 안전하다는 뜻은 아니다. 다른 47개 도구는 이번 적용 범위 밖이다.
+- 오류 반환 경로는 기존 오류 계약을 유지하며 성공 warnings를 붙이지 않는다. 경고가 없다고 모든 작업이 무손실이거나 안전하다는 뜻은 아니다. 기존 SAFE-01 범위에 더해 cel 편집의 linked 경고가 추가됐다.
 - MCP SDK는 같은 출력 객체를 `structuredContent`와 JSON `TextContent`로 직렬화한다. warnings는 두 표현에서 같다.
 - stderr 로그는 운영 진단용이다. 클라이언트는 stderr 문구를 파싱하지 않고 응답의 warnings를 사용한다. warnings는 timing/debug 설정과 무관하며 경로·사용자 입력을 메시지에 삽입하지 않는다.
 
@@ -31,6 +31,7 @@
 | `palette_quantization` | `quantize_palette` | 성공한 모든 감색 요청 | 팔레트 대체와 색상 정보 손실 가능성 |
 | `color_mode_conversion` | `quantize_palette` | `convert_to_indexed=true` (생략 시 true) | indexed 변환 요청에 따른 색상·투명도 표현 변경 가능성. 이미 indexed인 경우도 요청 기준으로 반환 |
 | `layer_flattening` | `flatten_layers`, `quantize_palette` | 모든 flatten 요청 및 `dither=true` 감색 요청 | 편집 가능한 레이어 구조 손실 가능성. 단일 레이어에서도 작업 종류 기준으로 반환 |
+| `linked_cel_properties` | `set_cel_properties` | 명시적 allow_linked=true로 native 공유 cel 2개 이상 변경 성공 | affected_cels 전체에 위치·opacity 변경 적용, [계약](CEL_PROPERTIES.md) |
 | `resampling` | `scale_sprite` | `algorithm=bilinear` 또는 `rotsprite`, X/Y 중 하나라도 배율이 1이 아님 | 픽셀 색·경계 패턴 변경 가능성 |
 
 `scale_sprite`의 알고리즘 빈 문자열/nearest 및 배율 1×1은 resampling 경고가 없다. 현재 MCP 입력 schema는 algorithm 키를 필수로 요구하며 빈 문자열은 nearest로 처리한다. 실제 정수 출력 크기가 반올림 등으로 같아지는 경우도 입력 배율 기준이다. 감색 경고 순서는 palette_quantization, color_mode_conversion(변환 요청 시), layer_flattening(dither 사용 시)이며 동일 코드는 중복 반환하지 않는다.
