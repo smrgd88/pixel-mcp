@@ -3,13 +3,15 @@
 작업: `[SHARED][TEST] 공통 회귀 조합 점검` · 2026-10-04
 
 기준: `origin/develop` `65074051f5d3903124ead37367c7fc62d9e7e7f6`, PR #25 포함, Unreleased.
-브랜치: `test/shared-regression-matrix`.
+브랜치: `test/shared-regression-matrix`. 이 점검은 PR #27로 develop `ec99cc2`에 병합됐고 PR #28 문서도 `2ec6c79`에 병합됐다. 아래 기존 실행·리뷰 기록은 당시 이력이다.
+
+RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 전환했다. 루트 우회를 제거하고 nested 상태 그대로 검사한다. FIX는 아직 develop 미병합이며 [계약·검증](DRAW_PIXELS_NESTED_FIX.md)을 따른다.
 
 ## 실제 backlog와 이번 범위
 
 [NEXT_STEPS](NEXT_STEPS.md#테스트-matrix-확대)의 미완료 목록은 ① OS별 CI matrix ② RGB/grayscale/indexed 공통 drawing/export ③ palette index 0/transparent index ④ non-zero/linked cel, group/hidden layer, multi-frame ⑤ 클라이언트별 JSON 호환성이다. 최소 지원 버전 검증은 이미 완료 표시다. 이번 작업은 ②–④의 기존 증거 대조와 위험 조합 보강이며 ①·⑤ 전체 완료를 주장하지 않는다.
 
-[ROADMAP](ROADMAP.md#다음-작업-순서)의 기존 순서는 OPS-03 → 이 점검 → R3 범위 선정이다. 이번 문서 동기화에서 OPS-03 PR #25 병합 완료와 본 작업의 검증 완료·병합 전 상태를 반영했다. BUG-01–05, DITHER-01/02, SAFE-01–05, GAP-10 구현도 기준에 포함된다. 릴리스 완료를 뜻하지 않는다.
+[ROADMAP](ROADMAP.md#다음-작업-순서)의 기존 순서는 OPS-03 → 이 점검 → R3 범위 선정이다. 이번 문서 동기화에서 OPS-03 PR #25 병합 완료와 본 작업의 PR #27 develop 병합 완료 상태를 반영했다. BUG-01–05, DITHER-01/02, SAFE-01–05, GAP-10 구현도 기준에 포함된다. 릴리스 완료를 뜻하지 않는다.
 
 별도 문서 작업은 `shared-docs-post-ops-next-steps` 워크트리의 `docs/shared-post-ops-next-steps` 브랜치, 커밋 `0460cede14578840d8f4a7744370463d4e7a4afc`로 확인했다. 해당 커밋의 세 문서 동기화를 이번 브랜치에 반영하고 회귀 점검 결과까지 갱신했다. 별도 워크트리는 수정하지 않았다. 기존 광범위 matrix 체크박스는 일괄 완료 처리하지 않는다.
 
@@ -41,7 +43,7 @@
 | dry-run, RGB 두 레이어 | `TestDryRunPreservesSourceAndMatchesApply` (`dry_run_integration_test.go`): bytes/inode/권한/mtime 보존, 반복 preview, 실제 apply summary 일치 | 검증됨 L; grayscale/indexed linked/group 전체 조합은 미검증 |
 | snapshot/undo | `TestSnapshotMCPPreservesNativeSpriteAndRecoversEdit`, `TestHistoryMCPRealEditUndoAndExclusions`: 재시작 후 bytes 복원·재열기, history 제외 조건 | 검증됨 L; 세 모드 linked cel 렌더링 교차 복원은 미검증 |
 | 실패·취소·출력 rollback | `TestExportSequenceInvalidDestinationPreservesFiles`, `...ValidationAndSchema`, `...StalePlanWritesNothing`; `pkg/aseprite/output_files_test.go`의 `TestOutputFilesRollbackOnCommitFailure`, `...CancelDuringPublication`, `...RollbackFailureRetainsBackup` | 검증됨 L; crash 원자성/자동 복구는 지원 범위 밖 |
-| 신규: RGB/grayscale/indexed mask 0/3 × positioned native link × drawing→PNG | `TestRegressionMatrixLinkedDrawingExport/{rgb,grayscale,indexed-mask-zero,indexed-opaque-zero}` (`regression_matrix_integration_test.go`): 아래 상세 | 검증됨 L/M(명시된 경로); 그룹 내부 drawing은 RM-FIX-01 |
+| 신규: RGB/grayscale/indexed mask 0/3 × positioned native link × drawing→PNG | `TestRegressionMatrixLinkedDrawingExport/{rgb,grayscale,indexed-mask-zero,indexed-opaque-zero}` (`regression_matrix_integration_test.go`): 아래 상세 | 검증됨 L/M(명시된 경로); 그룹 내부 drawing도 FIX 브랜치에서 성공 검사; [후속 검증](DRAW_PIXELS_NESTED_FIX.md) |
 
 ## 위험 공백 선정과 신규 검증
 
@@ -49,12 +51,12 @@
 
 1. 16×16 문서, (5,3)의 2×2 회색 cel, 두 frame의 native link를 만든다. 숨김 레이어와 숨김 그룹에는 전체 화면 흰색 cel을 넣어 visibility 오류가 픽셀 비교에서 드러나게 한다.
 2. indexed는 mask=0/3을 나눠 설정하고 mask palette entry 자체는 불투명 magenta로 만든다. 따라서 palette alpha가 우연히 투명도를 대신하는 것을 막는다. mask=3에서는 흰색의 실제 index가 0인지도 직접 검사한다.
-3. 재열기 후 link identity·위치·계층 전제를 확인한다. 그룹 내부 drawing 실패와 원본 bytes 보존을 재현한다(RM-FIX-01).
-4. fixture의 paint를 루트로 옮긴 뒤 범위 밖 (16,0) 요청이 정확한 좌표 오류로 거부되고 원본 bytes가 보존되는지 확인한다. 이어 MCP draw_pixels로 frame 2의 내부 (5,3)와 cel 밖 (1,2)를 편집한다. 다시 그룹에 넣고 저장한다. 이는 그룹 내부 drawing 성공을 뜻하지 않는다.
+3. 재열기 후 link identity·위치·계층 전제를 확인한다. 현재 FIX에서는 그룹 내부 대상에 좌표 오류를 요청해 원본 bytes 보존을 확인한다.
+4. paint를 그룹 안에 유지한 채 MCP draw_pixels로 frame 2의 cel 밖 (1,2)를 단일 요청으로 편집하고 재열기 identity·위치를 확인한다. 내부 (5,3)도 편집한 뒤 두 frame을 렌더링한다. 기존 PR #27에서는 조회 실패를 기록하고 루트로 이동하는 우회를 사용했으나 RM-FIX-01에서 제거했다.
 5. 별도 프로세스로 재열어 모드·native link·두 cel 위치 일치·frame duration·sprite data·숨김 계층 존재 및 mask/빈 픽셀 index를 assert한다.
 6. MCP export_sprite로 두 PNG를 생성하고 Go PNG decoder로 **각 256픽셀 전체**를 독립 상수 기대값과 비교한다. 비대상 3개의 회색 픽셀과 투명 배경, 두 흰 픽셀이 두 frame 모두 일치해야 한다. source bytes는 export 전후 동일해야 한다.
 
-## 별도 FIX 인계: RM-FIX-01
+## 별도 FIX 인계: RM-FIX-01 (발견 당시 기록)
 
 작업 후보: `[BE][FIX] 그룹 내부 draw_pixels 대상 조회 수정`, 신규 작업 시 `fix/be-nested-draw-pixels`.
 
@@ -62,7 +64,7 @@
 - 재현: native 문서의 `visible-group/paint`에 positioned linked cel을 저장 → `draw_pixels(layer_name="paint", frame_number=2, pixels=[{x:1,y:2,color:"#FFFFFFFF"}])`.
 - 원인 근거: `pkg/aseprite/lua_drawing.go`의 `DrawPixels`가 `ipairs(spr.layers)`로 최상위만 검색한다. 자식 이름은 존재하나 탐색되지 않는다. 다른 drawing 도구에도 유사 루프가 있지만 이번 재현을 그 도구들의 확정 결함으로 확대하지 않는다.
 - 현재 영향: 그룹 안의 raster layer 편집이 거부됨. 이 재현에서는 원본 bytes 손상 없음. 그룹 편집 API 미지원(GAP-01)과 기존 그룹 내부 raster 편집 실패는 구분한다.
-- 이번 테스트의 오류 기대는 **현상 기록**이다. 해결 검증이 아니다. FIX에서는 이를 성공 기대와 저장/재열기·render 검사로 바꾸고, 중복 leaf 이름의 대상 지정/모호성 오류 계약을 먼저 결정해야 한다. 그룹을 선택한 경우와 missing/hidden/locked layer 정책도 명시한다.
+- 당시 테스트의 오류 기대는 **현상 기록**이었다. 현재 FIX는 성공 기대와 저장/재열기·render 검사로 전환했다. 중복/그룹/missing/hidden/locked 정책과 후속 검증은 [RM-FIX-01 보고서](DRAW_PIXELS_NESTED_FIX.md)에 기록한다.
 - production 코드 변경은 하지 않았다. 알려진 실패를 skip하거나 정상 지원으로 보고하지 않는다.
 
 ## 잔여와 R3 첫 구현 후보
@@ -104,7 +106,7 @@ go test -count=1 -tags=integration ./...
 - Linux 전체 integration: 통과. `ok  	github.com/willibrandon/pixel-mcp/pkg/tools	298.676s`. 실패·skip을 임의로 제외한 필터 실행이 아니라 `./...` 전체 실행이다. 기본 suite 일부 환경 조건부 skip 여부를 별도 전수 감사했다는 뜻은 아니다.
 - `gofmt -l` 신규 Go 파일 출력 없음, `git diff --check` 통과. 로그는 로컬 `/tmp/pixel-mcp-regression-matrix-evidence/{linux-race.log,linux-integration.log,macos.log}`에 보존했다(임시 경로이므로 영구 artifact는 아님).
 
-## 완료 상태
+## 공통 회귀 작업 완료 상태 (당시 기록; PR #27로 이후 병합)
 
 테스트·본 보고서와 NEXT_STEPS/ROADMAP/CAPABILITIES 동기화를 포함했다. production/GAP 기능 구현, develop/main 병합, 배포는 수행하지 않았다. 외부 독립 코드 리뷰는 아직 받지 않았다. 알려진 RM-FIX-01은 별도 작업으로 남는다. 문서 동기화는 이번 브랜치에 반영했으며 develop 통합은 별도 승인 대상이다. 현재 미병합 브랜치/워크트리는 정리하지 않는다.
 

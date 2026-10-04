@@ -27,11 +27,11 @@ type PixelInput struct {
 // for efficient bulk pixel operations. When UsePalette is true, colors are
 // snapped to the nearest palette color using LAB color space distance.
 type DrawPixelsInput struct {
-	SpritePath  string       `json:"sprite_path" jsonschema:"Path to the Aseprite sprite file"`                                // Path to the sprite file to modify
-	LayerName   string       `json:"layer_name" jsonschema:"Name of the layer to draw on"`                                     // Target layer name
-	FrameNumber int          `json:"frame_number" jsonschema:"Frame number to draw on (1-based)"`                              // 1-based frame index
-	Pixels      []PixelInput `json:"pixels" jsonschema:"Array of pixels to draw"`                                              // Pixels to draw with positions and colors
-	UsePalette  bool         `json:"use_palette,omitempty" jsonschema:"Snap colors to nearest palette color (default: false)"` // Snap to palette if true
+	SpritePath  string       `json:"sprite_path" jsonschema:"Path to the Aseprite sprite file"`                                               // Path to the sprite file to modify
+	LayerName   string       `json:"layer_name" jsonschema:"Unique exact raster layer name at any group depth; duplicate names are rejected"` // Target layer name
+	FrameNumber int          `json:"frame_number" jsonschema:"Frame number to draw on (1-based)"`                                             // 1-based frame index
+	Pixels      []PixelInput `json:"pixels" jsonschema:"Array of pixels to draw"`                                                             // Pixels to draw with positions and colors
+	UsePalette  bool         `json:"use_palette,omitempty" jsonschema:"Snap colors to nearest palette color (default: false)"`                // Snap to palette if true
 }
 
 // DrawPixelsOutput defines the output for the draw_pixels tool.

@@ -1,6 +1,6 @@
 # 기능 지원 현황
 
-기준일: 2026-10-04 · 구현 기준: `develop`의 `65074051f5d3903124ead37367c7fc62d9e7e7f6`
+기준일: 2026-10-04 · 구현 기준: `develop`의 `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -33,7 +33,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-005 | 캔버스·레이어·프레임 | `delete_layer` | v0.1.0 | — | [canvas.go](../pkg/tools/canvas.go) |
 | MCP-006 | 캔버스·레이어·프레임 | `delete_frame` | v0.1.0 | — | [canvas.go](../pkg/tools/canvas.go) |
 | MCP-007 | 캔버스·레이어·프레임 | `flatten_layers` | v0.5.0 | Unreleased: warnings (#11) + dry_run (#21, develop 반영) | [canvas.go](../pkg/tools/canvas.go) |
-| MCP-008 | 드로잉 | `draw_pixels` | v0.1.0 | Unreleased: cel 좌표 수정 (#1) | [drawing.go](../pkg/tools/drawing.go) |
+| MCP-008 | 드로잉 | `draw_pixels` | v0.1.0 | Unreleased: cel 좌표 수정 (#1); RM-FIX-01 nested 조회·중복 거부 (FIX 브랜치, 미병합) | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-009 | 드로잉 | `draw_line` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-010 | 드로잉 | `draw_contour` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-011 | 드로잉 | `draw_rectangle` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
@@ -124,8 +124,8 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 
 - 등록: [server.go](../pkg/server/server.go), 도구 표의 입력 schema/handler.
 - 구현: [Aseprite 계층](../pkg/aseprite), 실제 Lua generator와 Go 알고리즘.
-- 회귀 및 전체 검증 기록: [NEXT_STEPS](NEXT_STEPS.md), [TESTING](TESTING.md), [공통 회귀 조합 점검](REGRESSION_MATRIX.md) (작업 브랜치 검증·병합 전).
-- 회귀 점검에서 그룹 내부 `draw_pixels` 대상 조회 실패(RM-FIX-01)를 재현했다. 원본 바이트는 보존되며, 별도 FIX 전까지 해당 조합은 편집 성공이 검증된 범위에 포함하지 않는다. 신규 4개 조합 통과를 모든 drawing/export 도구의 전체 matrix 완료로 해석하지 않는다.
+- 회귀 및 전체 검증 기록: [NEXT_STEPS](NEXT_STEPS.md), [TESTING](TESTING.md), [공통 회귀 조합 점검](REGRESSION_MATRIX.md) (PR #27 develop 병합 완료).
+- 회귀 점검에서 발견한 RM-FIX-01은 현재 FIX 브랜치에서 그룹 내부 `draw_pixels` 조회를 수정했다. 고유한 정확한 이름만 허용하고 중복·그룹 대상을 거부한다. [계약·검증과 제한](DRAW_PIXELS_NESTED_FIX.md)을 따른다. develop에는 아직 미병합이다. 신규 4개 조합 통과를 모든 drawing/export 도구의 전체 matrix 완료로 해석하지 않는다.
 - `draw_pixels` 수정: PR #1 (`b1204b8`), native link: PR #6 (`941fe34`), indexed shading: PR #8 (`b444ff0`). 이 수정들은 기준일 현재 로컬 태그 `v0.5.0`에 포함되지 않는다.
 - 기능 변경 PR은 이 표의 상태·제한·버전과 `CHANGELOG.md`의 Unreleased를 함께 갱신한다. 테스트 통과 근거가 없으면 검증 완료로 표시하지 않는다.
 - develop 병합 시 `develop 반영`, 릴리스 태그 포함 확인 시 버전 기록. 배포 게시 상태는 별도로 확인한다.

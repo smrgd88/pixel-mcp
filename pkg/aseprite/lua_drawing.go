@@ -12,7 +12,7 @@ import (
 // efficient way to draw multiple pixels as they are all committed in a single transaction.
 //
 // Parameters:
-//   - layerName: name of the target layer (automatically escaped for Lua safety)
+//   - layerName: unique exact name of the target raster layer at any depth (escaped for Lua safety)
 //   - frameNumber: 1-based frame index to draw on
 //   - pixels: slice of Pixel structs containing {X, Y, Color} data
 //   - usePalette: if true, snaps each pixel color to nearest palette color
@@ -24,7 +24,7 @@ import (
 // Prints "Pixels drawn successfully" on success.
 // Returns an error if:
 //   - No sprite is active
-//   - The layer is not found
+//   - The layer is not found, ambiguous, or not a raster layer
 //   - The frame number is invalid
 //   - A pixel coordinate is outside the sprite bounds
 func (g *LuaGenerator) DrawPixels(layerName string, frameNumber int, pixels []Pixel, usePalette bool) string {
@@ -55,17 +55,30 @@ if not spr then
 	error("No active sprite")
 end
 
--- Find layer by name
+-- Resolve an exact name across the complete hierarchy before modifying anything.
+-- Count groups too: a group/raster name collision must not silently pick a leaf.
+local targetName = "%s"
 local layer = nil
-for i, lyr in ipairs(spr.layers) do
-	if lyr.name == "%s" then
-		layer = lyr
-		break
+local matches = 0
+local function findLayer(layers)
+	for _, lyr in ipairs(layers) do
+		if lyr.name == targetName then
+			layer = lyr
+			matches = matches + 1
+		end
+		if lyr.isGroup then
+			findLayer(lyr.layers)
+		end
 	end
 end
+findLayer(spr.layers)
 
-if not layer then
-	error("Layer not found: %s")
+if matches == 0 then
+	error("Layer not found: " .. targetName)
+elseif matches > 1 then
+	error("Ambiguous layer name: " .. targetName .. "; use a unique layer name")
+elseif not layer.isImage or layer.isTilemap then
+	error("Target layer must be a raster layer: " .. targetName)
 end
 
 local frame = spr.frames[%d]
@@ -131,7 +144,7 @@ app.transaction(function()
 	end
 
 	local img = cel.image
-`, escapedName, escapedName, frameNumber, frameNumber,
+`, escapedName, frameNumber, frameNumber,
 		hasPixels, requestedLeft, requestedTop, requestedRight, requestedBottom))
 
 	// Add pixel drawing commands

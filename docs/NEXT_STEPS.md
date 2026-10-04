@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-10-04
 
-현재 기준: `develop`의 `65074051f5d3903124ead37367c7fc62d9e7e7f6` (PR #25까지 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 작업 브랜치에서 검증·셀프리뷰를 마쳤으며 병합 전이다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2` (PR #28까지 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로 develop에 병합했다. PR #28의 Codex README/영어 AGENTS도 병합 완료다. RM-FIX-01은 이 FIX 브랜치에서 구현했으며 아직 develop 미병합이다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -26,7 +26,8 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 | 구분 | 남은 작업 | 상태·완료 기준 |
 | --- | --- | --- |
-| 병합 전 | 공통 회귀 조합 점검 | 4개 위험 조합 검증·셀프리뷰 완료. 좌표 거부 테스트 보강 완료. [결과](REGRESSION_MATRIX.md) |
+| develop 완료 | 공통 회귀 조합 점검 | PR #27 병합. [결과](REGRESSION_MATRIX.md) |
+| FIX 브랜치 | RM-FIX-01 그룹 내부 draw_pixels | 계층 전체의 고유 이름 조회·중복 거부 구현. develop 미병합. [계약·검증](DRAW_PIXELS_NESTED_FIX.md) |
 | 이후 작업 | R3 기능 확장 범위 선정 | 회귀 점검 결과를 바탕으로 GAP-01–04의 첫 구현 범위 선정. 릴리스 운영은 별도 |
 | develop 완료 | OPS-03 오류 코드·request ID·로그 계약 | PR #25 병합, 기존 성공 payload와 warnings 유지. [계약](ERRORS.md) |
 | develop 완료 | PR #22 팔레트·threshold·DITHER-01/02 수정 | 결정적 palette 추출 포함. 정확한 color2 비율을 강제하는 별도 모드는 범위 밖 |
@@ -49,9 +50,9 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 - [x] 원본 보존, 실제 저장·재열기와 렌더링 결과를 기준으로 위험도가 높은 공백을 선정하고 필요한 회귀 테스트를 추가·실행한다.
 - [x] 발견한 구현 결함은 원인별 FIX 작업으로 분리하고, 남은 공백과 R3 첫 작업 후보를 근거와 함께 기록한다.
 
-Linux 기본 검증과 변경 관련 macOS 회귀를 적용한다. 지원 하한 재실행과 플랫폼 확대는 위 개발 검증 정책을 따른다. 작업 커밋 `08ef4cb`에서 Linux build·vet·race/coverage·전체 integration과 macOS 관련 4개 조합을 검증했다. [축별 근거·미검증 범위](REGRESSION_MATRIX.md)를 참조한다. 전체 matrix 완료나 develop 병합·배포를 뜻하지 않는다.
+Linux 기본 검증과 변경 관련 macOS 회귀를 적용한다. 지원 하한 재실행과 플랫폼 확대는 위 개발 검증 정책을 따른다. 작업 커밋 `08ef4cb`에서 Linux build·vet·race/coverage·전체 integration과 macOS 관련 4개 조합을 검증했다. [축별 근거·미검증 범위](REGRESSION_MATRIX.md)를 참조한다. 전체 matrix 완료나 배포를 뜻하지 않는다. 공통 회귀 점검은 이후 PR #27로 develop에 병합했다.
 
-셀프리뷰: SHARED-P3-001은 루트 레이어에서 좌표 오류 메시지·원본 bytes를 검사하도록 보강했다. RM-FIX-01 그룹 내부 draw_pixels 조회 실패는 별도 BE FIX 대상이며 이번에 구현을 수정하지 않는다. R3 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회로, 실제 구현 범위는 아직 확정하지 않았다.
+셀프리뷰: SHARED-P3-001은 루트 레이어에서 좌표 오류 메시지·원본 bytes를 검사하도록 보강했다. RM-FIX-01 그룹 내부 draw_pixels 조회 실패는 당시 별도 BE FIX로 분리했으며 현재 FIX 브랜치의 수정 근거는 [별도 보고서](DRAW_PIXELS_NESTED_FIX.md)에 기록한다. R3 첫 후보는 GAP-02 읽기 전용 상세 구조/cel 조회로, 실제 구현 범위는 아직 확정하지 않았다.
 
 ## 판단 기준
 
@@ -383,7 +384,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 
 ### 테스트 matrix 확대
 
-2026-10-04 작업 브랜치 점검: [REGRESSION_MATRIX](REGRESSION_MATRIX.md)에 기존 테스트 매핑, 추가 4개 조합, 별도 FIX 및 잔여를 기록했다. 아래 광범위한 항목 전체를 완료한 것은 아니다.
+2026-10-04 PR #27 develop 병합 완료: [REGRESSION_MATRIX](REGRESSION_MATRIX.md)에 기존 테스트 매핑, 추가 4개 조합, 별도 FIX 및 잔여를 기록했다. 아래 광범위한 항목 전체를 완료한 것은 아니다.
 
 - [ ] OS별 검증을 반복 가능한 CI matrix로 확장한다. Linux 전체 검사와 macOS 관련 회귀 실행 이력이 있다.
 - [x] 최소 지원 버전과 최신 Aseprite 버전을 모두 검증한다.
@@ -417,7 +418,8 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[SHARED][FEATURE] snapshot 및 restore` (SAFE-03), PR #23 develop 병합.
 - 완료: `[SHARED][FEATURE] 작업 이력 및 undo` (SAFE-04), PR #24 develop 병합.
 - 완료: `[SHARED][REFACTOR] 오류 코드 및 요청 추적 계약` (OPS-03), PR #25 develop 병합.
-- 병합 전: `[SHARED][TEST] 공통 회귀 조합 점검` 검증·셀프리뷰 완료, 좌표 거부 검사 보강 완료. 이후 RM-FIX-01 수정과 R3 GAP-02 읽기 전용 조회 범위 선정을 진행한다.
+- develop 완료: `[SHARED][TEST] 공통 회귀 조합 점검` PR #27 및 Codex README/영어 AGENTS PR #28 병합.
+- FIX 브랜치: RM-FIX-01 구현·검증은 [보고서](DRAW_PIXELS_NESTED_FIX.md)에 기록한다. GAP-02 읽기 전용 조회와 독립 PR이며 develop/main 병합은 수행하지 않는다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.

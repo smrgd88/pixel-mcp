@@ -150,12 +150,12 @@ func TestLuaGenerator_DrawPixels(t *testing.T) {
 
 	script := gen.DrawPixels("Layer 1", 1, pixels, false)
 
-	// Verify script contains expected elements (using loop-based layer lookup)
-	if !strings.Contains(script, `lyr.name == "Layer 1"`) {
+	// Verify the exact layer name is safely bound for hierarchical lookup.
+	if !strings.Contains(script, `local targetName = "Layer 1"`) {
 		t.Error("script missing layer name check")
 	}
 
-	if !strings.Contains(script, "for i, lyr in ipairs(spr.layers)") {
+	if !strings.Contains(script, "findLayer(spr.layers)") {
 		t.Error("script missing layer iteration")
 	}
 
