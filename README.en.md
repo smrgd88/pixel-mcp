@@ -21,7 +21,7 @@ This README describes `develop`. Fork fixes and recovery features are **Unreleas
 
 ## MCP tools
 
-`develop` registers 56 tools. See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
+The `develop` baseline registers 56 tools; this GAP-02 query branch registers 57 with one new Unreleased tool (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
 
 ### Canvas and layers
 
@@ -63,9 +63,11 @@ Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserv
 
 ### Inspection and file operations
 
-`get_pixels`, `export_sprite`, `export_spritesheet`, `import_image`, `save_as`
+`get_sprite_structure`, `get_pixels`, `export_sprite`, `export_spritesheet`, `import_image`, `save_as`
 
 Verify pixels and work with PNG, GIF, JPG, BMP, spritesheets, and Aseprite files.
+
+[Detailed structure inspection](docs/SPRITE_STRUCTURE.md) returns read-only hierarchy and per-frame cel existence, position, size, opacity and native image sharing. Structural IDs remain valid while hierarchy order is unchanged; existing mutation tools do not accept them. Layer pages and frame windows each have a maximum of 100.
 
 ### Recovery and operation history (Unreleased)
 

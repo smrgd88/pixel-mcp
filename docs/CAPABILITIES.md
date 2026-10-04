@@ -1,12 +1,12 @@
 # 기능 지원 현황
 
-기준일: 2026-10-04 · 구현 기준: `develop`의 `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2`
+기준일: 2026-10-04 · 구현 기준: `develop`의 `2ced64ca0da429764cb39f7ced37f349917a4448`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
 ## 기준과 상태
 
-- develop의 MCP 도구는 **56개**다. SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
+- develop의 MCP 도구는 **56개**이며 이 GAP-02 조회 브랜치는 **57개**다 (신규 조회는 미병합/Unreleased). SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
 - `지원`은 MCP 입력으로 제공됨을 뜻한다. 공식 API 전체 옵션 지원이나 모든 조합의 실행 검증을 뜻하지 않는다.
 - 기능군은 `지원 / 부분 / 미지원 / 현재 구조 밖`, 개발 진행은 `예정 / 진행 / develop 반영 / 태그 포함`으로 구분한다.
 - 최초 태그는 로컬 `v0.1.0`부터 `v0.5.0`까지 코드에 도구가 존재하는지 확인한 결과다. GitHub Release 게시나 배포 artifact 검증을 의미하지 않는다.
@@ -33,7 +33,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-005 | 캔버스·레이어·프레임 | `delete_layer` | v0.1.0 | — | [canvas.go](../pkg/tools/canvas.go) |
 | MCP-006 | 캔버스·레이어·프레임 | `delete_frame` | v0.1.0 | — | [canvas.go](../pkg/tools/canvas.go) |
 | MCP-007 | 캔버스·레이어·프레임 | `flatten_layers` | v0.5.0 | Unreleased: warnings (#11) + dry_run (#21, develop 반영) | [canvas.go](../pkg/tools/canvas.go) |
-| MCP-008 | 드로잉 | `draw_pixels` | v0.1.0 | Unreleased: cel 좌표 수정 (#1); RM-FIX-01 nested 조회·중복 거부 (FIX 브랜치, 미병합) | [drawing.go](../pkg/tools/drawing.go) |
+| MCP-008 | 드로잉 | `draw_pixels` | v0.1.0 | Unreleased: cel 좌표 수정 (#1); RM-FIX-01 nested 조회·중복 거부 (#29, develop 반영) | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-009 | 드로잉 | `draw_line` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-010 | 드로잉 | `draw_contour` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
 | MCP-011 | 드로잉 | `draw_rectangle` | v0.1.0 | — | [drawing.go](../pkg/tools/drawing.go) |
@@ -82,6 +82,7 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-054 | snapshot/restore | `delete_snapshot` | Unreleased | SAFE-03 (#23, develop 반영) | [snapshots.go](../pkg/tools/snapshots.go) |
 | MCP-055 | 작업 이력 | `list_operation_history` | Unreleased | SAFE-04 (#24, develop 반영) | [history.go](../pkg/tools/history.go) |
 | MCP-056 | 작업 이력 | `undo_last_operation` | Unreleased | SAFE-04 (#24, develop 반영) | [history.go](../pkg/tools/history.go) |
+| MCP-057 | 상세 구조·cel 조회 | `get_sprite_structure` | Unreleased | GAP-02 조회 부분 (이 브랜치, 미병합) | [structure.go](../pkg/tools/structure.go), [계약](SPRITE_STRUCTURE.md) |
 
 ## 공식 기능군 대비 차이
 
@@ -90,7 +91,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | ID | 공식 기능·근거 | 현재 상태와 제한 | 목표 |
 | --- | --- | --- | --- |
 | GAP-01 | [Layer](https://www.aseprite.org/api/layer/): 이름·가시성·잠금·opacity·blend mode·순서·그룹 | 부분: 추가·삭제·flatten만 제공, 속성과 그룹 편집 입력 없음 | R3 |
-| GAP-02 | [Sprite](https://www.aseprite.org/api/sprite/), [Cel](https://www.aseprite.org/api/cel/): 문서 구조·cel 관리 | 부분: 기본 정보·픽셀 조회와 link 제공; 상세 계층·cel 목록 및 위치/opacity 편집·unlink 도구 없음 | R3 |
+| GAP-02 | [Sprite](https://www.aseprite.org/api/sprite/), [Cel](https://www.aseprite.org/api/cel/): 문서 구조·cel 관리 | 부분: 기본 정보·픽셀 조회와 link 제공. 이 브랜치에서 상세 계층·frame별 cel 존재/bounds/opacity/native 공유 조회 구현; 위치/opacity 편집·unlink는 미구현 ([조회 계약](SPRITE_STRUCTURE.md)) | R3 |
 | GAP-03 | [Tag](https://www.aseprite.org/api/tag/): 애니메이션 태그 | 부분: 생성·삭제, forward/reverse/pingpong; 기존 태그 수정·상세 조회 도구 없음 | R3 |
 | GAP-04 | [CLI](https://www.aseprite.org/docs/cli/): 색상 모드 변환 | 부분: 생성 시 모드 선택·감색 시 indexed 변환; 범용 RGB/grayscale/indexed 전환 없음 | R3 |
 | GAP-05 | [CLI](https://www.aseprite.org/docs/cli/): export·sprite sheet | 부분: 4종 형식, 단일/전체 frame, 5종 sheet 배치·JSON; 태그/레이어/범위 선택 없음. trim/extrude는 false, 3종 padding은 동일 값 사용 | R4 |
@@ -125,7 +126,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 - 등록: [server.go](../pkg/server/server.go), 도구 표의 입력 schema/handler.
 - 구현: [Aseprite 계층](../pkg/aseprite), 실제 Lua generator와 Go 알고리즘.
 - 회귀 및 전체 검증 기록: [NEXT_STEPS](NEXT_STEPS.md), [TESTING](TESTING.md), [공통 회귀 조합 점검](REGRESSION_MATRIX.md) (PR #27 develop 병합 완료).
-- 회귀 점검에서 발견한 RM-FIX-01은 현재 FIX 브랜치에서 그룹 내부 `draw_pixels` 조회를 수정했다. 고유한 정확한 이름만 허용하고 중복·그룹 대상을 거부한다. [계약·검증과 제한](DRAW_PIXELS_NESTED_FIX.md)을 따른다. develop에는 아직 미병합이다. 신규 4개 조합 통과를 모든 drawing/export 도구의 전체 matrix 완료로 해석하지 않는다.
+- 회귀 점검에서 발견한 RM-FIX-01은 PR #29로 develop에 병합되어 그룹 내부 `draw_pixels` 조회를 수정했다. 고유한 정확한 이름만 허용하고 중복·그룹 대상을 거부한다. [계약·검증과 제한](DRAW_PIXELS_NESTED_FIX.md)을 따른다. 신규 4개 조합 통과를 모든 drawing/export 도구의 전체 matrix 완료로 해석하지 않는다.
 - `draw_pixels` 수정: PR #1 (`b1204b8`), native link: PR #6 (`941fe34`), indexed shading: PR #8 (`b444ff0`). 이 수정들은 기준일 현재 로컬 태그 `v0.5.0`에 포함되지 않는다.
 - 기능 변경 PR은 이 표의 상태·제한·버전과 `CHANGELOG.md`의 Unreleased를 함께 갱신한다. 테스트 통과 근거가 없으면 검증 완료로 표시하지 않는다.
 - develop 병합 시 `develop 반영`, 릴리스 태그 포함 확인 시 버전 기록. 배포 게시 상태는 별도로 확인한다.

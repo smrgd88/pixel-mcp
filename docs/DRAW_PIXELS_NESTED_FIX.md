@@ -3,7 +3,7 @@
 작업: `[BE][FIX] 그룹 내부 draw_pixels 대상 조회 수정` · 2026-10-04
 브랜치: `fix/be-nested-draw-pixels`
 워크트리: `/Users/keumheesung/orca/workspaces/pixel-mcp/be-fix-nested-draw-pixels`
-기준: `origin/develop` `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2` (PR #27/#28 병합 포함). 이 FIX는 develop/main 미병합이며 Unreleased다.
+기준: `origin/develop` `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2` (PR #27/#28 병합 포함). 이 FIX는 PR #29로 develop `2ced64ca0da429764cb39f7ced37f349917a4448`에 병합했으며 Unreleased다. 아래 검증·리뷰·독립 작업 기록은 당시 이력이다.
 
 ## 문제와 수정 계약
 
@@ -32,7 +32,7 @@ GAP-02는 별도 `feature/be-sprite-structure` / `be-feature-sprite-structure` �
 
 다른 drawing tools의 nested 이름 처리, path/UUID 편집 선택, tilemap pixel 편집, 프레임별 palette·서로 다른 linked 위치·blend/부분 alpha의 전체 교차 matrix는 확대하지 않는다. 광범위 matrix 전체 완료·배포를 주장하지 않는다. 지원 하한 전체 재실행은 기존 완료 이력과 NEXT_STEPS 정책에 따라 제외한다. macOS는 관련 회귀만 실행하며 전체/race·앱 UI는 이 작업 검증 범위에 포함하지 않는다.
 
-## 실행 및 셀프리뷰
+## 실행 및 셀프리뷰 (FIX 작업 당시 기록)
 
 환경: 전용 `pixel-rm-fix-01` 컨테이너, Linux amd64 / Go 1.25.14 / Aseprite `1.3.18.3-dev`, API 41 (`--health` success=true). 소스를 `/workspace` 내부 filesystem에 복사했으며 host bind mount를 쓰지 않았다. 전용 `/tmp/rm-fix-config.json`, temp `/tmp/pixel-rm-fix-01`, timeout=30을 사용했다. 사용자 config는 수정하지 않았다. 검증 시작 시 다른 컨테이너는 유휴 상태였으며 이후 다른 작업의 Go 컴파일 부하를 관찰했다. 이 세션의 Aseprite 실행은 순차 수행했다.
 

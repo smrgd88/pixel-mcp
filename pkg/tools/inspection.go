@@ -54,6 +54,7 @@ type GetPixelsOutput struct {
 //
 // Inspection tools are read-only and do not modify sprite files.
 func RegisterInspectionTools(server *mcp.Server, client *aseprite.Client, gen *aseprite.LuaGenerator, cfg *config.Config, logger core.Logger) {
+	registerStructureTool(server, client, gen, cfg, logger)
 	// Register get_pixels tool
 	mcp.AddTool(
 		server,

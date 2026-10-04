@@ -5,7 +5,9 @@
 기준: `origin/develop` `65074051f5d3903124ead37367c7fc62d9e7e7f6`, PR #25 포함, Unreleased.
 브랜치: `test/shared-regression-matrix`. 이 점검은 PR #27로 develop `ec99cc2`에 병합됐고 PR #28 문서도 `2ec6c79`에 병합됐다. 아래 기존 실행·리뷰 기록은 당시 이력이다.
 
-RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 전환했다. 루트 우회를 제거하고 nested 상태 그대로 검사한다. FIX는 아직 develop 미병합이며 [계약·검증](DRAW_PIXELS_NESTED_FIX.md)을 따른다.
+RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 전환했다. 루트 우회를 제거하고 nested 상태 그대로 검사한다. FIX는 PR #29로 develop `2ced64c`에 병합했으며 [계약·검증](DRAW_PIXELS_NESTED_FIX.md)을 따른다.
+
+현재 통합 상태: PR #27은 develop `ec99cc2`에 병합 완료했고 PR #28도 `2ec6c79`에 병합 완료했다. 아래 기준·실행 기록은 회귀 작업 당시 이력이다. GAP-02 조회는 별도 feature 브랜치에서 구현하며 [계약·검증](SPRITE_STRUCTURE.md)을 따른다.
 
 ## 실제 backlog와 이번 범위
 
@@ -69,12 +71,12 @@ RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 
 
 ## 잔여와 R3 첫 구현 후보
 
-첫 후보는 **GAP-02 중 읽기 전용 상세 구조/cel 조회**다. 이번 결함에서 이름만으로 그룹 내부 대상을 고르는 한계가 드러났다. 계층 경로·layer 식별자, frame별 cel 존재/위치/opacity, linked 관계를 먼저 조회할 수 있어야 GAP-01 편집과 GAP-02 위치/opacity/unlink, R4 export 선택의 대상을 검증할 수 있다. 기존 get_sprite_info와 호환되는 별도/optional 계약, 재열기 기반 결과와 중복 이름 정책을 먼저 범위로 정한다. 이는 구현 승인이나 API 설계 확정이 아니다.
+첫 후보는 **GAP-02 중 읽기 전용 상세 구조/cel 조회**다. 이번 결함에서 이름만으로 그룹 내부 대상을 고르는 한계가 드러났다. 계층 경로·layer 식별자, frame별 cel 존재/위치/opacity, linked 관계를 먼저 조회할 수 있어야 GAP-01 편집과 GAP-02 위치/opacity/unlink, R4 export 선택의 대상을 검증할 수 있다. 기존 get_sprite_info와 호환되는 별도/optional 계약, 재열기 기반 결과와 중복 이름 정책을 먼저 범위로 정한다. 회귀 작업 당시에는 후보였으나 사용자의 후속 지시로 별도 `feature/be-sprite-structure`에서 읽기 전용 조회를 구현했다. [확정 계약](SPRITE_STRUCTURE.md); 편집 기능 및 GAP-02 전체 완료는 후속이다.
 
 | 실제 R3 목록 | 다음 판단 |
 | --- | --- |
-| GAP-01 레이어 속성·그룹 | RM-FIX-01 별도 수정과 대상 지정 정책을 정리한 뒤 편집 범위 선정 |
-| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회를 첫 후보로; 변경 기능은 후속 분리 |
+| GAP-01 레이어 속성·그룹 | RM-FIX-01 이름 지정 정책은 PR #29로 반영. 구조 ID 기반 편집은 별도 범위 선정 |
+| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회는 별도 feature 브랜치 구현·미병합; 변경 기능은 후속 분리 |
 | GAP-03 태그 상세 조회·기존 태그 수정 | frame 식별/범위 조회 이후 검토; 이번에 구현하지 않음 |
 | GAP-04 범용 색상 모드 전환 | indexed helper 공통화와 transparent index 불변식 확대가 선행; 현재 4-case 통과만으로 충족하지 않음 |
 
@@ -108,7 +110,7 @@ go test -count=1 -tags=integration ./...
 
 ## 공통 회귀 작업 완료 상태 (당시 기록; PR #27로 이후 병합)
 
-테스트·본 보고서와 NEXT_STEPS/ROADMAP/CAPABILITIES 동기화를 포함했다. production/GAP 기능 구현, develop/main 병합, 배포는 수행하지 않았다. 외부 독립 코드 리뷰는 아직 받지 않았다. 알려진 RM-FIX-01은 별도 작업으로 남는다. 문서 동기화는 이번 브랜치에 반영했으며 develop 통합은 별도 승인 대상이다. 현재 미병합 브랜치/워크트리는 정리하지 않는다.
+회귀 작업 당시 테스트·본 보고서와 NEXT_STEPS/ROADMAP/CAPABILITIES 동기화를 포함했다. 해당 세션은 production/GAP 기능 구현, develop/main 병합, 배포를 수행하지 않았다. 이후 PR #27 develop 병합은 완료했다. 외부 독립 코드 리뷰는 아직 받지 않았다. 별도 RM-FIX-01 수정은 이후 PR #29로 develop에 병합했다. 회귀 문서·테스트는 PR #27로 develop에 통합했다. 아래 셀프리뷰/검증은 회귀 작업 당시 기록이며 신규 조회 검증과 구분한다.
 
 셀프리뷰(`6507405..08ef4cb`): 병합 차단 P0/P1 없음, PASS_WITH_NOTES. SHARED-P3-001은 마지막 범위 밖 좌표 요청이 그룹 내부 레이어 조회 오류로 먼저 실패하여 좌표 검사 자체를 검증하지 못하는 보강 권고다. 후속 수정에서 요청을 루트 레이어 상태로 옮기고 `Pixel coordinates must be within sprite bounds`와 요청 직전/직후 bytes 동일성을 assert하도록 보강했다. 신규 matrix와 기존 RGB 좌표 거부 테스트 재실행은 6.607초 통과했다. 문서 경로·상태 동기화 권고는 이번 문서 변경에 반영했다. 이 기록은 후속 테스트 변경에 대한 재리뷰를 대신하지 않는다.
 
