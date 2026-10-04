@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"os"
 	"path/filepath"
 	"strings"
@@ -228,5 +229,102 @@ func TestOutputFilesConcurrentWriterIsNotOverwrittenByRollback(t *testing.T) {
 	require.Len(t, backups, 2)
 	for _, p := range backups {
 		requireFileBytes(t, p, "old")
+	}
+}
+
+func TestOutputRollbackPublicRecoveryReferences(t *testing.T) {
+	for _, kind := range []string{"commit", "cancel", "timeout"} {
+		t.Run(kind, func(t *testing.T) {
+			dir := outputTestDir(t)
+			paths := []string{filepath.Join(dir, "private-one"), filepath.Join(dir, "private-two")}
+			for _, p := range paths {
+				require.NoError(t, os.WriteFile(p, []byte("old"), 0600))
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			err := withOutputFilesReplace(ctx, paths, writeOutputSet, func(src, dst string) error {
+				if strings.Contains(src, "backup") {
+					return errors.New("injected rollback failure")
+				}
+				if dst == paths[1] {
+					if kind == "timeout" {
+						return context.DeadlineExceeded
+					}
+					return errors.New("injected write failure")
+				}
+				err := replaceFile(src, dst)
+				if kind == "cancel" {
+					cancel()
+				}
+				return err
+			})
+			require.ErrorContains(t, err, "file_rollback_failed")
+			public := diagnostics.Classify(err)
+			require.Equal(t, "file_rollback_failed", public.Code)
+			require.Len(t, public.Recovery, 2)
+			for i, ref := range public.Recovery {
+				require.Equal(t, i+1, ref.OutputIndex)
+				require.Equal(t, filepath.Base(ref.Directory), ref.Directory)
+				require.True(t, strings.HasPrefix(ref.Directory, ".pixel-mcp-stage-"))
+				require.Equal(t, ".original-backup", ref.BackupFile)
+				requireFileBytes(t, filepath.Join(filepath.Dir(paths[i]), ref.Directory, ref.BackupFile), "old")
+				require.Equal(t, i == 0, ref.RollbackFailed)
+			}
+			requireFileBytes(t, paths[0], "new-0")
+			requireFileBytes(t, paths[1], "old")
+		})
+	}
+}
+
+func TestOutputRollbackWithoutOriginalBackup(t *testing.T) {
+	dir := outputTestDir(t)
+	paths := []string{filepath.Join(dir, "one"), filepath.Join(dir, "two")}
+	err := withOutputFilesReplace(context.Background(), paths, writeOutputSet, func(src, dst string) error {
+		if dst == paths[1] {
+			require.NoError(t, os.WriteFile(paths[0], []byte("external"), 0600))
+			return errors.New("failed second publish")
+		}
+		return replaceFile(src, dst)
+	})
+	require.ErrorContains(t, err, "file_rollback_failed")
+	public := diagnostics.Classify(err)
+	require.Equal(t, "file_rollback_failed", public.Code)
+	require.Len(t, public.Recovery, 2)
+	require.True(t, public.Recovery[0].RollbackFailed)
+	require.Empty(t, public.Recovery[0].BackupFile)
+	requireFileBytes(t, paths[0], "external")
+}
+
+func TestOutputSuccessfulRollbackKeepsOrdinaryError(t *testing.T) {
+	for _, cancelMode := range []bool{false, true} {
+		dir := outputTestDir(t)
+		paths := []string{filepath.Join(dir, "one"), filepath.Join(dir, "two")}
+		for _, p := range paths {
+			require.NoError(t, os.WriteFile(p, []byte("old"), 0600))
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		err := withOutputFilesReplace(ctx, paths, writeOutputSet, func(src, dst string) error {
+			if dst == paths[1] {
+				return errors.New("injected commit failure")
+			}
+			err := replaceFile(src, dst)
+			if cancelMode && !strings.Contains(src, "backup") {
+				cancel()
+			}
+			return err
+		})
+		cancel()
+		require.Error(t, err)
+		code := "file_commit_failed"
+		if cancelMode {
+			code = "cancelled"
+		}
+		public := diagnostics.Classify(err)
+		require.Equal(t, code, public.Code)
+		require.Empty(t, public.Recovery)
+		for _, p := range paths {
+			requireFileBytes(t, p, "old")
+		}
+		requireNoOutputStages(t, dir)
 	}
 }

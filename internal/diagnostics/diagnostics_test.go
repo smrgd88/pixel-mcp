@@ -38,3 +38,17 @@ func TestRedactLogFilter(t *testing.T) {
 	require.NotContains(t, e.RenderMessage(), "/private")
 	require.Contains(t, e.RenderMessage(), "id")
 }
+
+func TestRollbackFailureOutranksJoinedCauses(t *testing.T) {
+	for _, cause := range []error{context.Canceled, context.DeadlineExceeded, Errorf("file_commit_failed", "write failed")} {
+		ref := RecoveryReference{OutputIndex: 1, Directory: ".pixel-mcp-stage-safe", BackupFile: ".original-backup", RollbackFailed: true}
+		rollback := &RollbackError{Cause: errors.Join(cause, errors.New("raw private recovery path")), Recovery: []RecoveryReference{ref}}
+		out := Classify(fmt.Errorf("outer: %w", errors.Join(cause, rollback)))
+		require.Equal(t, "file_rollback_failed", out.Code)
+		require.Equal(t, []RecoveryReference{ref}, out.Recovery)
+		require.NotContains(t, out.Message, "private")
+		require.ErrorIs(t, rollback, cause)
+		out.Recovery[0].Directory = "changed"
+		require.Equal(t, ".pixel-mcp-stage-safe", rollback.Recovery[0].Directory)
+	}
+}

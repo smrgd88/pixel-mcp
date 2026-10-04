@@ -29,9 +29,30 @@ func Wrap(code string, err error) error {
 }
 func Errorf(code, format string, args ...any) error { return Wrap(code, fmt.Errorf(format, args...)) }
 
+// RecoveryReference locates retained staging relative to the canonical parent
+// of output_index (1-based in the operation's output list), without source paths.
+type RecoveryReference struct {
+	OutputIndex    int    `json:"output_index"`
+	Directory      string `json:"directory"`
+	BackupFile     string `json:"backup_file,omitempty"`
+	RollbackFailed bool   `json:"rollback_failed"`
+}
+
+// RollbackError must outrank its cause: cancellation does not imply that an
+// already-published output was restored. Unwrap retains the original evidence.
+type RollbackError struct {
+	Cause    error
+	Recovery []RecoveryReference
+}
+
+func (e *RollbackError) Error() string     { return e.Cause.Error() }
+func (e *RollbackError) Unwrap() error     { return e.Cause }
+func (e *RollbackError) ErrorCode() string { return "file_rollback_failed" }
+
 type PublicError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code     string              `json:"code"`
+	Message  string              `json:"message"`
+	Recovery []RecoveryReference `json:"recovery,omitempty"`
 }
 
 var messages = map[string]string{
@@ -45,6 +66,7 @@ var messages = map[string]string{
 	"unsupported_aseprite":       "The Aseprite version or API is below the supported minimum.",
 	"capability_probe_failed":    "The Aseprite runtime could not be inspected.",
 	"file_changed":               "The file changed during the operation; inspect it before retrying.",
+	"file_rollback_failed":       "Some outputs could not be restored. Manual recovery is required; inspect the retained recovery directories before retrying.",
 	"file_commit_failed":         "The file replacement failed.",
 	"file_lock_scope":            "The operation could not reserve the required file locks.",
 	"snapshot_invalid":           "The snapshot request or stored snapshot is invalid.",
@@ -60,8 +82,15 @@ var messages = map[string]string{
 	"protocol_error":             "The tool request could not be processed.",
 }
 
-// Classify never parses error text or returns paths, arguments, stderr or Lua.
+// Classify never parses error text or returns absolute paths, arguments, stderr
+// or Lua. Rollback recovery exposes only generated relative basenames.
 func Classify(err error) PublicError {
+	var rollback *RollbackError
+	if errors.As(err, &rollback) {
+		out := Public("file_rollback_failed")
+		out.Recovery = append([]RecoveryReference(nil), rollback.Recovery...)
+		return out
+	}
 	code := "operation_failed"
 	switch {
 	case errors.Is(err, context.DeadlineExceeded):
@@ -86,7 +115,7 @@ func Public(code string) PublicError {
 		code = "operation_failed"
 		message = messages[code]
 	}
-	return PublicError{code, message}
+	return PublicError{Code: code, Message: message}
 }
 
 type requestIDKey struct{}

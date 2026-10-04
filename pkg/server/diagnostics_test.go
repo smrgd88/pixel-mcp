@@ -140,3 +140,61 @@ func TestToolDiagnosticsPreservesSharedSuccessAndNonToolResults(t *testing.T) {
 	require.NoError(t, err)
 	require.Same(t, shared, result)
 }
+
+func TestRollbackRecoverySurvivesMCPBoundary(t *testing.T) {
+	cfg := testutil.LoadTestConfig(t)
+	sink := sinks.NewMemorySink()
+	logger := mtlog.New(mtlog.WithSink(sink), mtlog.WithFilter(diagnostics.RedactLogFilter{}))
+	s, err := New(cfg, logger)
+	require.NoError(t, err)
+	for _, kind := range []string{"commit", "cancel", "timeout"} {
+		cause := errors.New("private-user-path: write failure")
+		if kind == "cancel" {
+			cause = context.Canceled
+		}
+		if kind == "timeout" {
+			cause = context.DeadlineExceeded
+		}
+		failure := &diagnostics.RollbackError{Cause: errors.Join(cause, errors.New("private-user-path: rollback failed")), Recovery: []diagnostics.RecoveryReference{{OutputIndex: 1, Directory: ".pixel-mcp-stage-recovery", BackupFile: ".original-backup", RollbackFailed: true}}}
+		mcp.AddTool(s.mcp, &mcp.Tool{Name: "rollback_" + kind, Description: "Test fault boundary"}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, struct{}, error) {
+			return nil, struct{}{}, failure
+		})
+	}
+	st, ct := mcp.NewInMemoryTransports()
+	ss, err := s.mcp.Connect(context.Background(), st, nil)
+	require.NoError(t, err)
+	defer ss.Close()
+	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "1"}, nil).Connect(context.Background(), ct, nil)
+	require.NoError(t, err)
+	defer cs.Close()
+	for _, kind := range []string{"commit", "cancel", "timeout"} {
+		result, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "rollback_" + kind, Arguments: map[string]any{}})
+		require.NoError(t, err)
+		require.True(t, result.IsError)
+		var payload struct {
+			RequestID string                  `json:"request_id"`
+			Error     diagnostics.PublicError `json:"error"`
+		}
+		require.NoError(t, json.Unmarshal([]byte(result.Content[0].(*mcp.TextContent).Text), &payload))
+		require.Equal(t, "file_rollback_failed", payload.Error.Code)
+		require.Len(t, payload.Error.Recovery, 1)
+		require.Equal(t, ".original-backup", payload.Error.Recovery[0].BackupFile)
+		require.True(t, payload.Error.Recovery[0].RollbackFailed)
+		require.Equal(t, payload.RequestID, result.Meta[diagnostics.RequestIDMeta])
+		meta, err := json.Marshal(result.Meta[diagnostics.ErrorMeta])
+		require.NoError(t, err)
+		var public diagnostics.PublicError
+		require.NoError(t, json.Unmarshal(meta, &public))
+		require.Equal(t, payload.Error, public)
+		encoded, err := json.Marshal(result)
+		require.NoError(t, err)
+		require.NotContains(t, string(encoded), "private-user-path")
+		found := false
+		for _, event := range sink.Events() {
+			if event.Properties["RequestID"] == payload.RequestID && event.Properties["ErrorCode"] == "file_rollback_failed" {
+				found = true
+			}
+		}
+		require.True(t, found)
+	}
+}

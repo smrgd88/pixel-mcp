@@ -62,6 +62,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Fixed
 
+- Preserve multi-output rollback failures across the public MCP error boundary, even when caused by cancellation or timeout. Return `file_rollback_failed` with relative recovery references while retaining backups and hiding absolute paths.
+
 - `analyze_reference` now supports advertised BMP and native Aseprite inputs by rendering frame 1 to a private PNG before analysis (BUG-02). PNG/JPEG/GIF keep their existing Go decoder path; GIF uses its first decoded image and native documents use the visible first-frame composite. Preserve source files and clean temporary images on success/failure; output fields and analysis algorithms remain unchanged.
 
 - `export_sprite` returns the actual PNG/JPG/BMP frame sequence in optional `files` entries, using explicit `stem_0001.ext` names. Existing `exported_path`/`file_size` identify the first real file; single-frame and animated GIF exports retain their single-file response (BUG-03).

@@ -65,7 +65,7 @@ PR #18로 develop `363d6fa`에 병합한 계약이다. 기존 단일 파일 도�
 2. source는 read-only로 열고 모든 출력의 기존 내용·권한을 기록한다. 기존 출력은 각 대상의 같은 부모에 만든 private staging 디렉터리에 `.original-backup`으로 복사·동기화한다. 중복 출력, bound source alias, hard link, read-only·비일반 파일은 거부한다.
 3. 모든 프레임을 임시 경로에 생성한다. 저장 API 실패, 누락·빈 파일·symlink 출력은 성공으로 처리하지 않는다. 각 staged 파일을 검증하고 기존 permission bits를 적용한 후 fsync한다.
 4. 출력의 기존 내용·identity·mode·경로가 바뀌지 않았는지 재검사하고 파일별 atomic replace를 수행한다. 교체 실패 또는 취소 시 이미 반영된 파일은 역순으로 복구한다. 기존 파일은 백업으로 교체하고, 새 파일은 제거한다.
-5. 복구 중 비협력 writer의 변경이 발견되면 이를 덮어쓰지 않는다. 복구 자체가 실패하면 `file_rollback_failed`와 복구 디렉터리를 반환하고 백업을 보존한다. 자동 재시도로 백업을 지우지 말고 해당 경로를 먼저 확인한다. 정상 완료 및 복구 성공 시 staging을 정리한다.
+5. 복구 중 비협력 writer의 변경이 발견되면 이를 덮어쓰지 않는다. 복구 자체가 실패하면 typed `file_rollback_failed`와 복구 디렉터리 참조를 반환하고 백업을 보존한다. MCP에서는 [ERRORS](ERRORS.md)의 `error.recovery`로 출력 순번·상대 폴더명·확인된 백업 파일명·출력별 실패 여부를 제공하며 취소/timeout보다 우선한다. 자동 재시도로 백업을 지우지 말고 해당 경로를 먼저 확인한다. 정상 완료 및 복구 성공 시 staging을 정리한다.
 
 보장 경계: 협력하는 호출은 전체 경로 잠금 덕분에 완성된 결과를 관찰한다. 각 파일 교체는 atomic이지만 **세트 전체의 OS 차원 atomic/crash-atomic 교체는 아니다**. 외부 프로그램은 반영 중 일부 새 파일을 볼 수 있고, 강제 종료·전원 장애 시 일부만 반영될 수 있다. 이 경우 남은 staging/백업의 수동 확인이 필요하며 자동 crash 복구·TTL 정리는 제공하지 않는다. rollback은 내용·permission bits를 복원하며 원래 inode·mtime·ACL·확장 속성 전체를 복원하는 계약은 아니다. 비협력 writer의 마지막 검사 이후 경쟁에 대한 기존 한계도 유지한다.
 

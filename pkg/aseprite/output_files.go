@@ -103,6 +103,7 @@ func withOutputFilesReplace(ctx context.Context, paths []string, fn func([]strin
 		}
 		rollback := func(cause error) error {
 			var recovery []error
+			failed := map[int]bool{}
 			for i := len(items) - 1; i >= 0; i-- {
 				item := items[i]
 				if !item.committed {
@@ -128,12 +129,21 @@ func withOutputFilesReplace(ctx context.Context, paths []string, fn func([]strin
 					}
 				}
 				if err != nil {
+					failed[i] = true
 					recovery = append(recovery, fmt.Errorf("file_rollback_failed: %s: %w; recovery directory: %s", item.path, err, item.dir))
 				}
 			}
 			if len(recovery) > 0 {
 				retain = true
-				return errors.Join(append([]error{cause}, recovery...)...)
+				refs := make([]diagnostics.RecoveryReference, 0, len(items))
+				for i, item := range items {
+					ref := diagnostics.RecoveryReference{OutputIndex: i + 1, Directory: filepath.Base(item.dir), RollbackFailed: failed[i]}
+					if info, err := os.Lstat(item.backup); err == nil && info.Mode().IsRegular() {
+						ref.BackupFile = filepath.Base(item.backup)
+					}
+					refs = append(refs, ref)
+				}
+				return &diagnostics.RollbackError{Cause: errors.Join(append([]error{cause}, recovery...)...), Recovery: refs}
 			}
 			return cause
 		}

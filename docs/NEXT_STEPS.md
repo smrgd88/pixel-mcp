@@ -383,6 +383,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - [x] tools/call 응답 `_meta`/protocol error.data와 stderr 완료 로그에 같은 UUID를 연결한다.
 - [x] 번들 CLI non-debug 로그 속성/exception 비노출 및 공개 오류 고정 문구를 적용한다. [범위](ERRORS.md).
 - [x] OPS-03 오류·추적 범위의 전체 회귀·실제 Aseprite 검증 완료.
+- [x] BE-P1-001 rollback 실패 정보 손실 수정·회귀 및 재리뷰 완료 (2026-10-04). [수정 근거](ERRORS.md#be-p1-001-수정-검증-2026-10-04).
 - [ ] OPS-03 오류·추적 PR develop 병합.
 
 2026-10-02 검증: Linux Go 1.25.14/Aseprite 1.3.18.3-dev의 build·vet·전체 race/coverage·전체 integration 통과 (pkg/tools 283.820초). 추가 request ID 주입 방어·shared result 보존·실제 timeout·CLI 파일 로그 회귀도 별도 통과. 최소 Aseprite 1.3.17.2와 macOS arm64/Aseprite 1.3.18.2-arm64에서 실제 Lua 오류 분류 및 서버 응답 관련 회귀 통과. 두 환경은 관련 회귀 범위다.
