@@ -103,7 +103,7 @@ pixel-plugin 저장소·pin·번들은 수정하지 않는다. Top1–3 develop 
 
 Notes:
 
-1. tag_id/revision은 내용이 같은 저장 문서에서만 유효하다. 비협력 writer/ABA/최종 검사 이후 경쟁과 전체 태그 응답의 비용·무페이지 제한은 위 계약을 따른다.
+1. tag_id/revision은 내용이 같은 저장 문서에서만 유효하다. 비협력 writer/ABA/최종 검사 이후 경쟁과 전체 태그 응답의 비용·무페이지 제한은 위 계약을 따른다. 후속 검토·plugin 반영은 [NEXT_STEPS의 태그 후속 TODO](NEXT_STEPS.md#태그-후속-todo)에서 추적한다.
 2. macOS 전체/race 및 명시된 교차 조합은 미실행이며 동시 native 실행 중 timeout 관찰을 기록했다. 필요한 CI/운영 병렬 실행 범위는 별도 검증해야 한다.
 3. 다른 Top4 PR과 공통 파일/count/문서 ID 충돌 가능성이 있다. plugin pin/번들/skill 동기화와 독립 외부 리뷰, develop/main 병합·배포는 수행하지 않았다.
 

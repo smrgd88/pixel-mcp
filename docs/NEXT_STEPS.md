@@ -43,6 +43,14 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 검증 관찰 잔여: Docker 호스트 bind mount에서 관찰한 `file_changed` 거부의 원인은 미확정이다. 컨테이너 내부 filesystem과 macOS 네이티브 회귀 통과 이력과 구분하며, 파일시스템별 재현 조건 확인 대상으로 남긴다.
 
+## 태그 후속 TODO
+
+PR #32의 [Notes 1](TAG_EDITING.md#최종-셀프리뷰)을 후속 작업으로 추적한다. 아래 항목은 이번 태그 기능의 미구현 결함이나 병합 차단 항목이 아니며, 구현 착수·일정은 별도 결정한다. `tag_id`가 순번이고 `revision`이 내용 hash라는 현재 계약은 유지한다.
+
+- [ ] `[BE][DOCS] plugin 태그 대상 재조회 흐름 반영`: Top1–3 develop 병합 후 예정된 plugin 동기화에서 조회 → `tag_id`+`expected_revision`으로 수정 → 재조회 흐름을 animator skill에 반영한다. 범위 변경 후 이전 순번을 재사용하지 않는 예제와 stale 응답 시 재조회 절차를 확인하면 완료한다. 이 저장소에서 plugin 파일을 수정하지 않는다.
+- [ ] `[SHARED][SPIKE] 비협력 writer 경쟁 보호 검토`: GUI/외부 writer의 ABA 및 최종 원본 검사–rename 사이 변경을 재현하고, 추가 보호의 가능 범위·파일시스템별 제약·비용을 검토한다. 개선안 또는 현행 한계를 유지하는 판단과 근거를 기록하면 SPIKE를 완료한다. 실제 보호 구현은 검토 결과에 따라 별도 작업으로 분리한다.
+- [ ] `[BE][SPIKE] 대규모 태그 조회 응답 비용 측정`: 태그 수와 이름 길이를 늘린 저장 문서로 응답 bytes·실행 시간·메모리를 측정한다. 측정 근거와 허용 기준을 정하고 pagination/응답 상한의 필요 여부를 결정하면 완료한다. 필요 시 기존 필수 입력·성공 응답 호환성 및 페이지 간 revision 일관성을 유지하는 별도 FEATURE로 이어간다.
+
 ## 공통 회귀 점검 결과와 완료 기준
 
 작업: `[SHARED][TEST] 공통 회귀 조합 점검` · 작업 브랜치: `test/shared-regression-matrix`
