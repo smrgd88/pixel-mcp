@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"image"
 	"image/png"
 	"os"
@@ -56,7 +57,7 @@ func RegisterAutoShadingTools(server *mcp.Server, client *aseprite.Client, gen *
 
 			// Validate inputs
 			if input.Intensity < 0.0 || input.Intensity > 1.0 {
-				return nil, nil, fmt.Errorf("intensity must be between 0.0 and 1.0, got %f", input.Intensity)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "intensity must be between 0.0 and 1.0, got %f", input.Intensity)
 			}
 
 			validDirections := map[string]bool{
@@ -65,19 +66,19 @@ func RegisterAutoShadingTools(server *mcp.Server, client *aseprite.Client, gen *
 				"bottom_left": true, "bottom": true, "bottom_right": true,
 			}
 			if !validDirections[input.LightDirection] {
-				return nil, nil, fmt.Errorf("invalid light direction: %s", input.LightDirection)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid light direction: %s", input.LightDirection)
 			}
 
 			validStyles := map[string]bool{
 				"cell": true, "smooth": true, "soft": true,
 			}
 			if !validStyles[input.Style] {
-				return nil, nil, fmt.Errorf("invalid style: %s (must be cell, smooth, or soft)", input.Style)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid style: %s (must be cell, smooth, or soft)", input.Style)
 			}
 
 			// Check sprite file exists
 			if _, err := os.Stat(input.SpritePath); os.IsNotExist(err) {
-				return nil, nil, fmt.Errorf("sprite file not found: %s", input.SpritePath)
+				return nil, nil, diagnostics.Errorf("not_found", "sprite file not found: %s", input.SpritePath)
 			}
 
 			// Step 1: Export layer/frame to temporary PNG

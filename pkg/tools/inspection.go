@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"strconv"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -66,11 +67,11 @@ func RegisterInspectionTools(server *mcp.Server, client *aseprite.Client, gen *a
 
 			// Validate inputs
 			if input.Width <= 0 || input.Height <= 0 {
-				return nil, nil, fmt.Errorf("width and height must be positive, got width=%d height=%d", input.Width, input.Height)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "width and height must be positive, got width=%d height=%d", input.Width, input.Height)
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be >= 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be >= 1, got %d", input.FrameNumber)
 			}
 
 			// Set default page size and validate

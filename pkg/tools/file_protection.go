@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"os"
 	"reflect"
 	"regexp"
@@ -164,7 +165,7 @@ func validateSheetOutputs(source string, outputs []string) error {
 		}
 		for i, path := range paths {
 			if dest == path || (destInfo != nil && infos[i] != nil && os.SameFile(infos[i], destInfo)) {
-				return fmt.Errorf("spritesheet outputs must not alias the source or each other")
+				return diagnostics.Errorf("invalid_arguments", "spritesheet outputs must not alias the source or each other")
 			}
 		}
 		paths = append(paths, dest)

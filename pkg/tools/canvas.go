@@ -29,6 +29,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"path/filepath"
 	"strings"
 	"time"
@@ -139,7 +140,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 			case "indexed":
 				colorMode = aseprite.ColorModeIndexed
 			default:
-				return nil, nil, fmt.Errorf("invalid color mode: %s (must be rgb, grayscale, or indexed)", input.ColorMode)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid color mode: %s (must be rgb, grayscale, or indexed)", input.ColorMode)
 			}
 
 			// Generate filename in temp directory
@@ -177,7 +178,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 
 			// Validate layer name
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			// Generate Lua script
@@ -209,7 +210,7 @@ func RegisterCanvasTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 
 			// Validate duration
 			if input.DurationMs < 1 || input.DurationMs > 65535 {
-				return nil, nil, fmt.Errorf("duration_ms must be between 1 and 65535, got %d", input.DurationMs)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "duration_ms must be between 1 and 65535, got %d", input.DurationMs)
 			}
 
 			// Generate Lua script

@@ -1,8 +1,8 @@
 # pixel-mcp 다음 작업 체크리스트
 
-작성일: 2026-08-31 · 현황 동기화: 2026-09-30
+작성일: 2026-08-31 · 현황 동기화: 2026-10-02
 
-현재 기준: `develop`의 `e0304bd7854bd42ab8b13d107c162180f6161f90` (PR #23까지 병합 반영). BUG-01~05와 SAFE-02/03 완료. SAFE-04는 `feature/shared-operation-history`에서 구현·검증 완료, 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `7f439a0df1ec0d2d24ef6dabba6de4d30c2484f9` (PR #24까지 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID 계약은 구현·검증 완료, 병합 대기다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -20,14 +20,14 @@
 
 macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검증한다. Windows 네이티브 테스트는 현재 개발 범위에서 제외하며 반복적인 미실행 알림·보류 목록·진행 차단 사유로 보고하지 않는다. Windows 환경 작업이나 명시적인 검증 요청이 있을 때 범위를 다시 정한다. 기존 cross-build 이력과 제품의 플랫폼 지원 계획은 별개다.
 
-## 남은 작업 요약 (2026-09-30)
+## 남은 작업 요약 (2026-10-02)
 
 상세 작업 항목은 아래 기존 체크리스트에 유지하고, 우선순위는 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 한다.
 
 | 구분 | 남은 작업 | 상태·완료 기준 |
 | --- | --- | --- |
-| 현재 작업 | SAFE-04 작업 이력·undo | 성공한 파일 변경 기록·snapshot 연결·외부 변경/재시도 보호. [계약](HISTORY.md) |
-| 이후 작업 | 잔여 운영·계약 및 R3 범위 선정 | SAFE-04 병합 후 OPS-01/03·R3 우선순위 결정. SAFE-02/03/05는 develop 반영 완료 |
+| 현재 작업 | OPS-03 오류 코드·request ID | 기존 성공 payload 유지, 오류 분류·응답/로그 상관관계. [계약](ERRORS.md) |
+| 이후 작업 | 공통 회귀 조합 점검 → R3 범위 선정 | 기존 색상/계층/cel/export 테스트의 빈 조합 대조. 릴리스 운영은 별도 |
 | develop 완료 | PR #22 팔레트·threshold·DITHER-01/02 수정 | 결정적 palette 추출 포함. 정확한 color2 비율을 강제하는 별도 모드는 범위 밖 |
 | 릴리스 전 운영 | OPS-01, upstream #19, 릴리스 절차 | CI 버전 artifact, upstream 제출 범위 결정, 0.x 호환성·RELEASING 절차 및 main/태그/artifact 배포 검증 |
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
@@ -95,7 +95,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 ### 구현 순서 기준
 
-[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 팔레트·threshold·디더링 후속 수정은 PR #22로 병합했다. SAFE-02 dry-run은 PR #21로 병합했다. SAFE-03는 PR #23으로 병합했고 현재 SAFE-04 history/undo를 구현한다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
+[ROADMAP의 다음 작업 순서](ROADMAP.md#다음-작업-순서)를 따른다. warnings(SAFE-01)은 PR #11로 병합했고 capability(GAP-10)는 PR #13으로 병합했고 파일 변경 보호(SAFE-05)는 PR #14로 병합했다. BUG-04/05는 PR #16으로 병합했다. BUG-01도 PR #17로 병합했다. BUG-03은 PR #18로 병합했다. BUG-02도 PR #20으로 병합했다. 팔레트·threshold·디더링 후속 수정은 PR #22로 병합했다. SAFE-02 dry-run은 PR #21로 병합했다. SAFE-03는 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했다. 현재 OPS-03 오류 코드·요청 추적을 구현한다. capability는 복구 기능 전에 완료한다. per-file lock/atomic save는 snapshot·undo 이후의 부가 작업이 아니라 복구 기능의 선행 기반으로 옮긴다. indexed helper 공통화는 색상 모드 전환 확장 전에 검증한다.
 
 ## 현재 우선 작업 — 알려진 동작 오류
 
@@ -326,7 +326,7 @@ SAFE-02 검증 (2026-09-27): Go 1.25.14 / Linux amd64 / Aseprite 1.3.18.3-dev에
 - [x] `list_operation_history` 및 expected operation ID를 받는 `undo_last_operation` 구현.
 - [x] 외부 편집·손상·만료/삭제·순서 불일치 거부, pending 전이 복구 및 복원 전 백업.
 - [x] 실제 Aseprite·동시성·오류/취소·재시작 회귀 검증 완료.
-- [ ] SAFE-04 PR develop 병합.
+- [x] SAFE-04 PR #24 develop `7f439a0` 병합 (2026-10-02).
 
 2026-09-30 검증: Linux Go 1.25.14/Aseprite 1.3.18.3-dev에서 build·vet·전체 race/coverage·전체 integration 통과 (pkg/tools integration 289.287초). 최소 Aseprite 1.3.17.2의 history/snapshot MCP 회귀 통과 (5.464초). macOS arm64/Aseprite 1.3.18.2-arm64의 history/snapshot core 및 history/snapshot/dry-run MCP 회귀 통과. 최소 버전·macOS는 관련 회귀 범위다.
 
@@ -378,10 +378,15 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 
 ### 관측성과 오류 계약
 
-- [ ] 모든 tool output에 일관된 `success`, `warnings`, `details` 규칙을 적용한다.
-- [ ] Aseprite stderr, Lua 오류, timeout, validation 오류를 구분된 error code로 반환한다.
-- [ ] request ID를 MCP 응답과 stderr 로그 양쪽에 연결한다.
-- [ ] 경로·사용자 데이터가 기본 로그에 과도하게 노출되지 않게 한다.
+- [ ] 성공 payload의 `success`/`details` 일괄 표준화는 별도 호환성 검토. 이번 작업은 기존 필드와 warnings를 유지한다.
+- [x] typed error로 Lua·process·timeout/cancel·validation 및 기존 domain code를 분류하고 미분류 fallback을 정의한다.
+- [x] tools/call 응답 `_meta`/protocol error.data와 stderr 완료 로그에 같은 UUID를 연결한다.
+- [x] 번들 CLI non-debug 로그 속성/exception 비노출 및 공개 오류 고정 문구를 적용한다. [범위](ERRORS.md).
+- [x] OPS-03 오류·추적 범위의 전체 회귀·실제 Aseprite 검증 완료.
+- [x] BE-P1-001 rollback 실패 정보 손실 수정·회귀 및 재리뷰 완료 (2026-10-04). [수정 근거](ERRORS.md#be-p1-001-수정-검증-2026-10-04).
+- [ ] OPS-03 오류·추적 PR develop 병합.
+
+2026-10-02 검증: Linux Go 1.25.14/Aseprite 1.3.18.3-dev의 build·vet·전체 race/coverage·전체 integration 통과 (pkg/tools 283.820초). 추가 request ID 주입 방어·shared result 보존·실제 timeout·CLI 파일 로그 회귀도 별도 통과. 최소 Aseprite 1.3.17.2와 macOS arm64/Aseprite 1.3.18.2-arm64에서 실제 Lua 오류 분류 및 서버 응답 관련 회귀 통과. 두 환경은 관련 회귀 범위다.
 
 ## 권장 실행 순서
 
@@ -394,7 +399,8 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: PR #22 팔레트·threshold·DITHER-01/02·palette 추출 초기화 수정.
 - 완료: `[SHARED][FEATURE] 임시 복사본 dry-run` (SAFE-02), PR #21 develop 병합.
 - 완료: `[SHARED][FEATURE] snapshot 및 restore` (SAFE-03), PR #23 develop 병합.
-- 현재 작업: `[SHARED][FEATURE] 작업 이력 및 undo` (SAFE-04). 이후 운영·공통 계약/R3 우선순위는 별도 선정한다.
+- 완료: `[SHARED][FEATURE] 작업 이력 및 undo` (SAFE-04), PR #24 develop 병합.
+- 현재 작업: `[SHARED][REFACTOR] 오류 코드 및 요청 추적 계약` (OPS-03). 다음은 공통 회귀 조합 점검 후 R3 기능 확장 범위 선정.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.

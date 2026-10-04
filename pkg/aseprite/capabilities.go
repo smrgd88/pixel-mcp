@@ -26,8 +26,9 @@ type CapabilityError struct {
 	Cause error
 }
 
-func (e *CapabilityError) Error() string { return e.Code + ": " + e.Cause.Error() }
-func (e *CapabilityError) Unwrap() error { return e.Cause }
+func (e *CapabilityError) Error() string     { return e.Code + ": " + e.Cause.Error() }
+func (e *CapabilityError) Unwrap() error     { return e.Cause }
+func (e *CapabilityError) ErrorCode() string { return e.Code }
 
 const capabilityMarker = "PIXEL_MCP_CAPABILITIES="
 const capabilityProbe = `print("PIXEL_MCP_CAPABILITIES=" .. json.encode({aseprite_version=tostring(app.version), api_version=app.apiVersion}))`

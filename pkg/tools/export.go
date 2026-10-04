@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"os"
 	"path/filepath"
 	"strings"
@@ -114,11 +115,11 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 
 			// Validate inputs
 			if input.OutputPath == "" {
-				return nil, nil, fmt.Errorf("output_path cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "output_path cannot be empty")
 			}
 
 			if input.SpritePath == "" {
-				return nil, nil, fmt.Errorf("sprite_path cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "sprite_path cannot be empty")
 			}
 
 			// Validate layout
@@ -134,12 +135,12 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 				layout = "horizontal"
 			}
 			if !validLayouts[layout] {
-				return nil, nil, fmt.Errorf("invalid layout: %s (valid: horizontal, vertical, rows, columns, packed)", input.Layout)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid layout: %s (valid: horizontal, vertical, rows, columns, packed)", input.Layout)
 			}
 
 			// Validate padding
 			if input.Padding < 0 || input.Padding > 100 {
-				return nil, nil, fmt.Errorf("padding must be between 0 and 100, got %d", input.Padding)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "padding must be between 0 and 100, got %d", input.Padding)
 			}
 
 			// Ensure output directory exists
@@ -184,24 +185,24 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 
 			// Validate inputs
 			if input.SpritePath == "" {
-				return nil, nil, fmt.Errorf("sprite_path cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "sprite_path cannot be empty")
 			}
 
 			if input.ImagePath == "" {
-				return nil, nil, fmt.Errorf("image_path cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "image_path cannot be empty")
 			}
 
 			if input.LayerName == "" {
-				return nil, nil, fmt.Errorf("layer_name cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "layer_name cannot be empty")
 			}
 
 			if input.FrameNumber < 1 {
-				return nil, nil, fmt.Errorf("frame_number must be >= 1, got %d", input.FrameNumber)
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "frame_number must be >= 1, got %d", input.FrameNumber)
 			}
 
 			// Check if image file exists
 			if _, err := os.Stat(input.ImagePath); os.IsNotExist(err) {
-				return nil, nil, fmt.Errorf("image file not found: %s", input.ImagePath)
+				return nil, nil, diagnostics.Errorf("not_found", "image file not found: %s", input.ImagePath)
 			}
 
 			// Extract position if provided
@@ -245,16 +246,16 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 
 			// Validate inputs
 			if input.SpritePath == "" {
-				return nil, nil, fmt.Errorf("sprite_path cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "sprite_path cannot be empty")
 			}
 
 			if input.OutputPath == "" {
-				return nil, nil, fmt.Errorf("output_path cannot be empty")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "output_path cannot be empty")
 			}
 
 			// Ensure output ends with .aseprite
 			if !strings.HasSuffix(input.OutputPath, ".aseprite") && !strings.HasSuffix(input.OutputPath, ".ase") {
-				return nil, nil, fmt.Errorf("output_path must have .aseprite or .ase extension")
+				return nil, nil, diagnostics.Errorf("invalid_arguments", "output_path must have .aseprite or .ase extension")
 			}
 
 			// Ensure output directory exists

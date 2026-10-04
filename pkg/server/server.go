@@ -76,7 +76,9 @@ func New(cfg *config.Config, logger core.Logger) (*Server, error) {
 		logger: logger,
 	}
 
-	// Register tools (will be implemented in next tasks)
+	mcpServer.AddReceivingMiddleware(toolDiagnostics(logger))
+
+	// Register tools
 	s.registerTools()
 
 	return s, nil

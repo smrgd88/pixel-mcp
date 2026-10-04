@@ -3,7 +3,10 @@ package aseprite
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -78,10 +81,10 @@ func (c *Client) ExecuteCommand(ctx context.Context, args []string) (string, err
 
 		// Include stderr in error message
 		if stderr.Len() > 0 {
-			return "", fmt.Errorf("aseprite command failed: %w\nstderr: %s\nstdout: %s", err, stderr.String(), stdout.String())
+			return "", &CommandError{Cause: fmt.Errorf("aseprite command failed: %w\nstderr: %s\nstdout: %s", err, stderr.String(), stdout.String()), Stderr: stderr.String(), Stdout: stdout.String()}
 		}
 
-		return "", fmt.Errorf("aseprite command failed: %w\nstdout: %s", err, stdout.String())
+		return "", &CommandError{Cause: fmt.Errorf("aseprite command failed: %w\nstdout: %s", err, stdout.String()), Stderr: stderr.String(), Stdout: stdout.String()}
 	}
 
 	return stdout.String(), nil
@@ -112,7 +115,7 @@ func (c *Client) executeLuaWithRequirements(ctx context.Context, script, spriteP
 	defer cancel()
 	if spritePath != "" {
 		if _, err := os.Stat(spritePath); os.IsNotExist(err) {
-			return "", fmt.Errorf("sprite file not found: %s", spritePath)
+			return "", diagnostics.Errorf("not_found", "sprite file not found: %s", spritePath)
 		}
 	}
 	caps, err := c.GetCapabilities(ctx)
@@ -151,6 +154,19 @@ func (c *Client) executeLuaUnchecked(ctx context.Context, script string, spriteP
 	}
 	defer cleanup()
 
+	// loadfile captures syntax failures as well as runtime errors. A fresh marker
+	// separates script errors from unrelated Aseprite process/stderr failures.
+	marker := "PIXEL_MCP_LUA_ERROR_" + uuid.NewString()
+	loader := fmt.Sprintf(`local chunk, parseError = loadfile("%s")
+if not chunk then error("%s" .. tostring(parseError), 0) end
+local ok, failure = xpcall(chunk, debug.traceback)
+if not ok then error("%s" .. tostring(failure), 0) end`, EscapeString(scriptPath), marker, marker)
+	loaderPath, cleanupLoader, err := c.createTempScript(loader)
+	if err != nil {
+		return "", fmt.Errorf("failed to create Lua loader: %w", err)
+	}
+	defer cleanupLoader()
+
 	// Build arguments
 	args := []string{"--batch"}
 
@@ -158,16 +174,21 @@ func (c *Client) executeLuaUnchecked(ctx context.Context, script string, spriteP
 	if spritePath != "" {
 		// Verify sprite exists
 		if _, err := os.Stat(spritePath); os.IsNotExist(err) {
-			return "", fmt.Errorf("sprite file not found: %s", spritePath)
+			return "", diagnostics.Errorf("not_found", "sprite file not found: %s", spritePath)
 		}
 		args = append(args, spritePath)
 	}
 
 	// Add script argument
-	args = append(args, "--script", scriptPath)
+	args = append(args, "--script", loaderPath)
 
 	// Execute command
-	return c.ExecuteCommand(ctx, args)
+	out, err := c.ExecuteCommand(ctx, args)
+	var commandError *CommandError
+	if errors.As(err, &commandError) && (strings.Contains(commandError.Stderr, marker) || strings.Contains(commandError.Stdout, marker)) {
+		return out, diagnostics.Wrap("lua_error", err)
+	}
+	return out, err
 }
 
 // GetVersion retrieves the Aseprite version string.

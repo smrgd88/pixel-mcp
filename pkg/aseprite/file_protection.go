@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"github.com/willibrandon/pixel-mcp/internal/diagnostics"
 	"io"
 	"os"
 	"path/filepath"
@@ -99,7 +100,7 @@ func WithFileLocks(ctx context.Context, paths []string, fn func(context.Context)
 	if scope != nil {
 		for k := range keys {
 			if !scope.locked[k] {
-				return fmt.Errorf("file_lock_scope: nested operation must reserve all paths up front")
+				return diagnostics.Errorf("file_lock_scope", "file_lock_scope: nested operation must reserve all paths up front")
 			}
 		}
 		return fn(ctx)
@@ -212,7 +213,7 @@ func WithSpriteAccess(ctx context.Context, path string, write bool, fn func(cont
 			return fn(context.WithValue(ctx, fileContextKey{}, child))
 		}
 		if !s.locked[key] {
-			return fmt.Errorf("file_changed: source target changed before operation")
+			return diagnostics.Errorf("file_changed", "file_changed: source target changed before operation")
 		}
 		if !write {
 			return run(canonical)
@@ -296,7 +297,7 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 		return err
 	}
 	if s := scopeOf(ctx); s == nil || !s.locked[pathKey(original)] {
-		return fmt.Errorf("file_changed: target changed before operation")
+		return diagnostics.Errorf("file_changed", "file_changed: target changed before operation")
 	}
 	before, err := snapshot(original)
 	exists := err == nil
@@ -305,7 +306,7 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 	}
 	if exists {
 		if before.info.Mode().Perm()&0222 == 0 {
-			return fmt.Errorf("file is read-only: %s", path)
+			return diagnostics.Errorf("permission_denied", "file is read-only: %s", path)
 		}
 		if err = checkSingleLink(original, before.info); err != nil {
 			return err
@@ -371,12 +372,12 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 		return err
 	}
 	if currentPath != original {
-		return fmt.Errorf("file_changed: path target changed during operation")
+		return diagnostics.Errorf("file_changed", "file_changed: path target changed during operation")
 	}
 	current, err := snapshot(original)
 	if exists {
 		if err != nil || !os.SameFile(before.info, current.info) || before.hash != current.hash || before.info.Mode() != current.info.Mode() {
-			return fmt.Errorf("file_changed: original changed during operation")
+			return diagnostics.Errorf("file_changed", "file_changed: original changed during operation")
 		}
 		if err = checkSingleLink(original, current.info); err != nil {
 			return err
@@ -385,7 +386,7 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 			return nil
 		}
 	} else if !os.IsNotExist(err) {
-		return fmt.Errorf("file_changed: output appeared during operation")
+		return diagnostics.Errorf("file_changed", "file_changed: output appeared during operation")
 	}
 	mode := os.FileMode(0600)
 	if exists {
@@ -412,7 +413,7 @@ func stageFileWithReplace(ctx context.Context, path string, requireExisting bool
 	// Same-directory staging guarantees the same filesystem. Never remove the
 	// original or fall back to a truncating copy if atomic replacement fails.
 	if err = replace(staged, original); err != nil {
-		return fmt.Errorf("file_commit_failed: %w", err)
+		return diagnostics.Errorf("file_commit_failed", "file_commit_failed: %w", err)
 	}
 	return nil
 }
