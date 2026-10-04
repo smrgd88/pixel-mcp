@@ -289,3 +289,77 @@ app.range.layers={a};app.range.frames={s.frames[1],s.frames[2]};app.command.Link
 		})
 	}
 }
+
+// Keep zero-valued metadata distinct from absent fields and absent cels, and
+// exercise structural IDs independently of names and lexical sorting.
+func TestSpriteStructureEmptyNamesGroupsAndZeroValues(t *testing.T) {
+	f, store := newStructureFixture(t)
+	p := f.sprite(aseprite.ColorModeRGB)
+	f.lua(p, `local s=app.activeSprite
+local a=s.layers[1];a.name="";a.opacity=0
+local im=Image(1,1);im:clear(app.pixelColor.rgba(1,2,3,255))
+s:newCel(a,1,im,Point(0,0));a:cel(1).opacity=0
+s:newEmptyFrame();s:newEmptyFrame()
+app.range.layers={a};app.range.frames={s.frames[1],s.frames[3]};app.command.LinkCels()
+for i=2,9 do local layer=s:newLayer();layer.name="same" end
+local group=s:newGroup();group.name="";group.isVisible=false
+local child=s:newLayer();child.name="\t\\\"☃";child.parent=group
+local empty=s:newGroup();empty.name="empty"
+s:saveAs(s.filename)`)
+	before, err := os.ReadFile(p)
+	require.NoError(t, err)
+	stat, err := os.Stat(p)
+	require.NoError(t, err)
+
+	out := readStructure(t, f, map[string]any{"sprite_path": p})
+	require.Equal(t, 12, out.LayerCount)
+	require.Len(t, out.Layers, 12)
+	ids := make([]string, 0, len(out.Layers))
+	for _, layer := range out.Layers {
+		ids = append(ids, layer.LayerID)
+	}
+	require.Equal(t, []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "10/1", "11"}, ids)
+	zero := 0
+	layer := out.Layers[0]
+	require.Empty(t, layer.Name)
+	require.Equal(t, []string{""}, layer.NamePath)
+	require.Equal(t, &zero, layer.Opacity)
+	require.Len(t, layer.Cels, 3)
+	cel := layer.Cels[0]
+	require.True(t, cel.Exists, "opacity zero must not be treated as an absent cel")
+	require.Equal(t, &zero, cel.X)
+	require.Equal(t, &zero, cel.Y)
+	require.Equal(t, &zero, cel.Opacity)
+	require.Equal(t, &zero, cel.ZIndex)
+	require.Equal(t, StructureCel{FrameNumber: 2, Exists: false}, layer.Cels[1])
+
+	child := readStructure(t, f, map[string]any{"sprite_path": p, "layer_id": "10/1"})
+	require.Len(t, child.Layers, 1)
+	require.Equal(t, "10", child.Layers[0].ParentID)
+	require.Equal(t, []string{"", "\t\\\"☃"}, child.Layers[0].NamePath)
+	require.True(t, child.Layers[0].Visible)
+	require.False(t, child.Layers[0].EffectiveVisible)
+	empty := readStructure(t, f, map[string]any{"sprite_path": p, "layer_id": "11"})
+	require.Len(t, empty.Layers, 1)
+	require.Equal(t, "group", empty.Layers[0].Kind)
+	require.Equal(t, []StructureCel{}, empty.Layers[0].Cels, "empty group must encode an array, not null")
+
+	filtered := readStructure(t, f, map[string]any{"sprite_path": p, "layer_id": "1", "frame_start": 3, "frame_end": 3})
+	require.Len(t, filtered.Layers, 1)
+	require.Len(t, filtered.Layers[0].Cels, 1)
+	require.Equal(t, "1@1", filtered.Layers[0].Cels[0].ImageRef)
+	require.Equal(t, 2, filtered.Layers[0].Cels[0].LinkedCelCount, "sharing includes the frame outside the filter")
+	defaults := readStructure(t, f, map[string]any{"sprite_path": p, "page_size": 0, "frame_start": 0, "frame_end": 0})
+	require.Equal(t, out, defaults)
+
+	after, err := os.ReadFile(p)
+	require.NoError(t, err)
+	require.Equal(t, before, after)
+	afterStat, err := os.Stat(p)
+	require.NoError(t, err)
+	require.True(t, os.SameFile(stat, afterStat))
+	require.Equal(t, stat.ModTime(), afterStat.ModTime())
+	require.Equal(t, stat.Mode(), afterStat.Mode())
+	_, err = os.Stat(store)
+	require.True(t, os.IsNotExist(err), "inspection must not initialize the history store")
+}

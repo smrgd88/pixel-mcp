@@ -91,3 +91,13 @@ Notes:
 - 독립 외부 리뷰와 develop/main 병합·배포는 수행하지 않았다. RM-FIX-01과 공통 CHANGELOG/CAPABILITIES/NEXT_STEPS/ROADMAP/REGRESSION_MATRIX 문서가 겹칠 수 있어 병합 순서에 따라 상태 문구를 조정해야 한다. 미병합 FIX 코드를 사용하지 않는다.
 
 판정: **PASS_WITH_NOTES**. 범위 내 차단 결함과 미해결 지적이 없고 최종 후보 검증·전체 범위 재검토를 완료해 추가 수정 cycle을 진행하지 않는다. GAP-02는 조회 부분만 완료했으며 편집/unlink는 후속이다. feature 브랜치·워크트리는 미병합이므로 정리하지 않는다.
+
+### 권장 경계값 회귀 보강 (2026-10-04)
+
+재리뷰에서 임시 MCP probe로 확인했던 경계값을 `TestSpriteStructureEmptyNamesGroupsAndZeroValues` 정식 integration 테스트로 편입했다. 빈 레이어 이름과 이름 경로, 빈 그룹의 빈 배열, layer/cel opacity 및 좌표/z-index의 명시적 0, 두 자리 ID의 숫자 순서와 자식 필터를 검사한다. 존재하지 않는 cel과 opacity 0인 cel을 구분하며, frame 필터 밖 대표 image 참조·문서 전체 공유 개수, 생략과 명시적 0의 기본값 일치도 검증한다. 모든 조회 뒤 source bytes/inode/mtime/권한 및 history 저장소 미생성을 확인한다.
+
+- Linux amd64 Docker / Go 1.25.14 / Aseprite 1.3.18.3-dev: `GOMAXPROCS=2 PIXEL_MCP_CONFIG=/tmp/structure-config.json go test -p 1 -count=1 -race -tags=integration ./pkg/tools -run 'TestSpriteStructure|TestStructureInput' -v` 통과, 11.462초. 신규 테스트는 1.01초였다.
+- macOS arm64 / Aseprite 1.3.18.2-arm64: 현재 소스에서 cross-compile한 바이너리로 신규 테스트 통과. 기존 격리 config와 temp_dir을 사용했다.
+- production 코드 변경이 없는 테스트·검증 기록 보강이다. Go 컴파일·기본 vet를 포함하는 위 관련 검사와 macOS 신규 회귀를 실행했으며 로컬 전체 suite·전체 coverage·지원 하한 전체 검사는 반복하지 않았다. 기존 전체 통과 이력과 구분한다.
+- 셀프리뷰 범위는 `a94368b` 이후 테스트 1개 파일·본 문서이며 조회 구현과 기존 fixture/helper를 문맥으로 확인했다. 초기 검토 1회와 fresh 검토 1회, 지적·repair cycle·재개방·미해결·최종 후보 무효화 모두 0회. 차단 결함이 없어 추가 수정을 진행하지 않는다. 판정은 기존 Notes를 유지한 **PASS_WITH_NOTES**다.
+- 페이지 사이 변경 감지는 후속 설계로 유지한다. 두 PR의 공통 문서 상태 정리는 실제 develop 통합 시 수행하며 이번 보강에서 병합하지 않는다.
