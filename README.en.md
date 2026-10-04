@@ -6,7 +6,9 @@
 
 pixel-mcp is a local MCP (Model Context Protocol) server that lets AI clients control Aseprite.
 
-> This public fork is developed and validated with OpenAI Codex.
+This public fork is developed primarily with OpenAI Codex, and the getting-started guide below follows that workflow. The server uses standard MCP over stdio and can also connect to other compatible clients.
+
+This README describes `develop`. Fork fixes and recovery features are **Unreleased**, not part of the existing `v0.5.0` distribution. Build from source below to use the development features.
 
 ## Features
 
@@ -15,8 +17,11 @@ pixel-mcp is a local MCP (Model Context Protocol) server that lets AI clients co
 - Work with palettes, selections, and animations
 - Inspect sprite metadata and pixel colors
 - Export PNG, GIF, and spritesheets
+- Operation warnings, dry-run, snapshot/restore, and opt-in operation history/undo
 
 ## MCP tools
+
+`develop` registers 56 tools. See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
 
 ### Canvas and layers
 
@@ -40,7 +45,7 @@ Selection and clipboard state persists across consecutive MCP calls.
 
 `analyze_reference`, `draw_with_dither`, `downsample_image`, `quantize_palette`, `get_palette`, `set_palette`, `set_palette_color`, `add_palette_color`, `sort_palette`, `apply_shading`, `apply_auto_shading`, `analyze_palette_harmonies`, `suggest_antialiasing`
 
-Analyze references, apply dithering, downsample images, quantize colors, edit palettes, shade automatically, and antialias artwork.
+Analyze references, apply dithering, downsample images, quantize colors, edit palettes, shade automatically, and suggest antialiasing.
 
 For indexed sprites, `apply_auto_shading` preserves existing palette indices and the transparent index. New shade colors are appended only when capacity allows; otherwise non-exact shades retain their original pixel indices.
 
@@ -62,12 +67,33 @@ Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserv
 
 Verify pixels and work with PNG, GIF, JPG, BMP, spritesheets, and Aseprite files.
 
-## Requirements
+### Recovery and operation history (Unreleased)
 
-- Go 1.25+
-- Aseprite 1.3.17.2+ (1.3.18.3 recommended)
+`create_snapshot`, `list_snapshots`, `restore_snapshot`, `delete_snapshot`, `list_operation_history`, `undo_last_operation`
 
-## Configuration
+Create and restore snapshots of saved files. Restore creates a backup first. Copies expire after 7 days; the store is limited to 100 snapshots / 512 MiB. Optional absolute `snapshot_dir` config overrides `os.UserConfigDir()/pixel-mcp/snapshots`; this is separate from `temp_dir`. See [contract and limits](docs/SNAPSHOTS.md).
+
+Set `"enable_history": true` in the config to record successful in-place edits (default false). Use `list_operation_history` with `sprite_path`, then call `undo_last_operation` with that path and the latest applied `expected_operation_id`. External changes and stale IDs are rejected. Automatic copies share snapshot capacity and expiry; see the [history contract](docs/HISTORY.md).
+
+## Codex quick start
+
+### 1. Requirements and source build
+
+- Go 1.25+ to build from source
+- A local Aseprite executable: version 1.3.17.2+ and API 39+. See the [runtime checks](docs/CAPABILITIES.md#실행-환경-사전-검사-gap-10) for validation history.
+- Codex CLI installed in the environment that will run the MCP server
+
+```bash
+git clone --branch develop https://github.com/smrgd88/pixel-mcp.git
+cd pixel-mcp
+go build -o bin/pixel-mcp ./cmd/pixel-mcp
+```
+
+Replace `/absolute/path/to/pixel-mcp` below with the actual absolute path to the resulting `bin/pixel-mcp`. Register a path where you will keep the executable.
+
+### 2. Create the server configuration
+
+Save this JSON at a location such as `/absolute/path/to/config.json`. The Aseprite and temporary-directory paths below are macOS examples; replace them for your environment. The server does not automatically discover Aseprite.
 
 ```json
 {
@@ -84,7 +110,47 @@ Configuration files are selected in this order:
 2. `PIXEL_MCP_CONFIG`
 3. `~/.config/pixel-mcp/config.json`
 
-## Connect an MCP client
+### 3. Check the Aseprite runtime
+
+```bash
+/absolute/path/to/pixel-mcp --config /absolute/path/to/config.json --health
+```
+
+A healthy runtime returns exit code 0 and JSON with `success: true`. This checks Aseprite version/API requirements, not the Codex connection itself.
+
+### 4. Register the MCP server in Codex
+
+Use either these CLI commands or the TOML configuration below.
+
+```bash
+codex mcp add pixel-mcp -- /absolute/path/to/pixel-mcp --config /absolute/path/to/config.json
+codex mcp list
+codex mcp get pixel-mcp
+```
+
+For manual configuration, add this entry to `~/.codex/config.toml`, preserving your existing settings:
+
+```toml
+[mcp_servers.pixel-mcp]
+command = "/absolute/path/to/pixel-mcp"
+args = ["--config", "/absolute/path/to/config.json"]
+```
+
+The JSON configures pixel-mcp; the TOML tells Codex how to launch it. Open a new Codex CLI session and use `/mcp` to inspect active servers. A listed configuration alone does not verify Aseprite tool execution. See the [official Codex MCP guide](https://developers.openai.com/codex/mcp).
+
+Codex launches the server over stdio. Do not add `--health` to its launch arguments: that mode exits after the check. Use `--config` as above. The Codex execution environment must be able to access the server, config, Aseprite, and artwork paths.
+
+### 5. Request a first drawing
+
+Give Codex actual output paths:
+
+> Use pixel-mcp to create a 32×32 RGB canvas and draw a red circle. Save a new file at `/absolute/path/to/art/demo.aseprite`, export `/absolute/path/to/art/demo.png`, and verify the result.
+
+Before destructive operations such as quantization, check [warnings](docs/WARNINGS.md) and [dry-run](docs/DRY_RUN.md) for supported tools, and create a snapshot when needed. Recovery uses saved files rather than the GUI undo stack.
+
+## Other MCP clients
+
+Clients using a `mcpServers` JSON format can adapt this example in their own configuration location. Do not paste this JSON into Codex's `config.toml`.
 
 ```json
 {
@@ -96,6 +162,10 @@ Configuration files are selected in this order:
   }
 }
 ```
+
+## Contributing
+
+For repository development, see the [Codex contributor instructions](AGENTS.md) and [testing guide](docs/TESTING.md).
 
 ## License
 
