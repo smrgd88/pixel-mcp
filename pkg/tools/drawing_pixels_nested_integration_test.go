@@ -63,6 +63,7 @@ func TestDrawPixelsLayerRejectionPreservesSource(t *testing.T) {
 		{"missing", "", "missing", "Layer not found: missing", 1, 1, 2},
 		{"group", `local g=s:newGroup();g.name="group"`, "group", "Target layer must be a raster layer", 1, 1, 2},
 		{"nested-group", `local g=s:newGroup();local inner=s:newGroup();inner.name="group";inner.parent=g`, "group", "Target layer must be a raster layer", 1, 1, 2},
+		{"tilemap", `app.command.NewLayer{name="tiles",tilemap=true,gridBounds=Rectangle(0,0,8,8),ask=false}`, "tiles", "Target layer must be a raster layer", 1, 1, 2},
 		{"frame-zero", "", "paint", "frame_number must be at least 1", 0, 1, 2},
 		{"frame-missing", `local g=s:newGroup();l.parent=g`, "paint", "Frame not found: 2", 2, 1, 2},
 		{"negative-x", `local g=s:newGroup();l.parent=g`, "paint", "Pixel coordinates must be within sprite bounds", 1, -1, 2},
@@ -72,6 +73,13 @@ func TestDrawPixelsLayerRejectionPreservesSource(t *testing.T) {
 			f := newExportBehavior(t)
 			p := f.sprite(aseprite.ColorModeRGB)
 			f.lua(p, `local s=app.activeSprite;local l=s.layers[1];l.name="paint";`+tc.setup+`;s:saveAs(s.filename)`)
+			if tc.name == "tilemap" {
+				// Reopen the saved fixture and prove that isTilemap, rather than
+				// the non-image/group check, must reject this target.
+				f.lua(p, `local tiles
+for _,layer in ipairs(app.activeSprite.layers) do if layer.name=="tiles" then tiles=layer end end
+assert(tiles and tiles.isImage and tiles.isTilemap and tiles.tileset)`)
+			}
 			before, err := os.ReadFile(p)
 			require.NoError(t, err)
 			result, err := f.session.CallTool(context.Background(), &mcp.CallToolParams{Name: "draw_pixels", Arguments: map[string]any{"sprite_path": p, "layer_name": tc.target, "frame_number": tc.frame, "pixels": []map[string]any{{"x": tc.x, "y": tc.y, "color": "#FFFFFFFF"}}}})

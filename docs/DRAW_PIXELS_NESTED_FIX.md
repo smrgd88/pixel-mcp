@@ -22,7 +22,7 @@
 
 - `TestRegressionMatrixLinkedDrawingExport`: RGB/grayscale/indexed(mask 0/3), positioned (5,3) 2×2 cel, frame 2 native link를 대상으로 정확한 단일 `(1,2,#FFFFFFFF)` 요청 후 추가 픽셀을 편집한다. 그룹 밖 이동 없이 저장/재열기 image identity·expanded 위치(1,2)/크기(6,3)·palette mask와 새 투명 영역·계층/숨김 레이어·문서 data/frame duration을 검사한다. 두 PNG의 모든 16×16 픽셀과 export 원본 bytes 불변도 검사한다. nested 좌표 실패는 진단 문구와 bytes 보존을 assert한다.
 - `TestDrawPixelsLayerPolicy`: root 및 2-level nested에서 정상/hidden/locked/숨김·잠금 조상/no-cel/literal 특수 이름을 저장·재열기 검사한다. slash/quote/backslash/newline/Lua 코드 모양 이름이 실행되지 않고 정확히 해당 레이어에만 적용되는지 확인한다.
-- `TestDrawPixelsLayerRejectionPreservesSource`: root/nested/sibling 중복·group/leaf 충돌·missing·root/nested group·frame 0/없는 frame·음수 x/경계 밖 y를 오류 기대와 원본 bytes로 검사한다.
+- `TestDrawPixelsLayerRejectionPreservesSource`: root/nested/sibling 중복·group/leaf 충돌·missing·root/nested group·tilemap·frame 0/없는 frame·음수 x/경계 밖 y를 오류 기대와 원본 bytes로 검사한다.
 - 기존 animation integration의 3개 fixture는 기본 `Layer 1`에 같은 이름을 추가해 첫 일치를 편집하던 입력이었다. 중복 거부 계약에 맞춰 추가/편집/link 대상 이름을 고유 `paint`로 보정했다. 애니메이션 검증과 production animation 코드는 유지한다.
 - 기존 `TestIntegration_DrawPixels*`와 generator unit 테스트는 루트 동작·좌표·native link 비회귀 근거다. 새 무작위 PBT framework는 도입하지 않으며 구체 fixture의 전 픽셀·bytes 불변식을 검사한다.
 
@@ -45,7 +45,7 @@ GAP-02는 별도 `feature/be-sprite-structure` / `be-feature-sprite-structure` �
 
 - 최종 Linux `go test -count=1 -tags=integration ./...`: 전체 통과. pkg/tools 415.522초. 로그 `linux-integration-final.log`. 첫 실패 이후 보정된 최종 fixture를 포함한 재실행이다.
 
-### 최종 후보와 셀프리뷰
+### 최초 후보와 셀프리뷰 (222bc44 작성 시점)
 
 리뷰 기준 HEAD/merge-base: `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2`. 후보는 이 기준 + staged 12-file 변경이며, 보고용 최종 결과 추가 전 tree는 `ebb5d1e9f76c3e5f1982605f06683b34805a98ae`다. runtime/test 6개 파일을 경로순으로 `path + NUL + bytes` 연결한 SHA-256은 `891cab5ef176f4e9295448964bd184c1dea1abb98085cb466fa91a7ae0bd1c17`이다. 후보 선택 후 runtime·test·계약 변경 및 certification 무효화는 0회다. 이후 추가한 실행 결과·리뷰 수치는 보고용 기록이다.
 
@@ -70,3 +70,21 @@ Notes:
 3. 독립 외부 리뷰·원격 PR CI·develop/main 병합은 이 로컬 셀프리뷰와 별개다. 이번 작업은 커밋/PR 생성까지이며 미병합 branch/worktree는 정리하지 않는다.
 
 판정: **PASS_WITH_NOTES**.
+
+
+### Tilemap 거부 회귀 보강 및 재리뷰 (2026-10-04)
+
+후속 권고였던 tilemap 분기 검증 공백을 해소했다. `TestDrawPixelsLayerRejectionPreservesSource/tilemap`은 공식 [NewLayer 명령](https://github.com/aseprite/api/blob/main/api/command/NewLayer.md)의 `tilemap=true`, `ask=false`로 실제 native fixture를 생성·저장한다. 별도 프로세스로 재열어 대상의 `isImage == true`, `isTilemap == true`, tileset 존재를 먼저 확인한다. 유효 frame/좌표/색상 요청이 정확한 raster 대상 오류로 거부되고 원본 bytes가 동일한지 검사한다.
+
+- 분기 검증: 컨테이너 사본에서만 `or layer.isTilemap`을 제거하자 요청이 성공하여 새 테스트의 `IsError` assertion이 실패했다. 따라서 그룹/non-image 거부 검사에 우연히 기대는 fixture가 아니다. 원래 production 소스를 즉시 복구하고 워크트리와 byte 동일성을 확인한 뒤 아래 최종 검증을 수행했다.
+- Linux Go 1.25.14/Aseprite 1.3.18.3-dev: `go vet -tags=integration ./pkg/tools` 통과. `go test -count=1 -tags=integration ./pkg/aseprite ./pkg/tools -run 'TestLuaGenerator_DrawPixels|TestDrawPixelsLayer|TestRegressionMatrix|TestIntegration_DrawPixels|TestIntegration_LinkCel|TestIntegration_DuplicateFrame_AtEnd'` 통과 (aseprite 0.350초, tools 30.496초).
+- macOS arm64/Aseprite 1.3.18.2-arm64: 최종 소스로 테스트 바이너리를 재빌드한 뒤 `TestDrawPixelsLayerRejectionPreservesSource|TestRegressionMatrix` 필터 통과. 신규 tilemap 거부·원본 보존과 기존 RGB/grayscale/indexed native link matrix를 포함한다.
+- 로그: `/tmp/pixel-rm-fix-01-evidence/{tilemap-mutation,tilemap-final-linux,tilemap-final-macos}.log`. production 변경 없이 integration fixture와 본 보고서만 보강했으므로 로컬 전체 build/race/coverage/integration·macOS 전체를 반복하지 않았다. 직전 `222bc44`의 로컬 전체 검증과 원격 CI 성공은 앞선 코드의 이력이며, 새 커밋 CI와 구분한다. 하한 전체 반복 제외 정책도 유지한다.
+
+후속 리뷰 시작 HEAD는 `222bc44`, 통합 기준은 `2ec6c79`다. 최종 후보는 두 파일의 후속 diff를 포함하며, 앞서 정의한 runtime/test 6개 파일 연결 SHA-256은 `e6c4cff87e703ce3e935a8357448e1eb2e8c703dd50642026f952d4a532b8298`이다. 최초 후보의 검증 기록은 역사로 유지하고, 이번 후보는 아래 closure/fresh review로 다시 판정했다.
+
+리뷰 범위는 기준 `2ec6c79`부터 전체 12개 변경 파일 및 직접 handler/client/escaping/file-protection 문맥이다. 이번 수정은 테스트 1개·문서 1개이며, GAP-02와 다른 drawing/animation production 코드는 제외했다. 초기 확인 1회, mutation cycle 1회, repair-diff/closure 검토 1회, 전체 범위 fresh-discovery 1회로 총 review pass 3회다. tilemap 검증 공백은 VERIFIED; 신규 P0/P1/P2/P3, 수정 유발 결함, 재개방 및 미해결 지적은 각각 0건이다. 최종 후보 선택 뒤 runtime/test/계약 변경·무효화는 0회다.
+
+closure에서 저장 후 타입 전제, 정상 입력, 오류 문구 및 bytes 검사가 실제 tilemap 분기를 검증함을 확인했다. 전체 재리뷰에서 대상 이름의 유일성·타입 판별, 좌표/linked 공유, 오류 시 저장 보호와 문서 계약을 다시 대조했다. 필수 관련 검증이 통과하고 새 결함이 없어 추가 수정을 종료한다.
+
+Notes는 앞선 macOS 전체/race·앱 UI 및 광범위 matrix 제한, GAP-02 공통 문서 충돌 가능성, 독립 외부 리뷰·병합 상태에 한정한다. tilemap 거부 fixture 부재는 더 이상 잔여가 아니다. 판정: **PASS_WITH_NOTES**.
