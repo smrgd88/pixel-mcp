@@ -21,7 +21,7 @@ pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprit
 
 ## 제공 MCP 도구
 
-`develop`에는 PR #30까지 57개 도구가 있고, 이번 cel 편집 브랜치는 신규 도구를 포함해 58개를 등록합니다 (편집 도구 미병합/Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
+`develop`에는 PR #31까지 58개 도구가 등록되어 있습니다 (Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
 
 ### 캔버스와 레이어
 
@@ -64,6 +64,8 @@ Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent in
 ### 조회와 파일 입출력
 
 `get_sprite_structure`, `get_pixels`, `export_sprite`, `export_spritesheet`, `import_image`, `save_as`
+
+범위 export 후보: 태그/프레임 범위, revision으로 보호한 레이어·그룹 선택, trim, sheet extrude/개별 padding, texture+JSON 출력 보호. [옵션·호환성과 검증](docs/EXPORT_OPTIONS.md)을 참고하세요.
 
 [상세 구조 조회](docs/SPRITE_STRUCTURE.md)는 계층과 frame별 cel 존재·위치·크기·opacity·native linked 관계를 읽기 전용으로 반환합니다. 구조 ID는 영구 ID가 아닙니다. [cel 편집](docs/CEL_PROPERTIES.md)은 조회의 `revision`을 필수 사전조건으로 받아 위치·opacity를 수정하며, linked 집합 전체 변경은 명시적 `allow_linked=true`가 필요합니다. 다른 편집 도구의 입력은 그대로입니다. 레이어 페이지(최대 100)와 frame 범위(최대 100)를 지원합니다.
 

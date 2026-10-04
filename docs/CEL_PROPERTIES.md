@@ -2,7 +2,7 @@
 
 작업: `[BE][FEATURE] cel 위치 및 불투명도 편집 + 관련 문서 최신화`.
 기준: `origin/develop` `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f` (PR #29 RM-FIX-01 및 PR #30 상세 조회 병합 포함).
-`feature/be-cel-properties`에서 구현한 Unreleased 기능이다. develop 병합·태그·배포와 구분한다. 플러그인 저장소와 bundled binary는 이번 범위 밖이다.
+현재 상태: PR #31로 develop `96d8fa4`에 병합 완료 / Unreleased. 아래 브랜치별 검증·리뷰 기록은 당시 이력이며 태그·배포 완료와 구분한다. 플러그인 저장소와 bundled binary는 이번 범위 밖이다.
 
 ## 호출 계약
 

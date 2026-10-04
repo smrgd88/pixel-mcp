@@ -1,12 +1,12 @@
 # 기능 로드맵
 
-기준일: 2026-10-04 · 코드 기준: `develop`의 `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f`
+기준일: 2026-10-04 · 코드 기준: `develop`의 `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
 ## 현재 위치
 
-develop에는 57개 MCP 도구가 등록되어 있으며(PR #30 포함), 이번 cel 편집 브랜치는 58개다 (편집 신규 도구 미병합/Unreleased). 기본 드로잉·애니메이션·선택·팔레트·변형·export와 자체 분석 기능을 제공한다. `v0.1.0`의 47개에서 `v0.4.0`에 감색/자동 shading 2개, `v0.5.0`에 flatten 1개가 추가됐다.
+develop에는 PR #31까지 58개 MCP 도구가 등록되어 있다 (Unreleased). 범위 export 후보도 같은 이름 집합을 유지한다. 기본 드로잉·애니메이션·선택·팔레트·변형·export와 자체 분석 기능을 제공한다. `v0.1.0`의 47개에서 `v0.4.0`에 감색/자동 shading 2개, `v0.5.0`에 flatten 1개가 추가됐다.
 
 포크의 config 격리, draw_pixels 좌표, native linked cel, indexed shading 수정은 develop에 반영됐지만 `v0.5.0`에는 없다. 신규 릴리스 번호나 배포 일자는 확정하지 않는다. R0–R5는 작업 단계이며 버전 번호가 아니다.
 
@@ -23,7 +23,7 @@ develop에는 57개 MCP 도구가 등록되어 있으며(PR #30 포함), 이번 
 | 완료 | 공통 회귀 점검 | PR #27 develop 병합 완료, 좌표 거부 테스트 보강 포함. [결과](REGRESSION_MATRIX.md) |
 | 완료 | RM-FIX-01 그룹 내부 draw_pixels 조회 | PR #29 develop 병합. [계약·검증](DRAW_PIXELS_NESTED_FIX.md) |
 | develop 반영 | GAP-02 읽기 전용 상세 구조/cel 조회 | PR #30 / `eca9e83`, [계약·검증](SPRITE_STRUCTURE.md) |
-| 진행 | GAP-02 cel 위치·opacity 편집 | 이 브랜치의 `set_cel_properties` 및 revision guard, [계약·검증](CEL_PROPERTIES.md). unlink·GAP-01 후속. GAP-02 전체 완료 아님 |
+| develop 반영 | GAP-02 cel 위치·opacity 편집 | PR #31의 `set_cel_properties` 및 revision guard, [계약·검증](CEL_PROPERTIES.md). unlink·GAP-01 후속. GAP-02 전체 완료 아님 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
@@ -34,7 +34,7 @@ develop에는 57개 MCP 도구가 등록되어 있으며(PR #30 포함), 이번 
 - 릴리스 전: OPS-01 CI 버전 artifact, upstream #19 제출 범위, 릴리스 절차·0.x 호환성 정책 및 배포 검증.
 - 후속 설계: 정확한 color2 비율을 강제하는 별도 모드. 이번 DITHER-01/02는 기존0.5 문양을 유지하는 중간값 조절이며 exact-ratio API는 추가하지 않는다.
 - 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, 성공 payload의 success/details 일괄 표준화 검토. OPS-03 오류/request ID/로그 계약은 PR #25로 병합 완료했다.
-- 기능 확장: R3 편집·조회 → R4 export·slice. spritesheet의 texture+JSON 일괄 보호도 R4 잔여다. R5 후보는 범위 선정 후 착수한다.
+- 기능 확장: R3 편집·조회 → R4 export·slice. GAP-05 범위/texture+JSON 보호는 [독립 구현 후보](EXPORT_OPTIONS.md)이며 아직 미병합이다. R5 후보는 범위 선정 후 착수한다.
 - 후속 설계: export 세트 crash 복구·고아 staging/백업 정리, 파일시스템별 file_changed 관찰 재현. 현재 완료 범위에 포함하지 않는다.
 - upstream #16 indexed 검은 이미지 재현은 아래 재개 조건을 유지한다. 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다.
 
@@ -47,8 +47,8 @@ develop에는 57개 MCP 도구가 등록되어 있으며(PR #30 포함), 이번 
 | R0 | 현황·릴리스 근거 정리, OPS-01 | 기능표/태그/Unreleased 동기화, CI Go·Aseprite 버전 artifact (로그 출력은 구현됨), draw_pixels upstream 제출 범위 결정 | 등록 도구 수와 기능표 일치; 버전 증거 보존; 제출 범위 기록 | 문서 초안 작성 완료, CI artifact·범위 결정 예정 |
 | R1 | 실행 계약 확립, SAFE-01·GAP-10·OPS-03 | warnings, capability preflight, 오류 분류 및 응답 규칙 설계 | 위험 작업별 경고·기존 클라이언트 호환 검증; 미지원 버전/API를 변경 전에 거부 | warnings develop 병합 완료. capability PR #13 병합 완료; 하한 health·전체 통합 실검증 완료 (2026-09-22) |
 | R2 | 원본 보호와 복구, SAFE-02–05·OPS-03 | path lock·atomic save 기반, 임시 복사본 dry-run, snapshot/restore, history/undo, request ID·redaction | 실패·취소·동시 요청 시 원본 보존; dry-run 원본 불변; snapshot 복원·history 일관성 회귀 통과 | SAFE-02–05 및 OPS-03 구현 develop 반영 완료 (PR #14/#21/#23/#24/#25). 공통 회귀 점검은 PR #27 develop 병합 완료; 잔여는 REGRESSION_MATRIX 참조 |
-| R3 | 편집·조회 빈 부분 해소, GAP-01–04 | 레이어 속성·그룹, 상세 구조 조회, cel 위치/opacity/unlink, 태그 조회·편집, 범용 색상 모드 전환 | 다중 레이어/프레임에서 정확한 대상 지정; 저장/재열기 검증; destructive 변경에 R1/R2 계약 적용 | R1/R2 기반 이후, GAP-02 조회 PR #30 develop 반영; 위치·opacity 이번 브랜치 구현·미병합, unlink·GAP-01 후속 |
-| R4 | 게임·UI 자산 export, GAP-05–06 | 태그/레이어/프레임 범위 export, trim/extrude/개별 padding, slices/pivot/nine-slice | 출력 이미지와 JSON의 frame·bounds·pivot 일치; overwrite/실패 보호 | R3 상세 조회 기반, 예정 |
+| R3 | 편집·조회 빈 부분 해소, GAP-01–04 | 레이어 속성·그룹, 상세 구조 조회, cel 위치/opacity/unlink, 태그 조회·편집, 범용 색상 모드 전환 | 다중 레이어/프레임에서 정확한 대상 지정; 저장/재열기 검증; destructive 변경에 R1/R2 계약 적용 | R1/R2 기반 이후, GAP-02 조회 PR #30 develop 반영; 위치·opacity PR #31 develop 반영, unlink·GAP-01 후속 |
+| R4 | 게임·UI 자산 export, GAP-05–06 | 태그/레이어/프레임 범위 export, trim/extrude/개별 padding, slices/pivot/nine-slice | 출력 이미지와 JSON의 frame·bounds·pivot 일치; overwrite/실패 보호 | R3 상세 조회 기반. GAP-05 [구현 후보](EXPORT_OPTIONS.md), GAP-06 후속 |
 | R5 | 호환성·확장, GAP-07–09·GAP-11–12·OPS-02 | native launcher와 OS smoke, 색상/계층/client matrix 확대; tilemap/tileset·보정 필터·metadata·선택/brush/grid 확장 | 플랫폼별 실행 증거, 기능별 최소 API 및 batch 검증, 기존 도구 회귀 통과 | launcher/matrix는 독립 착수 가능. 확장 기능은 별도 계약·SPIKE 후 선정 |
 
 R5의 확장 후보 전체를 하나의 릴리스에 묶지 않는다. GUI 플러그인·실시간 편집 세션(GAP-13)은 현재 batch 구조 밖이므로 별도 SPIKE에서 필요성과 구조를 결정한다.

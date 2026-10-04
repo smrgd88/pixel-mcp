@@ -1,6 +1,6 @@
 # 오류 코드와 요청 추적 (OPS-03)
 
-상태: 구현 브랜치 / Unreleased. 기존 56개 도구의 성공 payload·warnings·output schema를 유지한다. 도구 추가는 없다.
+상태: PR #25 develop 병합 / Unreleased. 도입 당시 56개 도구의 성공 payload·warnings·output schema를 유지한다. 도구 추가는 없다.
 
 ## 성공 응답과 request ID
 
@@ -51,7 +51,7 @@ Lua 실행은 원본 script와 작은 loader를 private 임시 파일로 작성�
 {"code":"file_rollback_failed","message":"Some outputs could not be restored. Manual recovery is required; inspect the retained recovery directories before retrying.","recovery":[{"output_index":1,"directory":".pixel-mcp-stage-opaque","backup_file":".original-backup","rollback_failed":true}]}
 ```
 
-- `output_index`: 내부 출력 목록의 1-based 순번. `export_sprite` 시퀀스는 프레임 출력 순서이며 단일 파일은 1이다.
+- `output_index`: 내부 출력 목록의 1-based 순번. `export_sprite` 시퀀스는 프레임 출력 순서이며 단일 파일은 1이다. GAP-05 sheet 후보는 texture=1, JSON sidecar=2다.
 - `directory`: 해당 출력의 **작업 시작 시 canonical 출력 부모 디렉터리** 아래에 있는 복구 폴더명. 절대 경로·원래 파일명은 공개하지 않는다.
 - `backup_file`: 확인된 기존 원본 백업의 파일명. 신규 출력 또는 이미 사용/확인 불가인 백업은 필드를 생략하므로, 생략됐다고 임의로 백업 부재를 단정하지 않는다.
 - `rollback_failed`: 해당 출력의 복구 실패 여부. 보존된 다른 출력의 폴더도 함께 나열하므로 false인 항목이 있을 수 있다.
@@ -106,3 +106,5 @@ Reviewed: 기존 OPS-03 PR 범위와 rollback error/복구 참조/분류 우선�
 ## Cel 편집 후속
 
 Cel 편집의 `expected_revision` 불일치는 기존 `file_changed`를 사용한다. 입력 범위는 `invalid_arguments`, 잘못된 대상·locked·linked 동의 누락·변경 없음은 `lua_error`다. 새로운 공개 오류 코드/비정형 상세 payload를 추가하지 않는다. [CEL_PROPERTIES](CEL_PROPERTIES.md).
+
+GAP-05 export의 추가 입력/overwrite/차원 예산은 invalid_arguments, stale source는 file_changed, native 선택 오류는 lua_error를 사용한다. 새 공개 오류 코드는 없으며 [출력 세트 계약](EXPORT_OPTIONS.md)을 따른다.

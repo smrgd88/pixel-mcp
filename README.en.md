@@ -21,7 +21,7 @@ This README describes `develop`. Fork fixes and recovery features are **Unreleas
 
 ## MCP tools
 
-The `develop` baseline registers 57 tools through PR #30; this cel editing branch registers 58 with one new Unreleased tool (not yet merged). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
+The `develop` baseline registers 58 tools through PR #31 (Unreleased). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
 
 ### Canvas and layers
 
@@ -64,6 +64,8 @@ Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserv
 ### Inspection and file operations
 
 `get_sprite_structure`, `get_pixels`, `export_sprite`, `export_spritesheet`, `import_image`, `save_as`
+
+Range export candidate: tag/frame ranges, revision-guarded layer/group selection, trim, sheet extrusion/individual padding, and texture+JSON output protection. See the [options, compatibility and verification contract](docs/EXPORT_OPTIONS.md).
 
 Verify pixels and work with PNG, GIF, JPG, BMP, spritesheets, and Aseprite files.
 

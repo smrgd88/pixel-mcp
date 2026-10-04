@@ -7,7 +7,7 @@
 
 RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 전환했다. 루트 우회를 제거하고 nested 상태 그대로 검사한다. FIX는 PR #29로 develop `2ced64c`에 병합했으며 [계약·검증](DRAW_PIXELS_NESTED_FIX.md)을 따른다.
 
-현재 통합 상태: PR #27은 develop `ec99cc2`에 병합 완료했고 PR #28도 `2ec6c79`에 병합 완료했다. 아래 기준·실행 기록은 회귀 작업 당시 이력이다. GAP-02 조회는 별도 feature 브랜치에서 구현하며 [계약·검증](SPRITE_STRUCTURE.md)을 따른다.
+현재 통합 상태: PR #27은 develop `ec99cc2`에 병합 완료했고 PR #28도 `2ec6c79`에 병합 완료했다. 아래 기준·실행 기록은 회귀 작업 당시 이력이다. GAP-02 조회 PR #30 및 cel 속성 PR #31도 develop에 병합됐으며 [계약·검증](SPRITE_STRUCTURE.md)을 따른다.
 
 ## 실제 backlog와 이번 범위
 
@@ -123,3 +123,7 @@ go test -count=1 -tags=integration ./...
 - 리뷰 범위: 기준 `6507405`부터 최종 변경까지 테스트 1개·문서 4개. 직접 helper와 drawing handler/Lua를 문맥으로 확인했다. 별도 RM-FIX-01 구현, 다른 도구 확장, 배포는 제외했다.
 - 이번 재리뷰 활동: 초기 범위/지적 확인 1회, 수정 cycle 1회, 수정 diff 검토 및 closure 1회(동일 pass), 전체 범위 fresh-discovery 1회, 총 review pass 3회. 최초 지적 P3 1건 → VERIFIED 1건. 신규 지적·수정 유발 결함·재개방·미해결 범위 내 지적은 0건. 최종 후보 선택 후 관련 변경/무효화 0회.
 - 판정: **PASS_WITH_NOTES**. 남은 Notes는 별도 FIX인 RM-FIX-01(그룹 내부 편집 미지원 현상)과 기존 미검증 교차 조합·앱 UI·macOS 전체/race다. 범위 내 수정이 검증되었고 새 병합 차단 결함이 없어 추가 수정 cycle을 진행하지 않는다. 독립 외부 리뷰와 develop 병합은 수행하지 않았다.
+
+## GAP-05 독립 후보의 회귀
+
+범위 export/texture+JSON 보호의 추가 조합과 실제 실행 결과는 [EXPORT_OPTIONS](EXPORT_OPTIONS.md)를 따른다. 현재 미병합 후보이며 위 PR #27 당시 이력과 구분한다. frame palette, trim offsets, padding/extrude 및 출력 세트 보호를 검증하며 GAP-06이나 다른 Top4 편집 작업의 완료를 뜻하지 않는다.

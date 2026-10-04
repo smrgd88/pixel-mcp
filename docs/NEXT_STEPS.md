@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-10-04
 
-현재 기준: `develop`의 `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f` (PR #29 RM-FIX-01 및 PR #30 상세 조회 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 속성 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -29,14 +29,14 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 | develop 완료 | 공통 회귀 조합 점검 (PR #27) | 4개 위험 조합 검증·셀프리뷰 완료. 좌표 거부 테스트 보강 완료. [결과](REGRESSION_MATRIX.md) |
 | develop 완료 | RM-FIX-01 그룹 내부 draw_pixels | PR #29 병합. 고유 이름 조회·중복 거부. [계약·검증](DRAW_PIXELS_NESTED_FIX.md) |
 | develop 반영 | GAP-02 읽기 전용 상세 구조/cel 조회 | PR #30 / `eca9e83`, [계약·검증](SPRITE_STRUCTURE.md) |
-| 이 브랜치 | GAP-02 cel 위치·opacity 편집 | `set_cel_properties` 및 revision guard 구현, [계약·검증](CEL_PROPERTIES.md). 미병합/Unreleased. unlink·GAP-01 후속, GAP-02 전체 완료 아님 |
+| develop 반영 | GAP-02 cel 위치·opacity 편집 | `set_cel_properties` 및 revision guard 구현, [계약·검증](CEL_PROPERTIES.md). PR #31 병합/Unreleased. unlink·GAP-01 후속, GAP-02 전체 완료 아님 |
 | develop 완료 | OPS-03 오류 코드·request ID·로그 계약 | PR #25 병합, 기존 성공 payload와 warnings 유지. [계약](ERRORS.md) |
 | develop 완료 | PR #22 팔레트·threshold·DITHER-01/02 수정 | 결정적 palette 추출 포함. 정확한 color2 비율을 강제하는 별도 모드는 범위 밖 |
 | 릴리스 전 운영 | OPS-01, upstream #19, 릴리스 절차 | CI 버전 artifact, upstream 제출 범위 결정, 0.x 호환성·RELEASING 절차 및 main/태그/artifact 배포 검증 |
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
 | 공통 계약 후속 | 성공 payload의 success/details 일괄 표준화 | OPS-03 오류·추적 완료 범위 밖. 별도 호환성 검토 후 범위 결정 |
 | 편집·조회 확장 | GAP-01–04 (R3) | 레이어 속성·그룹, 구조/cel 관리, 태그 조회·편집, 범용 색상 모드 전환. indexed helper 공통화 검증 포함 |
-| export 확장 | GAP-05–06 (R4) | 범위/trim/extrude/padding, slice/pivot/nine-slice, spritesheet texture+JSON 일괄 보호 |
+| export 후보 | GAP-05 (R4) | 범위/trim/extrude/padding 및 texture+JSON 보호 구현 후보, 미병합. [계약·검증](EXPORT_OPTIONS.md). GAP-06은 후속 |
 | 장기 확장 | GAP-07–09·11–13 (R5/별도 SPIKE) | tilemap/tileset, 보정 필터, metadata, 선택/brush/grid, GUI·지속 세션. 범위 선정 후 착수 |
 | 보류·검토 후보 | upstream #16, export crash 복구 | #16은 지원 버전 재현 시 재개. 출력 세트의 crash 복구·고아 staging/백업 자동 정리는 후속 설계 대상으로 착수 미확정 |
 
@@ -422,7 +422,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[SHARED][TEST] 공통 회귀 조합 점검` PR #27 develop 병합. PR #28 Codex README/영어 AGENTS도 병합 완료.
 - 완료: RM-FIX-01 PR #29 develop 병합. [계약·검증](DRAW_PIXELS_NESTED_FIX.md).
 - develop 반영: PR #30 상세 구조/cel 조회 (`eca9e83`), [계약·검증](SPRITE_STRUCTURE.md).
-- 이 브랜치: cel 위치·opacity 편집 및 revision 사전조건, [계약·검증](CEL_PROPERTIES.md). cel unlink·GAP-01 등은 후속이며 GAP-02 전체 완료가 아니다.
+- develop 반영: PR #31 cel 위치·opacity 편집 및 revision 사전조건, [계약·검증](CEL_PROPERTIES.md). cel unlink·GAP-01 등은 후속이며 GAP-02 전체 완료가 아니다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
