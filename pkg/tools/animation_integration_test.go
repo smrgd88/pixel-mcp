@@ -266,7 +266,7 @@ func TestIntegration_DuplicateFrame_AtEnd(t *testing.T) {
 	defer os.Remove(spritePath)
 
 	// Add a layer and draw content
-	addLayerScript := gen.AddLayer("Layer 1")
+	addLayerScript := gen.AddLayer("paint")
 	_, err = client.ExecuteLua(ctx, addLayerScript, spritePath)
 	if err != nil {
 		t.Fatalf("Failed to add layer: %v", err)
@@ -282,7 +282,7 @@ func TestIntegration_DuplicateFrame_AtEnd(t *testing.T) {
 			Color: aseprite.Color{R: 0, G: 255, B: 0, A: 255},
 		},
 	}
-	drawScript := gen.DrawPixels("Layer 1", 1, pixels, false)
+	drawScript := gen.DrawPixels("paint", 1, pixels, false)
 	_, err = client.ExecuteLua(ctx, drawScript, spritePath)
 	if err != nil {
 		t.Fatalf("Failed to draw pixels: %v", err)
@@ -398,7 +398,7 @@ func TestIntegration_LinkCel(t *testing.T) {
 	defer os.Remove(spritePath)
 
 	// Add a layer
-	addLayerScript := gen.AddLayer("Layer 1")
+	addLayerScript := gen.AddLayer("paint")
 	_, err = client.ExecuteLua(ctx, addLayerScript, spritePath)
 	if err != nil {
 		t.Fatalf("Failed to add layer: %v", err)
@@ -428,7 +428,7 @@ spr:saveAs(spr.filename)`
 			Color: aseprite.Color{R: 0, G: 255, B: 255, A: 255},
 		},
 	}
-	drawScript := gen.DrawPixels("Layer 1", 1, pixels, false)
+	drawScript := gen.DrawPixels("paint", 1, pixels, false)
 	_, err = client.ExecuteLua(ctx, drawScript, spritePath)
 	if err != nil {
 		t.Fatalf("Failed to draw pixels: %v", err)
@@ -437,7 +437,7 @@ spr:saveAs(spr.filename)`
 	logger.Information("Testing link cel", "sprite", spritePath)
 
 	// Link frame 1 cel to frame 2
-	script := gen.LinkCel("Layer 1", 1, 2)
+	script := gen.LinkCel("paint", 1, 2)
 	output, err := client.ExecuteLua(ctx, script, spritePath)
 	if err != nil {
 		t.Fatalf("ExecuteLua(LinkCel) error = %v", err)
@@ -447,10 +447,10 @@ spr:saveAs(spr.filename)`
 		t.Errorf("Expected success message, got: %s", output)
 	}
 
-	t.Logf("✓ Linked frame 1 cel to frame 2 on Layer 1")
+	t.Logf("✓ Linked frame 1 cel to frame 2 on paint")
 
 	// Link frame 1 cel to frame 3
-	script = gen.LinkCel("Layer 1", 1, 3)
+	script = gen.LinkCel("paint", 1, 3)
 	output, err = client.ExecuteLua(ctx, script, spritePath)
 	if err != nil {
 		t.Fatalf("ExecuteLua(LinkCel) error = %v", err)
@@ -460,7 +460,7 @@ spr:saveAs(spr.filename)`
 		t.Errorf("Expected success message, got: %s", output)
 	}
 
-	t.Logf("✓ Linked frame 1 cel to frame 3 on Layer 1")
+	t.Logf("✓ Linked frame 1 cel to frame 3 on paint")
 }
 
 func TestIntegration_LinkCel_InvalidLayer(t *testing.T) {
@@ -511,12 +511,12 @@ func TestIntegration_LinkCel_InvalidFrame(t *testing.T) {
 	defer os.Remove(spritePath)
 
 	// Add a layer
-	addLayerScript := gen.AddLayer("Layer 1")
+	addLayerScript := gen.AddLayer("paint")
 	_, err = client.ExecuteLua(ctx, addLayerScript, spritePath)
 	if err != nil {
 		t.Fatalf("Failed to add layer: %v", err)
 	}
-	if _, err = client.ExecuteLua(ctx, gen.DrawPixels("Layer 1", 1, []aseprite.Pixel{{
+	if _, err = client.ExecuteLua(ctx, gen.DrawPixels("paint", 1, []aseprite.Pixel{{
 		Point: aseprite.Point{X: 2, Y: 3},
 		Color: aseprite.Color{R: 255, G: 0, B: 0, A: 255},
 	}}, false), spritePath); err != nil {
@@ -524,14 +524,14 @@ func TestIntegration_LinkCel_InvalidFrame(t *testing.T) {
 	}
 
 	// Try to link cel with invalid source frame
-	script := gen.LinkCel("Layer 1", 99, 1)
+	script := gen.LinkCel("paint", 99, 1)
 	_, err = client.ExecuteLua(ctx, script, spritePath)
 	if err == nil {
 		t.Error("Expected error for invalid source frame, got nil")
 	}
 
 	// Try to link cel with invalid target frame.
-	script = gen.LinkCel("Layer 1", 1, 99)
+	script = gen.LinkCel("paint", 1, 99)
 	_, err = client.ExecuteLua(ctx, script, spritePath)
 	if err == nil {
 		t.Error("Expected error for invalid target frame, got nil")
