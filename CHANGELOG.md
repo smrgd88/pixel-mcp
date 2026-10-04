@@ -64,6 +64,8 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Fixed
 
+- Fix `draw_pixels` lookup for raster layers nested inside groups (RM-FIX-01). Exact names must be unique across the hierarchy; reject ambiguous names and non-raster targets before editing. Preserve literal name escaping, hidden/locked layer behavior, positioned/native linked cels, existing inputs and success payloads. See [contract and validation](docs/DRAW_PIXELS_NESTED_FIX.md).
+
 - Preserve multi-output rollback failures across the public MCP error boundary, even when caused by cancellation or timeout. Return `file_rollback_failed` with relative recovery references while retaining backups and hiding absolute paths.
 
 - `analyze_reference` now supports advertised BMP and native Aseprite inputs by rendering frame 1 to a private PNG before analysis (BUG-02). PNG/JPEG/GIF keep their existing Go decoder path; GIF uses its first decoded image and native documents use the visible first-frame composite. Preserve source files and clean temporary images on success/failure; output fields and analysis algorithms remain unchanged.

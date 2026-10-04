@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-10-04 · 코드 기준: `develop`의 `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2`
+기준일: 2026-10-04 · 코드 기준: `develop`의 `2ced64ca0da429764cb39f7ced37f349917a4448`
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -16,12 +16,12 @@ develop에는 56개 MCP 도구가 등록되어 있으며 이 GAP-02 조회 브�
 
 알려진 동작 오류 수정과 SAFE-02 dry-run은 develop에 반영했다. SAFE-03 복원 기반도 PR #23으로 병합했고 SAFE-04도 PR #24로 병합했고 OPS-03 오류 코드·요청 추적도 PR #25로 병합했다. 재현 조건과 완료 조건은 [NEXT_STEPS](NEXT_STEPS.md#현재-우선-작업--알려진-동작-오류)에 둔다.
 
-완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18), BUG-02(PR #20), 팔레트·threshold·DITHER-01/02 후속 수정(PR #22). 아래는 남은 작업만 나열한다.
+완료된 동작 오류: BUG-04/05(PR #16), BUG-01(PR #17), BUG-03(PR #18), BUG-02(PR #20), 팔레트·threshold·DITHER-01/02 후속 수정(PR #22). 아래는 최근 완료 상태와 후속 작업을 나열한다.
 
 | 순서 | 작업 | 이유 |
 | --- | --- | --- |
 | 완료 | 공통 회귀 점검 | PR #27 develop 병합 완료, 좌표 거부 테스트 보강 포함. [결과](REGRESSION_MATRIX.md) |
-| 별도 FIX | RM-FIX-01 그룹 내부 draw_pixels 조회 | 재현·원본 보존 확인. production 수정은 별도 BE 작업 |
+| 완료 | RM-FIX-01 그룹 내부 draw_pixels 조회 | PR #29 develop 병합. [계약·검증](DRAW_PIXELS_NESTED_FIX.md) |
 | 진행 | GAP-02 읽기 전용 상세 구조/cel 조회 | 이 브랜치에서 `get_sprite_structure` 구현. [계약·검증](SPRITE_STRUCTURE.md); cel 편집/unlink 및 GAP-02 전체 완료는 후속. 배포 운영은 별도 |
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
@@ -106,10 +106,11 @@ Indexed primitive 공통화와 transparent index 불변식 확대 검증은 R3�
 - [x] SAFE-03: snapshot/restore 검증 및 PR #23 develop 병합
 - [x] SAFE-04: history/undo 검증 및 PR #24 develop 병합
 - [x] OPS-03: 오류 코드·request ID·로그 계약 및 PR #25 develop 병합 (성공 payload 일괄 표준화 제외)
-- [x] 공통 회귀 조합 매핑·위험 조합 검증·R3 첫 후보 기록 (작업 브랜치, [결과](REGRESSION_MATRIX.md))
+- [x] 공통 회귀 조합 매핑·위험 조합 검증·R3 첫 후보 기록 (PR #27 develop 병합, [결과](REGRESSION_MATRIX.md))
 - [x] 좌표 거부 검사 보강 (SHARED-P3-001)
-- [ ] 회귀 점검 develop 병합
-- [ ] RM-FIX-01 별도 수정 및 R3 첫 구현 범위 확정
+- [x] 회귀 점검 PR #27 develop 병합; Codex README/영어 AGENTS PR #28 병합
+- [x] RM-FIX-01 PR #29 develop 병합 완료 ([근거](DRAW_PIXELS_NESTED_FIX.md))
+- [x] R3 첫 구현 범위 확정: GAP-02 읽기 전용 구조/cel 조회 (이 브랜치 구현·미병합, [계약](SPRITE_STRUCTURE.md))
 - [ ] GAP-01–06: 편집·조회·export 확장
 - [ ] OPS-02 및 R5 후보별 범위·검증 계획 확정
 - [ ] 릴리스 절차 문서와 0.x 호환성 정책 확정

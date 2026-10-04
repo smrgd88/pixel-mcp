@@ -77,20 +77,7 @@ assert(layer:cel(1).position==layer:cel(2).position)
 assert(math.abs(s.frames[2].duration-0.2)<0.001)
 `
 			f.lua(p, inspect+`assert(layer:cel(1).position==Point(5,3))`)
-			// RM-FIX-01: nested layer lookup currently rejects an existing layer.
-			// Keep the reproduction and byte-preservation check until the FIX task
-			// replaces this expectation with successful nested drawing.
-			original, err := os.ReadFile(p)
-			require.NoError(t, err)
-			rejected, err := f.session.CallTool(context.Background(), &mcp.CallToolParams{Name: "draw_pixels", Arguments: map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 2, "pixels": []map[string]any{{"x": 1, "y": 2, "color": "#FFFFFFFF"}}}})
-			require.NoError(t, err)
-			require.True(t, rejected.IsError)
-			require.Contains(t, rejected.Content[0].(*mcp.TextContent).Text, "Layer not found: paint")
-			unchanged, err := os.ReadFile(p)
-			require.NoError(t, err)
-			require.Equal(t, original, unchanged)
-			f.lua(p, inspect+`layer.parent=s;s:saveAs(s.filename)`)
-			// The target must be at the root so layer lookup cannot mask bounds validation.
+			// Validate bounds on the nested target without relocating it to the root.
 			beforeRejectedDraw, err := os.ReadFile(p)
 			require.NoError(t, err)
 			result, err := f.session.CallTool(context.Background(), &mcp.CallToolParams{Name: "draw_pixels", Arguments: map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 1, "pixels": []map[string]any{{"x": 16, "y": 0, "color": "#FFFFFFFF"}}}})
@@ -101,11 +88,12 @@ assert(math.abs(s.frames[2].duration-0.2)<0.001)
 			require.NoError(t, err)
 			require.Equal(t, beforeRejectedDraw, afterRejectedDraw, "out-of-bounds draw changed source")
 			// Edit from the target frame and expand beyond the original cel bounds.
-			f.call("draw_pixels", map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 2, "pixels": []map[string]any{{"x": 1, "y": 2, "color": "#FFFFFFFF"}, {"x": 5, "y": 3, "color": "#FFFFFFFF"}}})
-			f.lua(p, `local s=app.activeSprite;local layer,group
-for _,v in ipairs(s.layers) do if v.name=="paint" then layer=v elseif v.name=="visible-group" then group=v end end
-assert(layer and group);layer.parent=group;s:saveAs(s.filename)`)
-			f.lua(p, inspect+fmt.Sprintf(`assert(s.colorMode==ColorMode.%s)
+			f.call("draw_pixels", map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 2, "pixels": []map[string]any{{"x": 1, "y": 2, "color": "#FFFFFFFF"}}})
+			f.lua(p, inspect+`assert(layer:cel(1).position==Point(1,2))`)
+			f.call("draw_pixels", map[string]any{"sprite_path": p, "layer_name": "paint", "frame_number": 2, "pixels": []map[string]any{{"x": 5, "y": 3, "color": "#FFFFFFFF"}}})
+			f.lua(p, inspect+fmt.Sprintf(`assert(layer:cel(1).position==Point(1,2))
+assert(layer:cel(1).image.width==6 and layer:cel(1).image.height==3)
+assert(s.colorMode==ColorMode.%s)
 if s.colorMode==ColorMode.INDEXED then
  assert(s.transparentColor==%d)
  local c=layer:cel(1)

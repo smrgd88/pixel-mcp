@@ -2,6 +2,7 @@
 
 작업: `[BE][FEATURE] 상세 구조 및 cel 조회`, `feature/be-sprite-structure`.
 기준: `origin/develop` `2ec6c79b184ba04d2c0cfcbf9ff49ed7475cadd2` (PR #27/#28 병합 포함).
+최신 통합 기준: `origin/develop` `2ced64ca0da429764cb39f7ced37f349917a4448` (PR #29 RM-FIX-01 병합). 최초 구현은 위 `2ec6c79`에서 독립적으로 완료했다.
 이 브랜치에서 구현한 Unreleased 조회 기능이며 develop 병합·배포와 구분한다.
 
 ## 호환성과 입력
@@ -88,7 +89,7 @@ Notes:
 
 - 구조 ID/frame/image 참조는 변경되지 않은 저장 문서에 한정한다. 페이지 간 snapshot 고정, 영구 ID 및 기존 mutation 도구의 ID 수용은 후속이다.
 - native load/전체 공유 집계 비용과 이름/깊이별 byte 규모는 페이지 제한만으로 제거되지 않는다. tilemap/reference 및 앱 UI·macOS 전체/race는 위 검증 범위 밖이다.
-- 독립 외부 리뷰와 develop/main 병합·배포는 수행하지 않았다. RM-FIX-01과 공통 CHANGELOG/CAPABILITIES/NEXT_STEPS/ROADMAP/REGRESSION_MATRIX 문서가 겹칠 수 있어 병합 순서에 따라 상태 문구를 조정해야 한다. 미병합 FIX 코드를 사용하지 않는다.
+- 독립 외부 리뷰와 develop/main 병합·배포는 수행하지 않았다. RM-FIX-01 PR #29의 develop 병합 후 공통 현황 문서 충돌을 해소하고 해당 develop을 기능 브랜치에 통합했다. 미병합 FIX 코드를 사용하지 않는다.
 
 판정: **PASS_WITH_NOTES**. 범위 내 차단 결함과 미해결 지적이 없고 최종 후보 검증·전체 범위 재검토를 완료해 추가 수정 cycle을 진행하지 않는다. GAP-02는 조회 부분만 완료했으며 편집/unlink는 후속이다. feature 브랜치·워크트리는 미병합이므로 정리하지 않는다.
 
@@ -100,4 +101,12 @@ Notes:
 - macOS arm64 / Aseprite 1.3.18.2-arm64: 현재 소스에서 cross-compile한 바이너리로 신규 테스트 통과. 기존 격리 config와 temp_dir을 사용했다.
 - production 코드 변경이 없는 테스트·검증 기록 보강이다. Go 컴파일·기본 vet를 포함하는 위 관련 검사와 macOS 신규 회귀를 실행했으며 로컬 전체 suite·전체 coverage·지원 하한 전체 검사는 반복하지 않았다. 기존 전체 통과 이력과 구분한다.
 - 셀프리뷰 범위는 `a94368b` 이후 테스트 1개 파일·본 문서이며 조회 구현과 기존 fixture/helper를 문맥으로 확인했다. 초기 검토 1회와 fresh 검토 1회, 지적·repair cycle·재개방·미해결·최종 후보 무효화 모두 0회. 차단 결함이 없어 추가 수정을 진행하지 않는다. 판정은 기존 Notes를 유지한 **PASS_WITH_NOTES**다.
-- 페이지 사이 변경 감지는 후속 설계로 유지한다. 두 PR의 공통 문서 상태 정리는 실제 develop 통합 시 수행하며 이번 보강에서 병합하지 않는다.
+- 페이지 사이 변경 감지는 후속 설계로 유지한다. PR #29 병합으로 발생한 공통 문서 충돌은 최신 develop을 이 기능 브랜치에 반영하며 해소했다. 이 기능 브랜치를 develop/main에 병합하지 않는다.
+
+### PR #29 반영 후 통합 검증 (2026-10-04)
+
+권장 테스트 보강 커밋 `b151183` 이후 PR #29가 develop에 병합되어 PR #30의 공통 문서에 충돌이 발생했다. `origin/develop` `2ced64c`를 이 기능 브랜치에 통합하고 CAPABILITIES/NEXT_STEPS/ROADMAP/REGRESSION_MATRIX의 상태를 조정했다. FIX 보고서의 현재 병합 상태와 과거 검증 기록도 구분했다. 가져온 drawing 구현·테스트는 develop과 바이트 기준 동일하며 추가로 수정하지 않았다. develop/main으로 이 기능을 병합한 것은 아니다.
+
+- 통합된 소스로 Linux Docker build·vet·전체 race/coverage·전체 integration을 순차 재실행하여 통과했다. `GOMAXPROCS=2`, `-p 1`, `-count=1`, 기존 전용 config·timeout 30초를 유지했다. pkg/tools race 28.864초/coverage 63.9%, 전체 integration 337.262초. 로그는 `/tmp/pixel-mcp-sprite-structure-evidence/linux-integrated.log`에 있다.
+- 통합된 소스로 macOS arm64 테스트 바이너리를 다시 컴파일하고 `TestSpriteStructure|TestStructureInput|TestRegressionMatrix|TestDrawPixelsLayer`를 실행하여 모두 통과했다. 조회 경계값과 중첩 drawing 정책·거부·공통 색상 matrix를 포함한다. 로그는 같은 디렉터리의 `macos-integrated.log`다.
+- 통합으로 앞선 후보를 1회 갱신했다. 최신 develop 대비 변경 17개 파일(Go 8개, 문서 9개) 전체와 충돌 해결 diff를 다시 검토했고 새 지적은 0건이다. 통합 후보 검토 1회·fresh 검토 1회, 충돌 해결 1회, 결함 repair/reopen 0회. 최종 검증 이후 runtime/contract/test 변경은 없고 검증 보고만 추가했다. 판정은 **PASS_WITH_NOTES**이며 구조 ID·페이지 snapshot·byte 규모 및 기존 미검증 확장 범위는 그대로다.
