@@ -41,7 +41,7 @@
 | `opacity` | API가 제공하는 0–255 값. API가 nil인 group은 생략 |
 | `cels` | group은 `[]`. 나머지는 선택 frame마다 하나의 존재/부재 레코드 |
 
-`layer_id`는 런타임 메모리 ID나 파일에 저장하는 영구 UUID가 아니다. 같은 계층/형제 순서의 저장 파일을 재열면 동일하다. 이름만 바뀌어도 index 경로는 유지되지만 삽입·삭제·이동·재정렬 후에는 다른 레이어를 가리킬 수 있다. frame 번호도 삽입/삭제로 바뀐다. 파일을 편집하면 다시 조회해야 한다. 후속 cel 편집 작업에서 파일 전체 bytes의 SHA-256 `revision` 출력을 추가했다. Lua 조회 전후 해시를 비교하며, 페이지마다 revision이 다르면 처음부터 재조회한다. 서버가 페이지 snapshot을 고정·보관하지는 않는다. `set_cel_properties`만 구조 ID와 필수 `expected_revision`을 함께 수용하며, 기존 mutation tool 입력은 그대로다. 비협력 writer/ABA 및 내용 token의 한계는 [편집 계약](CEL_PROPERTIES.md#오래된-구조동시-변경-방어)을 따른다.
+`layer_id`는 런타임 메모리 ID나 파일에 저장하는 영구 UUID가 아니다. 같은 계층/형제 순서의 저장 파일을 재열면 동일하다. 이름만 바뀌어도 index 경로는 유지되지만 삽입·삭제·이동·재정렬 후에는 다른 레이어를 가리킬 수 있다. frame 번호도 삽입/삭제로 바뀐다. 파일을 편집하면 다시 조회해야 한다. 후속 cel 편집 작업에서 파일 전체 bytes의 SHA-256 `revision` 출력을 추가했다. Lua 조회 전후 해시를 비교하며, 페이지마다 revision이 다르면 처음부터 재조회한다. 서버가 페이지 snapshot을 고정·보관하지는 않는다. `set_cel_properties`는 구조 ID와 필수 `expected_revision`을 함께 수용하며, 기존 mutation tool 입력은 그대로다. 비협력 writer/ABA 및 내용 token의 한계는 [편집 계약](CEL_PROPERTIES.md#오래된-구조동시-변경-방어)을 따른다.
 
 | cel 필드 | 의미 |
 | --- | --- |
@@ -110,3 +110,5 @@ Notes:
 - 통합된 소스로 Linux Docker build·vet·전체 race/coverage·전체 integration을 순차 재실행하여 통과했다. `GOMAXPROCS=2`, `-p 1`, `-count=1`, 기존 전용 config·timeout 30초를 유지했다. pkg/tools race 28.864초/coverage 63.9%, 전체 integration 337.262초. 로그는 `/tmp/pixel-mcp-sprite-structure-evidence/linux-integrated.log`에 있다.
 - 통합된 소스로 macOS arm64 테스트 바이너리를 다시 컴파일하고 `TestSpriteStructure|TestStructureInput|TestRegressionMatrix|TestDrawPixelsLayer`를 실행하여 모두 통과했다. 조회 경계값과 중첩 drawing 정책·거부·공통 색상 matrix를 포함한다. 로그는 같은 디렉터리의 `macos-integrated.log`다.
 - 통합으로 앞선 후보를 1회 갱신했다. 최신 develop 대비 변경 17개 파일(Go 8개, 문서 9개) 전체와 충돌 해결 diff를 다시 검토했고 새 지적은 0건이다. 통합 후보 검토 1회·fresh 검토 1회, 충돌 해결 1회, 결함 repair/reopen 0회. 최종 검증 이후 runtime/contract/test 변경은 없고 검증 보고만 추가했다. 판정은 **PASS_WITH_NOTES**이며 구조 ID·페이지 snapshot·byte 규모 및 기존 미검증 확장 범위는 그대로다.
+
+GAP-05 [범위 export 후보](EXPORT_OPTIONS.md)도 layer_id와 expected_revision을 함께 받는다. group ID는 하위 export 선택에 사용하며 source 파일은 수정하지 않는다. 후보의 통합 상태와 기존 조회 검증 이력은 구분한다.

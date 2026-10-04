@@ -31,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Range export and output protection (GAP-05 candidate)
+
+- Review repairs: keep visible native background canvases intact during sheet trim, preserving opaque pixels; render single-palette indexed backgrounds through an unsaved RGB conversion to preserve opaque mask colors; reject both padded sheet axes before rendering/staging.
+
+- Extend existing export tools with optional native tag/frame range and revision-guarded structural layer/group selection, trim, and overwrite control; add sheet extrusion and separate padding overrides.
+- Preserve sequence names and successful MCP fields; add source frame numbers and selected tag indices to sheet JSON. Protect texture and the legacy JSON sidecar as one staged output set with ordinary-error rollback.
+- Validate source revisions, dimensions, canonical output formats and sheet metadata before publication; preserve source bytes and history exclusions. Normalize native JSON control characters without changing metadata values.
+- No new tool, plugin bundle, GIF animation restructuring or slice/pivot support. See [contract, verification and plugin follow-up](docs/EXPORT_OPTIONS.md).
+
+
 These entries describe fork changes after the local `v0.5.0` tag; no new release is declared.
 
 ### Added

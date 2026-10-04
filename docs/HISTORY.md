@@ -64,3 +64,5 @@ undo는 최신 미복원 작업 ID와 현재 파일이 그 작업의 after 해�
 - 문서 상대 링크와 diff 공백 검사 통과. 과거 기록 전체가 만료/삭제되면 이력이 사라지고, 같은 저장소의 편집은 직렬화된다. 이러한 보존·동시성 한계는 위 계약을 따른다.
 
 최종 판정: PASS.
+
+GAP-05 범위 export 및 sheet 옵션 후보도 source bytes를 저장하지 않으므로 자동 history 대상에서 제외한다. 출력 세트 rollback은 source snapshot/undo와 별개다. [계약·연계 검증](EXPORT_OPTIONS.md).
