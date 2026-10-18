@@ -2,7 +2,7 @@
 
 작업: `[BE][FEATURE] cel unlink`, `feature/be-cel-unlink`.
 기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29 nested drawing, #30 구조 조회, #31 cel 속성 병합 포함).
-현재 후보는 Unreleased/미병합이다. 조회·위치/opacity는 develop 반영 완료이며, 이 문서는 추가 `unlink_cel`의 계약과 검증만 다룬다. 다른 Top4 기능·plugin·배포는 포함하지 않는다.
+현재 상태는 PR #33으로 develop `732958bd6cd6fdf38b59d82170bd258a815751fd`에 병합 완료 / Unreleased다. 아래 검증·리뷰 기록은 병합 전 당시 이력이며 배포 완료와 구분한다. 조회·위치/opacity는 develop 반영 완료이며, 이 문서는 추가 `unlink_cel`의 계약과 검증만 다룬다. 다른 Top4 기능·plugin·배포는 포함하지 않는다.
 
 ## 호출과 응답
 
@@ -50,7 +50,7 @@ MCP schema 타입/필수 필드 오류와 Go `invalid_arguments`, 누락 파일 
 - additive 도구: `unlink_cel`; 필수 네 입력과 위 `success/revision/cel/remaining_linked_cels` 응답을 반영한다. 기존 도구 변경 없음.
 - Top1~3 develop 병합 후 MCP commit pin·번들·도구 목록을 한 번에 동기화할 때 animation skill에 구조 조회 → revision guard unlink → 새 revision 조회 → 단일 cel 편집 흐름을 추가한다. 독립 cel 거부와 한 peer가 남으면 둘 다 독립임을 설명한다. Top4 export는 별도 plugin 동기화다.
 - pixel-plugin 저장소·bundled binary는 이 작업에서 수정하지 않는다.
-- 다른 Top4 PR과 README 한·영, CAPABILITIES/NEXT_STEPS/ROADMAP/CHANGELOG, animation 등록 및 server count tests 충돌 가능성이 있다. 병합 전 최신 develop의 실제 이름 집합으로 수를 다시 계산해야 한다. 현재 기준 58개 + 이 후보 1개 = 59개. 다른 미병합 브랜치를 합치지 않는다.
+- 다른 Top4 PR과 README 한·영, CAPABILITIES/NEXT_STEPS/ROADMAP/CHANGELOG, animation 등록 및 server count tests 충돌 가능성이 있다. 병합 전 최신 develop의 실제 이름 집합으로 수를 다시 계산해야 한다. PR #33 병합으로 기준 develop에는 59개가 있다. 이후 후보를 포함한 실제 도구 수는 [CAPABILITIES](CAPABILITIES.md)를 따른다. 다른 미병합 브랜치를 합치지 않는다.
 
 ## 검증 기록
 
