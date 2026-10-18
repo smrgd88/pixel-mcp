@@ -110,10 +110,14 @@ for i=first,last do table.insert(frames,s.frames[i]) end
 app.range.frames=frames
 if %t then
  local nonempty=false
+ -- Reuse one canvas buffer: Lua only accounts for the Image userdata, not
+ -- its native pixels, so per-frame allocation can accumulate before GC.
+ local im=Image(s.width,s.height,ColorMode.RGB)
  for i=first,last do
-  local im=Image(s.width,s.height,ColorMode.RGB);im:drawSprite(s,i)
+  im:clear();im:drawSprite(s,i)
   if not im:shrinkBounds().isEmpty then nonempty=true;break end
  end
+ im=nil;collectgarbage("collect")
  if not nonempty then error("Export selection is empty") end
 end
 app.command.ExportSpriteSheet{

@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Export allocation planning
 
+- Review repair: reuse and release one RGB canvas buffer in the sheet empty-selection check, avoiding native image accumulation for many leading empty frames. Add real-Aseprite weak-reference retention, output pixel/JSON and source/rollback regressions across three color modes.
+
 - Replace the enclosing-strip rejection with selected-frame trim measurements and source-derived native strip/packed placement, including packed duplicates, padding and extrusion. Preserve the 32767-side and 64 Mi-pixel limits; bound planning work, memory and cancellation.
 - Keep a trim-aware conservative packed envelope below Aseprite 1.3.18.2: older native `std::sort` tie order varies by standard library. Preserve those supported exports without assuming modern stable placements; some otherwise fitting old-runtime packed sheets still reject.
 - Remeasure before native sheet allocation and compare actual texture dimensions and every JSON frame/trim rectangle with the plan before publishing through existing output-set protection. Public tools, schemas, success payloads and source/history contracts are unchanged.
