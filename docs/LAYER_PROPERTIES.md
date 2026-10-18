@@ -117,3 +117,20 @@ Notes:
 - 독립 외부 리뷰·develop/main 병합·태그/배포는 하지 않는다. 타 Top4 PR 통합 시 공통 문서/MCP ID/등록 수 충돌을 재확인해야 하며 plugin 반영은 위 후속 목록을 따른다.
 
 판정: **PASS_WITH_NOTES**. 필수 검증이 통과했고 동일 후보의 전체 범위 재검토에서 차단 결함이 없다. 이 작업의 PR 병합 전에는 브랜치·워크트리를 정리하지 않는다.
+
+### 경계 probe의 정식 회귀 편입 (2026-10-18)
+
+작업: `[BE][TEST] 레이어·그룹 경계 회귀 보강`. 기능 후보 `f09838df9ed552f05e7020f975902edea34b5725` 이후의 테스트 보강이며 기존 `feature/be-layer-properties` / PR #34에서 진행한다. 기준 develop `96d8fa4`는 그대로다. 앞선 임시 probe가 확인한 다섯 범주를 [정식 integration 테스트](../pkg/tools/layer_properties_boundaries_integration_test.go) 네 개로 편입했다.
+
+- `TestLayerPropertiesNameBoundariesAndMixedNull`: ASCII/UTF-8의 65535-byte 저장·재열기, 제어문자/emoji/U+2028/따옴표·역슬래시를 포함한 이름, null opacity의 기존 값 보존과 명시적 false 적용, byte 상한 초과 거부.
+- `TestLayerMoveAboveBackground`: background 아래 삽입 거부와 바로 위의 유효한 이동을 구분하며 저장된 순서·cel 위치/픽셀·빈 원래 그룹을 확인.
+- `TestLayerMoveRejectsTilemapDescendant`: 일반 그룹의 두 단계 아래 tilemap 자손을 둬 대상 자체의 타입 검사만으로 통과하지 않도록 검증.
+- `TestLayerGroupsOnlyDocument`: raster 없이 빈 그룹만 있는 문서에서 자식 그룹 생성 후 루트로 이동하고 새 ID·그룹 구조·frame 보존을 확인.
+
+공통 `rejectLayer`를 재사용해 실패 이유와 source bytes/inode/mtime/권한·history 불변을 확인한다. 성공은 별도 Aseprite batch에서 다시 연 파일을 검사한다. production 코드·도구/schema·도구 수·plugin 계약은 바꾸지 않았다.
+
+검증 결과와 셀프리뷰는 이 보강 후보에 한정해 아래에 기록한다. 앞선 전체 suite 통과 이력을 새 실행으로 소급하지 않는다.
+
+- 최초 보강 후보: macOS arm64 / Go 1.25.0 / Aseprite 1.3.18.2-arm64, 전용 config/temp와 timeout 30초. 신규 네 테스트 단독 8.027초, `go test -p 1 -parallel 1 -count=1 -tags=integration ./pkg/tools -run '^TestLayer' -v` 83.822초 통과. `go vet -tags=integration ./pkg/tools`, gofmt·diff 공백 검사 통과.
+- 셀프리뷰 범위는 `f09838d` 이후 신규 테스트와 본 기록이다. 기존 layer handler/Lua와 fixture·조회·거부 helper는 문맥으로 확인했다. 초기/fresh 검토 각 1회, 신규 지적·repair·재개방·미해결 0건. production 코드·다른 Top4 기능 확장은 제외했다.
+- Docker 데몬은 실행 중이 아니므로 로컬 Linux 전체 suite와 coverage는 반복하지 않았다. 기존 전체 통과 기록을 유지하고 최신 커밋의 GitHub Linux CI를 별도로 확인한다. 지원 하한 전체 재실행도 정책에 따라 생략한다.
