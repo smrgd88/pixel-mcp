@@ -16,6 +16,15 @@ import (
 
 // ExportSpriteInput defines the input parameters for the export_sprite tool.
 type ExportSpriteInput struct {
+	Tag              *string `json:"tag,omitempty" jsonschema:"Exact saved native tag name; mutually exclusive with frame range and nonzero frame_number"`
+	LayerID          string  `json:"layer_id,omitempty" jsonschema:"Structural layer or group ID from get_sprite_structure; requires expected_revision"`
+	ExpectedRevision string  `json:"expected_revision,omitempty" jsonschema:"Saved SHA-256 revision; required with layer_id"`
+	FrameStart       *int    `json:"frame_start,omitempty" jsonschema:"First inclusive source frame, 1-based; omitted defaults to 1"`
+	FrameEnd         *int    `json:"frame_end,omitempty" jsonschema:"Last inclusive source frame; omitted defaults to last frame"`
+	IncludeHidden    bool    `json:"include_hidden,omitempty" jsonschema:"Include hidden target and descendants; requires layer_id; default respects saved visibility"`
+	Trim             bool    `json:"trim,omitempty" jsonschema:"Trim transparent frame margins; default false"`
+	Overwrite        *bool   `json:"overwrite,omitempty" jsonschema:"Replace existing planned outputs; omitted or null defaults to true; false rejects any existing destination"`
+
 	SpritePath  string `json:"sprite_path" jsonschema:"Path to the Aseprite sprite file"`
 	OutputPath  string `json:"output_path" jsonschema:"Output file path; multi-frame PNG/JPG/BMP uses stem_0001.ext, stem_0002.ext, etc."`
 	Format      string `json:"format" jsonschema:"Export format: png, gif, jpg, bmp"`
@@ -38,11 +47,25 @@ type ExportedFile struct {
 
 // ExportSpritesheetInput defines the input parameters for the export_spritesheet tool.
 type ExportSpritesheetInput struct {
+	Tag              *string `json:"tag,omitempty" jsonschema:"Exact saved native tag name; mutually exclusive with frame_start/frame_end"`
+	LayerID          string  `json:"layer_id,omitempty" jsonschema:"Structural layer or group ID from get_sprite_structure; requires expected_revision"`
+	ExpectedRevision string  `json:"expected_revision,omitempty" jsonschema:"Saved SHA-256 revision; required with layer_id"`
+	FrameStart       *int    `json:"frame_start,omitempty" jsonschema:"First inclusive source frame, 1-based; omitted defaults to 1"`
+	FrameEnd         *int    `json:"frame_end,omitempty" jsonschema:"Last inclusive source frame; omitted defaults to last frame"`
+	IncludeHidden    bool    `json:"include_hidden,omitempty" jsonschema:"Include hidden target and descendants; requires layer_id; default respects saved visibility"`
+	Trim             bool    `json:"trim,omitempty" jsonschema:"Trim transparent frame margins; visible native background keeps the full canvas; default false"`
+	Overwrite        *bool   `json:"overwrite,omitempty" jsonschema:"Replace existing planned outputs; omitted or null defaults to true; false rejects any existing destination"`
+
+	Extrude       bool `json:"extrude,omitempty" jsonschema:"Repeat edge pixels by one pixel outside each sheet frame; default false"`
+	BorderPadding *int `json:"border_padding,omitempty" jsonschema:"Sheet outer padding 0-100; overrides padding including explicit zero"`
+	ShapePadding  *int `json:"shape_padding,omitempty" jsonschema:"Space between sheet shapes 0-100; overrides padding including explicit zero"`
+	InnerPadding  *int `json:"inner_padding,omitempty" jsonschema:"Transparent inset inside each sheet frame 0-100; overrides padding including explicit zero"`
+
 	SpritePath  string `json:"sprite_path" jsonschema:"Path to the Aseprite sprite file"`
 	OutputPath  string `json:"output_path" jsonschema:"Output file path for spritesheet"`
 	Layout      string `json:"layout" jsonschema:"Spritesheet layout: horizontal, vertical, rows, columns, or packed"`
-	Padding     int    `json:"padding" jsonschema:"Padding between frames in pixels (0-100)"`
-	IncludeJSON bool   `json:"include_json" jsonschema:"Include JSON metadata file"`
+	Padding     int    `json:"padding" jsonschema:"Default border, shape and inner padding in pixels (0-100); individual options override"`
+	IncludeJSON bool   `json:"include_json" jsonschema:"Return metadata_path; the legacy JSON sidecar is always generated and protected"`
 }
 
 // ExportSpritesheetOutput defines the output for the export_spritesheet tool.
@@ -94,7 +117,7 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 		server,
 		&mcp.Tool{
 			Name:        "export_sprite",
-			Description: "Export sprite to PNG, GIF, JPG, or BMP. All-frame PNG/JPG/BMP exports use numbered files (stem_0001.ext etc.) and return files in frame order. exported_path and file_size identify the first real file. Single-frame exports and animated GIF retain a single output path. The output extension must match format.",
+			Description: "Export sprite to PNG, GIF, JPG, or BMP. All-frame PNG/JPG/BMP exports use numbered files (stem_0001.ext etc.) and return files in frame order. exported_path and file_size identify the first real file. Single-frame exports and animated GIF retain a single output path. The output extension must match format. PNG/JPG/BMP support tag or inclusive frame range, revision-guarded layer/group selection and trim. GIF retains its existing frame_number behavior and rejects these new rendering options.",
 		},
 		maybeWrapConfigured("export_sprite", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input ExportSpriteInput) (*mcp.CallToolResult, *ExportSpriteOutput, error) {
 			result, err := exportSprite(ctx, client, gen, input)
@@ -107,68 +130,11 @@ func RegisterExportTools(server *mcp.Server, client *aseprite.Client, gen *asepr
 		server,
 		&mcp.Tool{
 			Name:        "export_spritesheet",
-			Description: "Export animation frames as spritesheet with layout options.",
+			Description: "Export saved frames as a spritesheet with optional tag/frame range, revision-guarded layer/group selection, trim, extrude and individual padding. Texture and the legacy JSON sidecar are staged and published together with ordinary-error rollback. include_json controls metadata_path in the response; both outputs are always protected.",
 		},
 		maybeWrapConfigured("export_spritesheet", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, input ExportSpritesheetInput) (*mcp.CallToolResult, *ExportSpritesheetOutput, error) {
-			opLogger := logger.WithContext(ctx)
-			opLogger.Debug("export_spritesheet tool called", "sprite_path", input.SpritePath, "output_path", input.OutputPath, "layout", input.Layout)
-
-			// Validate inputs
-			if input.OutputPath == "" {
-				return nil, nil, diagnostics.Errorf("invalid_arguments", "output_path cannot be empty")
-			}
-
-			if input.SpritePath == "" {
-				return nil, nil, diagnostics.Errorf("invalid_arguments", "sprite_path cannot be empty")
-			}
-
-			// Validate layout
-			validLayouts := map[string]bool{
-				"horizontal": true,
-				"vertical":   true,
-				"rows":       true,
-				"columns":    true,
-				"packed":     true,
-			}
-			layout := input.Layout
-			if layout == "" {
-				layout = "horizontal"
-			}
-			if !validLayouts[layout] {
-				return nil, nil, diagnostics.Errorf("invalid_arguments", "invalid layout: %s (valid: horizontal, vertical, rows, columns, packed)", input.Layout)
-			}
-
-			// Validate padding
-			if input.Padding < 0 || input.Padding > 100 {
-				return nil, nil, diagnostics.Errorf("invalid_arguments", "padding must be between 0 and 100, got %d", input.Padding)
-			}
-
-			// Ensure output directory exists
-			outputDir := filepath.Dir(input.OutputPath)
-			if err := os.MkdirAll(outputDir, 0755); err != nil {
-				return nil, nil, fmt.Errorf("failed to create output directory: %w", err)
-			}
-
-			// Generate Lua script
-			script := gen.ExportSpritesheet(input.OutputPath, layout, input.Padding, input.IncludeJSON)
-
-			// Execute Lua script with the sprite
-			output, err := client.ExecuteLua(ctx, script, input.SpritePath)
-			if err != nil {
-				opLogger.Error("Failed to export spritesheet", "error", err)
-				return nil, nil, fmt.Errorf("failed to export spritesheet: %w", err)
-			}
-
-			// Parse JSON output
-			var result ExportSpritesheetOutput
-			if err := parseJSON(output, &result); err != nil {
-				opLogger.Error("Failed to parse spritesheet output", "error", err, "output", output)
-				return nil, nil, fmt.Errorf("failed to parse output: %w", err)
-			}
-
-			opLogger.Information("Spritesheet exported successfully", "sprite", input.SpritePath, "output", result.SpritesheetPath, "frames", result.FrameCount)
-
-			return nil, &result, nil
+			result, err := exportSpritesheet(ctx, client, gen, input)
+			return nil, result, err
 		}),
 	)
 

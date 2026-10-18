@@ -1,7 +1,7 @@
 # 태그 상세 조회·수정 (GAP-03)
 
 작업: `[BE][FEATURE] 태그 상세 조회 및 수정`, `feature/be-tag-editing`.
-기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합). 이번 브랜치의 Unreleased 구현이며 develop 병합·태그·배포 완료가 아니다. 현재 통합 기준은 `origin/develop` `28b6fbfbeb6dfb1892a44cb50bb1b5d4fa7d4efc` (PR #33 unlink 및 #34 layer/group 병합 포함)이다. 기준 도구 62개에 태그 2개를 추가해 64개를 등록한다. 범위 export PR #35는 미병합이며 포함하지 않는다.
+최초 구현 기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 포함). 현재 상태는 PR #32로 develop `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`에 병합 완료 / Unreleased다. PR #33 unlink 및 #34 layer/group이 포함된 62개 도구에 태그 2개가 추가되어 develop 등록 수는 64개다. 아래 검증·통합 기록은 당시 후보 이력이며 배포 완료를 뜻하지 않는다. 범위 export PR #35는 별도 미병합 후보다.
 
 ## 호출 계약
 

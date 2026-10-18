@@ -29,25 +29,34 @@ func exportSprite(ctx context.Context, client *aseprite.Client, gen *aseprite.Lu
 	if input.FrameNumber < 0 {
 		return nil, diagnostics.Errorf("invalid_arguments", "frame_number must be non-negative")
 	}
-	// Planning takes only the source lock. Release it before acquiring the full
-	// sorted set, avoiding lock-order inversion with overlapping exports/edits.
-	var count struct {
-		Frames int `json:"frames"`
-	}
-	err := aseprite.WithSpriteAccess(ctx, input.SpritePath, false, func(ctx context.Context) error {
-		out, err := client.ExecuteLua(ctx, `local s=app.activeSprite;if not s then error("No active sprite") end;print(json.encode({frames=#s.frames}))`, input.SpritePath)
-		if err != nil {
-			return err
-		}
-		return parseJSON(out, &count)
-	})
+	selection, err := validateExportSelection(input.Tag, input.LayerID, input.ExpectedRevision, input.FrameStart, input.FrameEnd, input.IncludeHidden, input.FrameNumber)
 	if err != nil {
 		return nil, err
 	}
-	if count.Frames < 1 || input.FrameNumber > count.Frames {
+	if format == "gif" && (selection.Selected || input.Trim) {
+		return nil, diagnostics.Errorf("invalid_arguments", "GIF does not support new selection or trim options")
+	}
+	// Plan under the source lock, release it, then acquire the entire sorted set.
+	planningSelection := selection
+	// Legacy frame_number range errors are Go invalid_arguments, not lua_error.
+	if input.FrameNumber > 0 {
+		planningSelection.First = 0
+		planningSelection.Last = 0
+	}
+	plan, err := planExport(ctx, client, gen, input.SpritePath, input.ExpectedRevision, planningSelection)
+	if err != nil {
+		return nil, err
+	}
+	if input.FrameNumber > plan.Count {
 		return nil, diagnostics.Errorf("invalid_arguments", "frame_number outside sprite frame range")
 	}
-	paths, frames := exportFramePaths(input.OutputPath, format, input.FrameNumber, count.Frames)
+	if err = validateExportDimensions(plan, "", 0, 0, 0, false); err != nil {
+		return nil, err
+	}
+	paths, frames := exportFramePaths(input.OutputPath, format, input.FrameNumber, plan.Count)
+	if selection.Selected && (input.Tag != nil || input.FrameStart != nil || input.FrameEnd != nil) {
+		paths, frames = exportRangePaths(input.OutputPath, plan.First, plan.Last)
+	}
 	locks := append([]string{input.SpritePath, input.OutputPath}, paths...)
 	sizes := make([]int64, len(paths))
 	err = aseprite.WithFileLocks(ctx, locks, func(ctx context.Context) error {
@@ -55,8 +64,20 @@ func exportSprite(ctx context.Context, client *aseprite.Client, gen *aseprite.Lu
 			return err
 		}
 		return aseprite.WithSpriteAccess(ctx, input.SpritePath, false, func(ctx context.Context) error {
-			return aseprite.WithOutputFiles(ctx, paths, func(staged []string) error {
-				script := gen.ExportSpriteFiles(staged, frames, count.Frames)
+			if err := verifyExportRevision(ctx, input.SpritePath, plan.Revision); err != nil {
+				return err
+			}
+			if err := checkExportOverwrite(paths, input.Overwrite); err != nil {
+				return err
+			}
+			return withExportOutputFiles(ctx, paths, input.Overwrite, func(staged []string) error {
+				for _, path := range staged {
+					ext := strings.ToLower(filepath.Ext(path))
+					if ext != "."+format && !(format == "jpg" && ext == ".jpeg") {
+						return diagnostics.Errorf("invalid_arguments", "canonical output extension must match format")
+					}
+				}
+				script := gen.ExportSelectedFiles(staged, frames, plan.Count, selection, input.Trim)
 				if _, err := client.ExecuteLua(ctx, script, input.SpritePath); err != nil {
 					return fmt.Errorf("failed to export sprite: %w", err)
 				}
@@ -67,7 +88,7 @@ func exportSprite(ctx context.Context, client *aseprite.Client, gen *aseprite.Lu
 					}
 					sizes[i] = st.Size()
 				}
-				return nil
+				return verifyExportRevision(ctx, input.SpritePath, plan.Revision)
 			})
 		})
 	})
@@ -127,4 +148,21 @@ func validateExportSourceAliases(source string, paths []string) error {
 		}
 	}
 	return nil
+}
+
+// A single selected frame retains the requested path. A sequence uses original
+// source frame numbers, so range 3..4 is stem_0003.ext and stem_0004.ext.
+func exportRangePaths(path string, first, last int) ([]string, []int) {
+	if first == last {
+		return []string{path}, []int{first}
+	}
+	ext := filepath.Ext(path)
+	stem := strings.TrimSuffix(path, ext)
+	paths := make([]string, last-first+1)
+	frames := make([]int, len(paths))
+	for i := range paths {
+		frames[i] = first + i
+		paths[i] = fmt.Sprintf("%s_%04d%s", stem, frames[i], ext)
+	}
+	return paths, frames
 }

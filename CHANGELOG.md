@@ -31,11 +31,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Range export and output protection (GAP-05 candidate)
+
+- Review repairs: keep visible native background canvases intact during sheet trim, preserving opaque pixels; render single-palette indexed backgrounds through an unsaved RGB conversion to preserve opaque mask colors; reject both padded sheet axes before rendering/staging.
+
+- Extend existing export tools with optional native tag/frame range and revision-guarded structural layer/group selection, trim, and overwrite control; add sheet extrusion and separate padding overrides.
+- Preserve sequence names and successful MCP fields; add source frame numbers and selected tag indices to sheet JSON. Protect texture and the legacy JSON sidecar as one staged output set with ordinary-error rollback.
+- Validate source revisions, dimensions, canonical output formats and sheet metadata before publication; preserve source bytes and history exclusions. Normalize native JSON control characters without changing metadata values.
+- No new tool, plugin bundle, GIF animation restructuring or slice/pivot support. See [contract, verification and plugin follow-up](docs/EXPORT_OPTIONS.md).
+
+
 These entries describe fork changes after the local `v0.5.0` tag; no new release is declared.
 
 ### Added
 
-- Add read-only `get_sprite_tags` and revision-guarded `set_tag_properties` for names, inclusive ranges, four playback directions and repeats. Preserve duplicate/empty existing names, metadata and native sharing; use saved order IDs and return the new ID after reordering. Existing `create_tag`/`delete_tag` contracts remain unchanged. This branch registers 64 tools (62 in develop through PR #34). See [contract and verification](docs/TAG_EDITING.md).
+- Add read-only `get_sprite_tags` and revision-guarded `set_tag_properties` for names, inclusive ranges, four playback directions and repeats. Preserve duplicate/empty existing names, metadata and native sharing; use saved order IDs and return the new ID after reordering. Existing `create_tag`/`delete_tag` contracts remain unchanged. Merged into develop via PR #32 (64 tools, including PR #33/#34). See [contract and verification](docs/TAG_EDITING.md).
 
 - Add revision-guarded `set_layer_properties`, `move_layer`, and `create_layer_group` for ordinary raster/group editing, with explicit local/effective flags, native blend names, cycle/lock/order checks, saved hierarchy/cel-sharing verification and existing file protection/history. Add optional structure `blend_mode`; preserve existing tools. Merged into develop in PR #34 (62 tools). See [contract and verification](docs/LAYER_PROPERTIES.md).
 

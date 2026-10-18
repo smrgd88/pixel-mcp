@@ -65,6 +65,8 @@ undo는 최신 미복원 작업 ID와 현재 파일이 그 작업의 after 해�
 
 최종 판정: PASS.
 
-## 레이어·그룹 후보
+## 레이어·그룹 편집
 
 `set_layer_properties`, `move_layer`, `create_layer_group`은 성공한 실제 변경만 각 tool 이름으로 기록한다. no-op·stale·잠금 거부·실패/취소는 기록하지 않는다. 새 구조 ID는 편집 후 재조회하며 byte-exact undo 후에도 다시 조회한다. [계약과 검증](LAYER_PROPERTIES.md).
+
+GAP-05 범위 export 및 sheet 옵션 후보도 source bytes를 저장하지 않으므로 자동 history 대상에서 제외한다. 출력 세트 rollback은 source snapshot/undo와 별개다. [계약·연계 검증](EXPORT_OPTIONS.md).

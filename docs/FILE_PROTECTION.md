@@ -90,3 +90,7 @@ SAFE-03의 네 snapshot 도구는 저장소와 source 잠금을 함께 예약하
 ## 태그 revision 사전조건
 
 `get_sprite_tags`는 읽기 잠금 안에서 조회 전후 bytes 해시를 비교하며 save/history를 수행하지 않는다. `set_tag_properties`는 동일한 공통 staging/history 경로에서 bound 복사본과 `expected_revision`을 비교하고 저장·재열기를 확인한 뒤 발행한다. 태그 순번은 범위 변경으로도 바뀔 수 있으므로 revision 없이 재사용하지 않는다. [태그 계약](TAG_EDITING.md)과 기존 비협력 writer/ABA/최종 검사 이후 경쟁 한계를 따른다.
+
+## GAP-05 export 후보
+
+범위 export와 sheet texture+JSON은 기존 WithOutputFiles 보호를 재사용한다. source는 계획 전후/출력 발행 전에 SHA-256을 확인한다. sheet recovery 순번은 texture=1, JSON=2이며 include_json=false의 legacy sidecar도 포함한다. 개별 교체·일반 오류 rollback이며 세트 crash 원자성은 아니다. [선택·overwrite·검증과 제한](EXPORT_OPTIONS.md).
