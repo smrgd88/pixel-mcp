@@ -2,6 +2,7 @@
 
 작업: `[BE][FEATURE] 레이어 속성 및 그룹 편집` · `feature/be-layer-properties`.
 기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합 포함).
+현재 통합 기준은 `origin/develop` `732958bd6cd6fdf38b59d82170bd258a815751fd` (PR #33 cel unlink 포함, 2026-10-18)이다.
 현재 후보는 Unreleased이며 develop/main 병합·태그·배포는 수행하지 않는다. 타 Top4 작업과 plugin 저장소는 이 범위에 포함하지 않는다.
 
 ## 호출 계약
@@ -69,7 +70,7 @@ MCP 형식 오류는 schema/RPC, Go 값 검사는 `invalid_arguments`, stale은 
 
 ## Plugin 반영과 병합 충돌
 
-이 후보는 기준 develop 58개에 도구 3개를 더해 61개다. 타 Top4 도구는 포함하지 않는다. 다른 PR 병합 후 숫자를 합산하지 말고 실제 등록 이름 집합을 다시 계산해야 한다.
+현재 후보는 기준 develop 59개에 도구 3개를 더해 62개다. develop에 병합된 cel unlink는 포함하고, 다른 미병합 Top4 도구는 포함하지 않는다. 다른 PR 병합 후 숫자를 합산하지 말고 실제 등록 이름 집합을 다시 계산해야 한다.
 
 - Top1~3 develop 병합 후 MCP commit pin/번들/스킬 동기화에 세 도구와 optional structure `blend_mode`, `LayerEditOutput` 계약을 포함한다. Top4 export 이후 별도 plugin 동기화 계획은 유지한다.
 - `pixel-art-creator`에 조회→revision→속성/그룹 편집→구조 재조회 흐름, 잠금 해제 단독 호출, final sibling index, group opacity/blend 및 destructive 삭제 제외를 반영한다. 새 mutation을 기존 이름 기반 add/delete/flatten으로 대체하지 않도록 설명한다.
@@ -120,7 +121,7 @@ Notes:
 
 ### 경계 probe의 정식 회귀 편입 (2026-10-18)
 
-작업: `[BE][TEST] 레이어·그룹 경계 회귀 보강`. 기능 후보 `f09838df9ed552f05e7020f975902edea34b5725` 이후의 테스트 보강이며 기존 `feature/be-layer-properties` / PR #34에서 진행한다. 기준 develop `96d8fa4`는 그대로다. 앞선 임시 probe가 확인한 다섯 범주를 [정식 integration 테스트](../pkg/tools/layer_properties_boundaries_integration_test.go) 네 개로 편입했다.
+작업: `[BE][TEST] 레이어·그룹 경계 회귀 보강`. 기능 후보 `f09838df9ed552f05e7020f975902edea34b5725` 이후의 테스트 보강이며 기존 `feature/be-layer-properties` / PR #34에서 진행한다. 보강 전 기능 후보의 기준은 develop `96d8fa4`다. 앞선 임시 probe가 확인한 다섯 범주를 [정식 integration 테스트](../pkg/tools/layer_properties_boundaries_integration_test.go) 네 개로 편입했다.
 
 - `TestLayerPropertiesNameBoundariesAndMixedNull`: ASCII/UTF-8의 65535-byte 저장·재열기, 제어문자/emoji/U+2028/따옴표·역슬래시를 포함한 이름, null opacity의 기존 값 보존과 명시적 false 적용, byte 상한 초과 거부.
 - `TestLayerMoveAboveBackground`: background 아래 삽입 거부와 바로 위의 유효한 이동을 구분하며 저장된 순서·cel 위치/픽셀·빈 원래 그룹을 확인.
@@ -134,3 +135,14 @@ Notes:
 - 최초 보강 후보: macOS arm64 / Go 1.25.0 / Aseprite 1.3.18.2-arm64, 전용 config/temp와 timeout 30초. 신규 네 테스트 단독 8.027초, `go test -p 1 -parallel 1 -count=1 -tags=integration ./pkg/tools -run '^TestLayer' -v` 83.822초 통과. `go vet -tags=integration ./pkg/tools`, gofmt·diff 공백 검사 통과.
 - 셀프리뷰 범위는 `f09838d` 이후 신규 테스트와 본 기록이다. 기존 layer handler/Lua와 fixture·조회·거부 helper는 문맥으로 확인했다. 초기/fresh 검토 각 1회, 신규 지적·repair·재개방·미해결 0건. production 코드·다른 Top4 기능 확장은 제외했다.
 - Docker 데몬은 실행 중이 아니므로 로컬 Linux 전체 suite와 coverage는 반복하지 않았다. 기존 전체 통과 기록을 유지하고 최신 커밋의 GitHub Linux CI를 별도로 확인한다. 지원 하한 전체 재실행도 정책에 따라 생략한다.
+
+#### PR #33 반영 후 통합 후보
+
+보강 중 원격 develop의 PR #33 cel unlink 병합(`732958b`)을 확인했다. 해당 develop을 이 기능 브랜치에 반영하고 공통 문서·server 등록 수 충돌을 해소했다. 이 기능을 develop에 병합한 것은 아니다. cel unlink production/테스트와 등록·구조 조회 helper는 develop과 동일하며 레이어 production 및 신규 경계 테스트도 보강 커밋 `36e3ac5`와 동일하다. 현재 도구 수는 실제 MCP 조회로 62개이며 한·영 README/CAPABILITIES와 일치한다.
+
+- 통합 소스 macOS build, `go vet -tags=integration ./pkg/tools ./pkg/server`: 통과.
+- 같은 전용 config·timeout 30초·낮은 병렬도에서 `go test -p 1 -parallel 1 -count=1 -tags=integration ./pkg/tools ./pkg/server -run 'TestLayer|TestUnlink|TestCelProperties|TestSpriteStructure|TestStructureInput|TestSnapshotToolsRegistered|TestToolDiagnostics' -v`: tools 162.840초, server 6.672초 통과. 새 네 테스트와 기존 layer/cel/unlink/structure 및 server 계약을 포함한다.
+- 통합 후보 충돌 해결 diff 검토 1회 및 새 후보 fresh 검토 1회를 추가했다. 최초 보강 검토와 합쳐 총 4회이며 신규 지적·repair cycle·repair-diff/closure·수정 유발 결함·재개방·미해결 0건이다. develop 통합으로 후보를 1회 갱신했고 이후 runtime/contract/test 변경은 없다. 테스트 1개 파일과 문서 기록 보강 외에 통합으로 바뀐 공통 문서·등록 수를 검토했으며, 가져온 unlink 구현은 문맥·회귀 검증 대상으로 확인했다. 타 미병합 기능/plugin 변경은 제외한다. 리뷰 시간은 별도 측정하지 않았다.
+- Go 변경 파일 manifest SHA-256: `c001f8f69256323acbd296758241ae4c41af099916b6a25ef77452d900aff25a`. gofmt·diff 공백·문서 로컬 링크 확인 통과. 임시 로그는 `/private/tmp/pixel-layer-boundaries-20261018/`의 `new-tests.log`, `layer-suite.log`, `integrated.log`, `integrated-vet.log`, `tool-inventory.json`에 있다.
+
+Notes: 로컬 Docker 데몬 미실행으로 Linux 전체 검증은 최신 PR의 GitHub CI에 맡긴다. 대형 문서·모든 blend 조합·macOS 전체/race와 지원 하한 전체 반복은 이번 테스트 보강 범위 밖이다. 로컬 후보 검토는 차단 결함 없이 종료했으며 최종 PR의 CI 결과는 GitHub checks에서 확인한다. PR 병합·태그·배포와 워크트리 정리는 하지 않는다.

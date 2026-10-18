@@ -35,11 +35,13 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
-- Add revision-guarded `set_layer_properties`, `move_layer`, and `create_layer_group` for ordinary raster/group editing, with explicit local/effective flags, native blend names, cycle/lock/order checks, saved hierarchy/cel-sharing verification and existing file protection/history. Add optional structure `blend_mode`; preserve existing tools. This candidate has 61 tools against the 58-tool PR #31 baseline. See [contract and verification](docs/LAYER_PROPERTIES.md).
+- Add revision-guarded `set_layer_properties`, `move_layer`, and `create_layer_group` for ordinary raster/group editing, with explicit local/effective flags, native blend names, cycle/lock/order checks, saved hierarchy/cel-sharing verification and existing file protection/history. Add optional structure `blend_mode`; preserve existing tools. This candidate has 62 tools against the 59-tool PR #33 baseline. See [contract and verification](docs/LAYER_PROPERTIES.md).
 
-- Add `set_cel_properties` for revision-guarded sprite-absolute position and opacity edits, with explicit linked-set consent, saved-result verification, file protection and opt-in history/undo. Add `revision` to structure inspection without changing existing required inputs. Merged into develop via PR #31 (58 tools). See [contract and verification](docs/CEL_PROPERTIES.md).
+- Add `unlink_cel` to detach one revision-guarded raster cel using the native UnlinkCel command, preserving pixels/metadata and other sharing members, with staged save/reopen verification and opt-in history/undo. Independent cels are rejected without saving. Merged into develop via PR #33 (59 tools). See [contract and verification](docs/CEL_UNLINK.md).
 
-- Add read-only `get_sprite_structure` with recursive structural layer IDs, bounded layer/frame queries, cel existence/bounds/opacity/z-index and native image-sharing references. Preserve `get_sprite_info`; exclude queries from save/history. See [contract and verification](docs/SPRITE_STRUCTURE.md). Cel position/opacity editing is described above; unlink remains pending.
+- Add `set_cel_properties` for revision-guarded sprite-absolute position and opacity edits, with explicit linked-set consent, saved-result verification, file protection and opt-in history/undo. Add `revision` to structure inspection without changing existing required inputs. Merged into develop in PR #31 (58 tools). See [contract and verification](docs/CEL_PROPERTIES.md).
+
+- Add read-only `get_sprite_structure` with recursive structural layer IDs, bounded layer/frame queries, cel existence/bounds/opacity/z-index and native image-sharing references. Preserve `get_sprite_info`; exclude queries from save/history. See [contract and verification](docs/SPRITE_STRUCTURE.md). Cel position/opacity editing is described above; unlink is included in develop via PR #33 as described above.
 
 - Opt-in `enable_history` records successful in-place sprite edits using SAFE-03 snapshots. Add `list_operation_history` and guarded `undo_last_operation`, with pending-transition recovery, before/after hashes, and retry protection through expected operation IDs. See `docs/HISTORY.md`.
 
