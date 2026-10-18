@@ -13,7 +13,7 @@
 
 두 도구는 `enable_history=false`에서도 등록된다. 기록을 끈 뒤에도 기존 이력을 확인하거나 undo할 수 있다. list 응답은 `operations` 배열과 `recording_enabled`다. SAFE-04 도입 당시 도구 수는 54개에서 56개로 늘어났다. 현재 inventory는 [CAPABILITIES](CAPABILITIES.md)를 따른다.
 
-대상은 기존 파일의 단일 sprite 편집 경로다: 그림·태그 속성(`set_tag_properties`)·cel 위치/opacity(`set_cel_properties`)·레이어/프레임·선택/clipboard·팔레트·변형·감색·자동 shading·적용형 antialiasing·기존 sprite로의 image import. selection과 clipboard도 파일에 저장되므로 포함한다. 실패한 handler, 실제 파일 bytes가 같은 no-op, dry-run은 기록하지 않는다. get/analyze, export, save_as, downsample 출력, 새 canvas 생성, 수동 snapshot 생성/복원·삭제는 자동 편집 이력 대상이 아니다. raw Aseprite/Go API나 GUI의 미저장 작업도 대상이 아니다.
+대상은 기존 파일의 단일 sprite 편집 경로다: 그림·태그 속성(`set_tag_properties`)·cel 위치/opacity(`set_cel_properties`)·[cel unlink](CEL_UNLINK.md)(`unlink_cel`)·레이어/프레임·선택/clipboard·팔레트·변형·감색·자동 shading·적용형 antialiasing·기존 sprite로의 image import. selection과 clipboard도 파일에 저장되므로 포함한다. 실패한 handler, 실제 파일 bytes가 같은 no-op, dry-run은 기록하지 않는다. get/analyze, export, save_as, downsample 출력, 새 canvas 생성, 수동 snapshot 생성/복원·삭제는 자동 편집 이력 대상이 아니다. raw Aseprite/Go API나 GUI의 미저장 작업도 대상이 아니다.
 
 ## 데이터와 보존
 
@@ -64,3 +64,7 @@ undo는 최신 미복원 작업 ID와 현재 파일이 그 작업의 after 해�
 - 문서 상대 링크와 diff 공백 검사 통과. 과거 기록 전체가 만료/삭제되면 이력이 사라지고, 같은 저장소의 편집은 직렬화된다. 이러한 보존·동시성 한계는 위 계약을 따른다.
 
 최종 판정: PASS.
+
+## 레이어·그룹 후보
+
+`set_layer_properties`, `move_layer`, `create_layer_group`은 성공한 실제 변경만 각 tool 이름으로 기록한다. no-op·stale·잠금 거부·실패/취소는 기록하지 않는다. 새 구조 ID는 편집 후 재조회하며 byte-exact undo 후에도 다시 조회한다. [계약과 검증](LAYER_PROPERTIES.md).

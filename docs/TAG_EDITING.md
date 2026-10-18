@@ -1,7 +1,7 @@
 # 태그 상세 조회·수정 (GAP-03)
 
 작업: `[BE][FEATURE] 태그 상세 조회 및 수정`, `feature/be-tag-editing`.
-기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합). 이번 브랜치의 Unreleased 구현이며 develop 병합·태그·배포 완료가 아니다. 기존 도구 58개에 2개를 추가해 60개를 등록한다. cel unlink·layer/group·범위 export는 다른 세션의 독립 작업이며 여기서 완료로 표시하지 않는다.
+기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합). 이번 브랜치의 Unreleased 구현이며 develop 병합·태그·배포 완료가 아니다. 현재 통합 기준은 `origin/develop` `28b6fbfbeb6dfb1892a44cb50bb1b5d4fa7d4efc` (PR #33 unlink 및 #34 layer/group 병합 포함)이다. 기준 도구 62개에 태그 2개를 추가해 64개를 등록한다. 범위 export PR #35는 미병합이며 포함하지 않는다.
 
 ## 호출 계약
 
@@ -108,3 +108,28 @@ Notes:
 3. 다른 Top4 PR과 공통 파일/count/문서 ID 충돌 가능성이 있다. plugin pin/번들/skill 동기화와 독립 외부 리뷰, develop/main 병합·배포는 수행하지 않았다.
 
 판정: **PASS_WITH_NOTES**. 최종 후보의 필수 검증과 fresh 전체 검토를 완료했고 범위 내 미해결 차단 결함이 없어 추가 수정 cycle을 진행하지 않는다. 작업 브랜치·워크트리는 미병합이므로 정리하지 않는다.
+
+### PR #33/#34 반영 후 통합 후보 (2026-10-18)
+
+작업: `[BE][FEATURE] 태그 PR #32 develop 최신화`. 통합 전 HEAD는 `6ab64384af5465aced311e05b63ace6ab9b305c9`, 최신화 기준은 `origin/develop` `28b6fbfbeb6dfb1892a44cb50bb1b5d4fa7d4efc`다. PR #33 unlink 및 PR #34 layer/group을 기능 브랜치에 merge하고 공통 문서 12개와 animation 등록/server 등록 검사의 충돌을 해소했다. PR #32를 develop/main에 병합한 것은 아니다. 미병합 export PR #35의 코드는 포함하지 않는다.
+
+- 등록 이름 합집합은 64개다(develop 62 + 태그 2). 실제 빌드된 MCP `tools/list`에서도 64개의 고유 이름과 신규 도구들의 필수 schema를 확인했다. 기존 MCP-059 unlink, MCP-060–062 layer/group ID를 유지하고 태그 조회/수정을 MCP-063/064로 배정했다. 한·영 README 및 capability inventory를 맞췄다.
+- 가져온 unlink/layer/group/structure production·schema·기존 테스트는 develop과 바이트 단위로 같다. 태그 production·schema·기존 테스트도 통합 전 HEAD와 같다. revision, 0/null, 중복·빈 이름 정책을 변경하지 않았다. 외부 writer 경쟁·대규모 조회·plugin 태그 반영 TODO와 과거 검증 이력은 보존했다.
+- 새 `TestTagsIntegratedRevisionAndUndo`는 실제 MCP로 그룹 생성 → 레이어 이동 → 빈 레이어 이름/false/opacity 0 설정 → unlink → 태그 direction/repeats 0 수정 → 5개 operation 역순 undo를 검사한다. 양쪽 조회의 revision 일치, 다른 도구 편집 뒤 stale 요청 거부와 원본/이력 보존, 이동된 cel의 native 공유 분리·metadata, 태그 수정 전 bytes 및 전체 작업 전 bytes 복원을 검증한다. 기존 RGB/grayscale/indexed tag/cel/layer 개별 회귀는 그대로 실행한다.
+
+통합 검증:
+
+- macOS arm64 / Go 1.25.0 / 실제 Aseprite 1.3.18.2-arm64 / API 41: build, `go vet -p 1 -tags=integration ./...`, health 통과. 별도 `/private/tmp/pixel-tag-integration-20261018/config.json`·temp와 기존 Go cache를 사용했다. timeout은 30초, `GOMAXPROCS=2`, `-p 1 -parallel 1 -count=1`로 순차 실행했다. 사용자 기본 config 및 글로벌 설정은 수정하지 않았다.
+- `go test -p 1 -parallel 1 -count=1 -tags=integration ./pkg/aseprite ./pkg/tools ./pkg/server -run 'TestTags|TestTagProperties|TestLayer|TestUnlink|TestCelProperties|TestSpriteStructure|TestStructureInput|TestHistory|TestSnapshot|TestSpriteRevision|TestFileProtection|TestToolDiagnostics' -v`: 모두 통과. aseprite 1.805초, tools 187.657초, server 6.492초. 새 통합 테스트 2.85초 통과, 선택된 검사에 skip 없음. 이전 동시 세션 병목 관찰과 이번 실제 통과 결과를 구분한다.
+- 로컬 Docker daemon이 꺼져 있어 이 통합 후보의 로컬 Linux 전체 suite/coverage는 실행하지 않았다. 승인된 기존 PR GitHub CI의 Linux `go vet ./...`, 전체 `go test -v -race -cover ./...`, 전체 `go test -tags=integration -v ./...` 경로로 최종 HEAD를 검증한다. 과거 HEAD의 CI 결과로 대체하지 않으며, 최종 결과는 PR #32 checks와 완료 보고에서 확인한다.
+- runtime tools/list/필수 schema와 한·영 README/CAPABILITIES의 64개 이름 집합·문서 ID 유일성을 대조했다. 후속 TODO 세 항목의 원문 보존, Go 포맷·diff 공백·문서 로컬 링크 검사 통과. 로컬 증거는 `/private/tmp/pixel-tag-integration-20261018/`의 `regression.log`, `vet.log`, `tool-inventory.json`, `candidate-manifest.txt`다.
+- 지원 하한 전체 반복, macOS 전체/race, 대형 파일 성능 전수 검증은 이번 통합에서 실행하지 않았다. 별도 PBT/fuzz suite 도입 없이 기존 경계/순서 조합 및 실제 native fixture 불변식 검사를 유지했다.
+
+통합 셀프리뷰:
+
+- `convergent-code-review` backend lens로 14개 충돌 파일의 양쪽 의도·해결 결과와 최신 develop 대비 전체 변경 23개 파일(Go 9·문서 14)을 검토했다. 가져온 unlink/layer/structure 구현·기존 테스트는 develop과, tag 구현·기존 테스트는 `6ab6438`과 바이트 동일함을 확인했다. export 구현도 develop과 같으며 PR #35는 제외했다.
+- Reviewed: 태그 production/schema·기존/신규 integration·등록/read-only/history 제외 경로 및 14개 문서. Inspected for context: 가져온 unlink/layer/structure와 기존 cel 속성, 공통 lock/staging/revision/publish/history/snapshot/Client 및 server diagnostics, fixture/helper. 타 미병합 기능/plugin 저장소·배포는 제외했다. 결함 수정 파일은 없다.
+- 통합 diff 초기 검토 1회, 최종 후보 fresh 전체 검토 1회, 총 review pass 2회. 신규 P0/P1/P2/P3 지적·repair cycle·repair-diff/closure·수정 유발 결함·재개방·미해결 finding 모두 0건. 이번 merge로 기존 후보를 1회 갱신했으며 최종 후보 고정 후 runtime/contract/test 변경·인증 무효화는 0회다. 검증 결과를 기록하는 이 보고만 추가했다. 리뷰 시간은 별도 측정하지 않았다.
+- 최종 후보 manifest SHA-256은 `8541b9018fb51194e0a850b9aed91286ebe1b0066cb24a4cfac2319552b1de32`다. 새 도구 누락·중복 등록, 구조 변경 후 tag stale/역방향 stale, nil/0/빈 이름 정책의 도구 간 혼동, 공유 cel·태그 metadata 손실, 서로 다른 도구의 history/undo 순서, 문서의 현재/과거 상태를 다시 추적했다. 새 차단 결함을 발견하지 않아 추가 수정을 진행하지 않는다. 최종 원격 CI 결과는 별도로 확인한다.
+
+Notes: 외부 writer 경쟁·대규모 조회·plugin 반영 TODO를 유지한다. 로컬 Docker 미실행에 따른 Linux 검증은 최종 HEAD의 GitHub CI로 수행하며 macOS 전체/race 등 위 제외 범위는 확대하지 않는다. export PR #35와의 후속 통합·plugin 동기화 및 독립 외부 리뷰는 별도다. develop/main 병합·태그·배포·작업 워크트리 정리는 수행하지 않는다.

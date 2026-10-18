@@ -78,6 +78,7 @@ type LinkCelOutput struct {
 func RegisterAnimationTools(server *mcp.Server, client *aseprite.Client, gen *aseprite.LuaGenerator, cfg *config.Config, logger core.Logger) {
 	registerCelPropertiesTool(server, client, gen, cfg, logger)
 	registerTagTools(server, client, gen, cfg, logger)
+	registerUnlinkCelTool(server, client, gen, cfg, logger)
 	// Register set_frame_duration tool
 	mcp.AddTool(
 		server,

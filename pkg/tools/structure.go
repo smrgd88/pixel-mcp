@@ -50,6 +50,7 @@ type StructureLayer struct {
 	EffectiveVisible  bool           `json:"effective_visible"`
 	EffectiveEditable bool           `json:"effective_editable"`
 	Opacity           *int           `json:"opacity,omitempty"`
+	BlendMode         string         `json:"blend_mode,omitempty"`
 	Cels              []StructureCel `json:"cels"`
 }
 
@@ -88,7 +89,7 @@ func validateStructureInput(in GetSpriteStructureInput) (GetSpriteStructureInput
 }
 
 func registerStructureTool(server *mcp.Server, client *aseprite.Client, gen *aseprite.LuaGenerator, cfg *config.Config, logger core.Logger) {
-	mcp.AddTool(server, &mcp.Tool{Name: "get_sprite_structure", Description: "Read saved layer hierarchy and frame/cel existence, bounds, opacity and native image sharing. Structural layer IDs are sibling-index paths valid while hierarchy order is unchanged; set_cel_properties accepts these IDs with the returned revision precondition. Returns at most 100 layers x 100 frames, with exact layer filter and continuation offsets."}, maybeWrapConfigured("get_sprite_structure", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, in GetSpriteStructureInput) (*mcp.CallToolResult, *GetSpriteStructureOutput, error) {
+	mcp.AddTool(server, &mcp.Tool{Name: "get_sprite_structure", Description: "Read saved layer hierarchy and frame/cel existence, bounds, opacity and native image sharing. Structural layer IDs are sibling-index paths valid while hierarchy order is unchanged; revision-guarded cel and layer/group editing tools accept these IDs; requery after every edit. Returns at most 100 layers x 100 frames, with exact layer filter and continuation offsets."}, maybeWrapConfigured("get_sprite_structure", logger, cfg, func(ctx context.Context, req *mcp.CallToolRequest, in GetSpriteStructureInput) (*mcp.CallToolResult, *GetSpriteStructureOutput, error) {
 		in, err := validateStructureInput(in)
 		if err != nil {
 			return nil, nil, err

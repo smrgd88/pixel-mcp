@@ -21,13 +21,13 @@ pixel-mcp는 AI 클라이언트가 MCP(Model Context Protocol)를 통해 Aseprit
 
 ## 제공 MCP 도구
 
-`develop`에는 PR #31까지 58개 도구가 있고, 이번 태그 편집 브랜치는 신규 도구를 포함해 60개를 등록합니다 (태그 도구 미병합/Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
+`develop`에는 PR #34까지 62개 도구가 있고, 이번 태그 편집 브랜치는 신규 도구를 포함해 64개를 등록합니다 (태그 도구 미병합/Unreleased). 세부 지원 범위와 제한은 [기능 지원 현황](docs/CAPABILITIES.md)을 참고하세요.
 
 ### 캔버스와 레이어
 
-`create_canvas`, `add_layer`, `delete_layer`, `flatten_layers`, `get_sprite_info`
+`create_canvas`, `add_layer`, `delete_layer`, `flatten_layers`, `get_sprite_info`, `set_layer_properties`, `move_layer`, `create_layer_group`
 
-캔버스·레이어를 만들고 삭제하거나 병합하며 스프라이트 정보를 조회합니다.
+캔버스·레이어를 만들고 삭제하거나 병합하며 스프라이트 정보를 조회합니다. [레이어·그룹 편집](docs/LAYER_PROPERTIES.md)은 최신 구조 revision으로 이름·가시성·잠금·raster opacity/blend·순서·그룹 생성/이동을 지원합니다. 변경 후 구조 ID를 다시 조회합니다. 그룹 opacity/blend·특수 레이어·recursive 삭제는 새 도구에서 제외합니다.
 
 ### 드로잉
 
@@ -57,7 +57,7 @@ Indexed sprite의 `apply_auto_shading`은 기존 palette index와 transparent in
 
 ### 애니메이션
 
-`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`, `get_sprite_tags`, `set_tag_properties`
+`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`, `unlink_cel`, `get_sprite_tags`, `set_tag_properties`
 
 프레임, 재생 시간, 태그와 Aseprite native linked cel을 관리합니다. `link_cel`은 저장 후에도 source/target이 같은 image를 공유하며, 데이터 보호를 위해 target cel이 이미 있으면 실패합니다.
 
