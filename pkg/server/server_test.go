@@ -130,14 +130,79 @@ func TestSnapshotToolsRegistered(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 58 {
-		t.Fatalf("registered %d tools, want 58", len(list.Tools))
+	if len(list.Tools) != 64 {
+		t.Fatalf("registered %d tools, want 64", len(list.Tools))
 	}
 	names := map[string]bool{}
 	for _, tool := range list.Tools {
 		names[tool.Name] = true
 	}
-	for _, name := range []string{"create_snapshot", "list_snapshots", "restore_snapshot", "delete_snapshot", "list_operation_history", "undo_last_operation", "get_sprite_structure", "set_cel_properties"} {
+	for _, name := range []string{
+		"add_frame",
+		"add_layer",
+		"add_palette_color",
+		"analyze_palette_harmonies",
+		"analyze_reference",
+		"apply_auto_shading",
+		"apply_outline",
+		"apply_shading",
+		"copy_selection",
+		"create_canvas",
+		"create_layer_group",
+		"create_snapshot",
+		"create_tag",
+		"crop_sprite",
+		"cut_selection",
+		"delete_frame",
+		"delete_layer",
+		"delete_snapshot",
+		"delete_tag",
+		"deselect",
+		"downsample_image",
+		"draw_circle",
+		"draw_contour",
+		"draw_line",
+		"draw_pixels",
+		"draw_rectangle",
+		"draw_with_dither",
+		"duplicate_frame",
+		"export_sprite",
+		"export_spritesheet",
+		"fill_area",
+		"flatten_layers",
+		"flip_sprite",
+		"get_palette",
+		"get_pixels",
+		"get_sprite_info",
+		"get_sprite_structure",
+		"get_sprite_tags",
+		"import_image",
+		"link_cel",
+		"list_operation_history",
+		"list_snapshots",
+		"move_layer",
+		"move_selection",
+		"paste_clipboard",
+		"quantize_palette",
+		"resize_canvas",
+		"restore_snapshot",
+		"rotate_sprite",
+		"save_as",
+		"scale_sprite",
+		"select_all",
+		"select_ellipse",
+		"select_rectangle",
+		"set_cel_properties",
+		"set_frame_duration",
+		"set_layer_properties",
+		"set_palette",
+		"set_palette_color",
+		"set_tag_properties",
+		"sort_palette",
+		"suggest_antialiasing",
+		"undo_last_operation",
+		"unlink_cel",
+	} {
 		if !names[name] {
 			t.Errorf("missing %s", name)
 		}

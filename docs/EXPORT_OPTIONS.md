@@ -1,7 +1,7 @@
 # 범위 export 및 출력 보호 (GAP-05)
 
 작업: `[BE][FEATURE] 범위 export 및 출력 보호`, `feature/be-export-options`.
-기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합). 이 브랜치의 구현 후보이며 develop 병합·릴리스·plugin 배포와 구분한다. 도구 추가 없이 기존 **58개** 이름 집합을 유지한다. 다른 Top4 브랜치의 코드를 사용하지 않는다.
+최초 구현 기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합). 이 브랜치의 구현 후보이며 develop 병합·릴리스·plugin 배포와 구분한다. 초기 독립 구현 당시 도구 추가 없이 **58개** 이름 집합을 유지했다. 현재는 PR #33/#34/#32가 병합된 `origin/develop` `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`을 통합하며 **64개** 등록 이름 집합을 유지한다. 미병합 브랜치를 직접 가져오지 않았다. 아래 초기 검증·리뷰 기록은 당시 이력이다.
 
 ## 호환성과 옵션
 
@@ -69,7 +69,7 @@ Plugin 저장소·MCP commit pin·번들 바이너리는 이 작업에서 수정
 - sidecar source_frame_number와 출력 기준 frameTags, include_json=false의 legacy sidecar, texture+JSON rollback 및 recovery 순번을 소비자/스킬에 반영한다.
 - crash 원자성이나 출력 history undo를 주장하지 않는다. GIF 새 선택은 지원하지 않는다.
 
-동시 PR은 CAPABILITIES/NEXT_STEPS/ROADMAP/CHANGELOG 및 한·영 README가 충돌할 수 있다. 이 브랜치는 animation/server production 파일을 수정하지 않으며 미병합 Top1–3을 완료로 표시하지 않는다.
+PR #33/#34/#32 develop 통합 시 공통 문서 충돌을 양쪽 계약과 검증 이력을 보존하며 해소한다. animation/canvas/server 등록은 최신 develop의 세 기능을 유지하며 export 자체의 도구 추가는 없다. PR #35는 아직 develop 미병합이다.
 
 근거: [ExportSpriteSheet API](https://www.aseprite.org/api/command/ExportSpriteSheet/), [Image API](https://www.aseprite.org/api/image/), Aseprite 1.3.18.3 native `cmd_export_sprite_sheet.cpp`, `layer_frame_comboboxes.cpp`, `doc_exporter.cpp`. 공식 API의 존재와 이 후보의 실제 검증 범위를 구분한다.
 
@@ -142,3 +142,26 @@ Notes:
 3. plugin pin/번들/exporter skill 동기화는 별도 후속이며, 이 background/출력 모드 계약도 함께 반영해야 한다. 병합·태그·배포는 수행하지 않는다.
 
 수정 후 판정: **PASS_WITH_NOTES**. 직전 read-only 재리뷰의 BLOCKED를 대체한다.
+
+## 최신 develop 통합 (2026-10-18)
+
+작업: `[BE][CHORE] export 통합 및 다음 작업 최신화`. 시작 HEAD `6f466f8d360a90b170c975332cece12d85e9c12f`에 `origin/develop` `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`을 통합했다. PR #33 cel unlink, #34 layer/group, #32 tags는 develop 병합 완료이며 PR #35 자체는 여전히 미병합/Unreleased다. 원래 develop 워크트리나 다른 작업 브랜치를 수정하지 않았다.
+
+- 공통 문서 11개의 충돌을 해소했다. 최신 세 기능의 production/schema/tests는 develop과 byte-identical하게 유지했고, export production 5개 파일은 리뷰 완료본 `6f466f8`과 byte-identical하다. 배경 canvas/불투명 indexed mask, padding 후 두 축 검사, revision/output 보호를 되돌리지 않았다.
+- 등록 이름 합집합은 기존 export 후보 58 + 최신 develop 64 = **64개**다. 실제 server list 전체 이름/개수 검사, CAPABILITIES MCP-001…064의 ID·이름 일치, README 한/영 inventory를 대조했다. 새 등록 도구는 없다.
+- `TestExportIntegratedLayerTagUnlinkAndUndo` 추가: 세 모드에서 그룹 삽입·같은 이름의 레이어 이동으로 옛 ID가 다른 대상을 가리키게 한 뒤 stale export를 거부한다. unlink → 독립 frame의 x=0 수정 → tag rename/range/direction 수정 → 숨김 layer의 PNG/sheet export를 검사한다. 독립 PNG decoder의 전체 픽셀, JSON source frame/trim offset/duration/tag 범위, 오류 시 기존 texture+JSON/source 불변, export history 제외, 7개 편집의 역순 byte-exact undo 및 복원 revision 재사용을 확인한다.
+- NEXT_STEPS/ROADMAP은 PR #35 통합 검증·승인된 병합 판단 → plugin 동기화 → GAP-04/GAP-06 별도 범위 선정으로 현황을 갱신했다. 기존 태그 후속 TODO 세 항목은 최신 develop과 문자 단위로 동일하게 보존했고, SAFE/OPS·전체 matrix·crash/외부 writer 제한과 과거 검증 기록을 소급 완료하지 않았다.
+
+검증은 동시 native workload를 피하도록 순차 실행했다. Docker daemon이 사용 가능했으므로 CI fallback만으로 대체하지 않았다.
+
+- Linux amd64 / 전용 `pixel-export-options` 컨테이너 / Go 1.25.14 / Aseprite `1.3.18.3-dev`, API 41: container 내부 source 사본, `/tmp/export-integration-config.json`, 전용 temp, timeout=30, GOMAXPROCS=2/-p 1. build·vet·health·전체 unit/race/coverage 통과. coverage는 aseprite 81.8%, tools 62.9%, server 90.7%이며 statement coverage다.
+- Linux 최종 관련 `-race -tags=integration` 통과: aseprite 1.768초, tools 253.918초, server 9.235초. 필터는 `TestExport|TestTags|TestTagProperties|TestLayer|TestMoveLayer|TestCreateLayerGroup|TestUnlinkCel|TestCelProperties|TestSpriteStructure|TestStructureInput|TestRegressionMatrix|TestOutputFiles|TestOutputRollback|TestFileProtection|TestHistory|TestSnapshot|TestToolDiagnostics|TestIntegration_LinkCel`이다. 새 교차 회귀 외에 source/staging/lock/publication rollback/취소/metadata·background·frame palette 및 cel/link/unlink/tag/layer 단독 회귀를 포함한다.
+- macOS arm64 / Go 1.25.0 / Aseprite `1.3.18.2-arm64`, API 41: 별도 config/temp에서 build·health 및 export 전체 관련 회귀, layer/cel/unlink/tag 저장·undo와 교차 회귀, structure·출력 rollback·history/snapshot·diagnostics·64개 등록 검사를 통과했다. 전체 macOS suite/race는 아니다. 상세 command와 소요 시간은 로컬 로그에 남겼다.
+- 이번 로컬 Linux 전체 integration은 반복하지 않고 위 영향 범위를 실행했다. 원격 최종 HEAD CI의 전체 unit/race/integration은 push 후 별도 확인한다. 지원 하한 반복과 기존 범위 밖 조합은 재실행하지 않았다. 최종 관련 로그에 FAIL/SKIP은 없었다. 로그는 `/tmp/pixel-export-integrate-20261018/{linux.log,macos.log}`에 보존했다.
+- 충돌 marker 없음, gofmt/diff 공백 및 변경 문서 상대 파일 링크 검사 통과. 현재 대화의 기본 cwd에는 정리된 cel-unlink 경로가 남아 훅 실행 시 OS error 2가 관찰됐지만, 모든 작업 명령은 실제 export 경로를 명시해 실행했다. 글로벌 훅/접근 설정이나 삭제된 워크트리를 복구·변경하지 않았다. 이 환경 이슈와 코드/검증 실패를 구분한다.
+
+`convergent-code-review`: 통합 diff 41개 파일과 최신 develop 대비 PR 전체 24개 파일(Go 11, 문서 13)을 검토했다. 통합 diff 검토 1회, 최종 후보의 전체 fresh-discovery 1회, 총 review pass 2회. 통합/충돌 해소 1회, finding repair cycle·repair-diff·closure 0회(새 결함 수정 없음), 초기/신규/재개방/미해결 finding 모두 0건. 기존 리뷰 지적은 재개방되지 않았다. 범위는 export 및 등록/교차 회귀·문서이며, 새 develop의 layer/tag/unlink producer와 shared lock/history/structure는 직접 연동 문맥으로 대조했다. plugin·추가 기능·병합/배포는 제외했다.
+
+최종 후보 manifest(보고 추가 전) SHA-256은 `e8fa9823bae847a67f59b0b48770a916f285e81a9d06f7a88fcc1f1c4d04bd3b`다. 최종 후보 선정 이후 runtime/test/계약 변경·인증 무효화 0회이며 이후 추가는 이 검증 보고다. 통합으로 이전 `6f466f8` 후보를 대체했으며 이전 후보의 테스트만으로 승인하지 않았다.
+
+Notes: 배경 유지/일부 PNG의 RGB 출력, 보수적 크기 예산과 crash/외부 writer 한계, 위 미실행 범위는 유지한다. Plugin 동기화와 PR #35의 develop 병합은 별도 후속이다. 로컬 판정은 **PASS_WITH_NOTES**이며 최종 원격 HEAD CI도 확인한 뒤 사용자에게 보고한다.

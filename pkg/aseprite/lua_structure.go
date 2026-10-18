@@ -5,7 +5,7 @@ import "fmt"
 // GetSpriteStructure reads metadata without modifying or saving the sprite.
 // Arguments must be validated by the caller; frameEnd=0 selects up to 100 frames.
 func (g *LuaGenerator) GetSpriteStructure(layerID string, offset, pageSize, frameStart, frameEnd int) string {
-	return fmt.Sprintf(`local spr=app.activeSprite
+	return layerBlendLua + fmt.Sprintf(`local spr=app.activeSprite
 if not spr then error("No active sprite") end
 local wanted="%s"
 local offset,size,first,last=%d,%d,%d,%d
@@ -75,7 +75,7 @@ for i=offset+1,math.min(#matching,offset+size) do
  -- Build array envelopes explicitly: json.encode({}) would encode an object.
  local row={layer_id=node.id,parent_id=node.parent,name=layer.name,name_path=node.names,
  kind=kind,stack_index=layer.stackIndex,visible=layer.isVisible,editable=layer.isEditable,
- effective_visible=node.visible,effective_editable=node.editable,opacity=layer.opacity}
+ effective_visible=node.visible,effective_editable=node.editable,opacity=layer.opacity,blend_mode=blendNames[layer.blendMode]}
  local encoded=json.encode(row)
  table.insert(rows,encoded:sub(1,-2)..',"cels":['..table.concat(cells,",")..']}')
 end

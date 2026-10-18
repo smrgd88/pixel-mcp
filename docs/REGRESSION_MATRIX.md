@@ -7,7 +7,7 @@
 
 RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 전환했다. 루트 우회를 제거하고 nested 상태 그대로 검사한다. FIX는 PR #29로 develop `2ced64c`에 병합했으며 [계약·검증](DRAW_PIXELS_NESTED_FIX.md)을 따른다.
 
-현재 통합 상태: PR #27은 develop `ec99cc2`에 병합 완료했고 PR #28도 `2ec6c79`에 병합 완료했다. 아래 기준·실행 기록은 회귀 작업 당시 이력이다. GAP-02 조회 PR #30 및 cel 속성 PR #31도 develop에 병합됐으며 [계약·검증](SPRITE_STRUCTURE.md)을 따른다.
+현재 통합 상태: PR #27은 develop `ec99cc2`에 병합 완료했고 PR #28도 `2ec6c79`에 병합 완료했다. 아래 기준·실행 기록은 회귀 작업 당시 이력이다. GAP-02 조회는 PR #30, 위치·opacity는 PR #31로 develop에 병합했다. [unlink](CEL_UNLINK.md)는 PR #33, [레이어·그룹 편집](LAYER_PROPERTIES.md)은 PR #34로 develop에 병합했다. [태그 조회·수정](TAG_EDITING.md)은 PR #32 / `7cc9b1d`로 develop에 병합했다. 아래 과거 실행 기록과 구분한다.
 
 ## 실제 backlog와 이번 범위
 
@@ -75,9 +75,9 @@ RM-FIX-01 후속: `fix/be-nested-draw-pixels`에서 구현 및 성공 회귀로 
 
 | 실제 R3 목록 | 다음 판단 |
 | --- | --- |
-| GAP-01 레이어 속성·그룹 | RM-FIX-01 이름 지정 정책은 PR #29로 반영. 구조 ID 기반 편집은 별도 범위 선정 |
-| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회 PR #30 develop 반영; 위치·opacity는 [CEL_PROPERTIES](CEL_PROPERTIES.md) 작업, unlink 후속 |
-| GAP-03 태그 상세 조회·기존 태그 수정 | frame 식별/범위 조회 이후 검토; 이번에 구현하지 않음 |
+| GAP-01 레이어 속성·그룹 | RM-FIX-01 이름 지정 정책은 PR #29로 반영. 구조 ID 기반 편집은 [PR #34 레이어·그룹 편집](LAYER_PROPERTIES.md) develop 반영 |
+| GAP-02 상세 구조·cel 위치/opacity/unlink | 읽기 전용 조회 PR #30 develop 반영; 위치·opacity는 [PR #31 develop 반영](CEL_PROPERTIES.md), [unlink](CEL_UNLINK.md)는 PR #33 develop 반영 |
+| GAP-03 태그 상세 조회·기존 태그 수정 | [별도 태그 작업](TAG_EDITING.md)에서 구현·후보 검증; 미병합, 본 공통 회귀 당시 검증과 별개 |
 | GAP-04 범용 색상 모드 전환 | indexed helper 공통화와 transparent index 불변식 확대가 선행; 현재 4-case 통과만으로 충족하지 않음 |
 
 남은 높은 위험 조합은 grayscale의 모든 도형·dither, linked cel의 팔레트 resize 및 snapshot/undo 복원 렌더링, 음수 위치 grayscale/indexed, blend/부분 alpha·layer/cel opacity·서로 다른 linked 위치, 프레임별 palette, 모든 export 형식의 실제 픽셀/animation timing이다. 새 기능 계약에 맞춰 선택적으로 추가한다. spritesheet texture+JSON 일괄 보호는 GAP-05/R4 잔여이며 이번 PNG sequence 검증과 혼동하지 않는다.
@@ -124,6 +124,12 @@ go test -count=1 -tags=integration ./...
 - 이번 재리뷰 활동: 초기 범위/지적 확인 1회, 수정 cycle 1회, 수정 diff 검토 및 closure 1회(동일 pass), 전체 범위 fresh-discovery 1회, 총 review pass 3회. 최초 지적 P3 1건 → VERIFIED 1건. 신규 지적·수정 유발 결함·재개방·미해결 범위 내 지적은 0건. 최종 후보 선택 후 관련 변경/무효화 0회.
 - 판정: **PASS_WITH_NOTES**. 남은 Notes는 별도 FIX인 RM-FIX-01(그룹 내부 편집 미지원 현상)과 기존 미검증 교차 조합·앱 UI·macOS 전체/race다. 범위 내 수정이 검증되었고 새 병합 차단 결함이 없어 추가 수정 cycle을 진행하지 않는다. 독립 외부 리뷰와 develop 병합은 수행하지 않았다.
 
-## GAP-05 독립 후보의 회귀
+## Cel unlink 후보의 추가 회귀
+
+`cel_unlink_integration_test.go`는 세 모드의 그룹 내부 2/3개 링크, 중복 이름·독립 동일픽셀 이미지, 음수 위치·metadata·palette·렌더링 불변, stale/invalid/잠금/특수 레이어 거부, 실패·취소·동시 요청, snapshot/undo byte 복원을 검사한다. 후보 실행 환경·결과는 [CEL_UNLINK](CEL_UNLINK.md#검증-기록)에 별도로 기록한다. 위 과거 검증 행을 소급 완료하거나 다른 Top4 기능 완료로 해석하지 않는다.
+
+## GAP-05 export 통합 후보의 회귀
 
 범위 export/texture+JSON 보호의 추가 조합과 실제 실행 결과는 [EXPORT_OPTIONS](EXPORT_OPTIONS.md)를 따른다. 현재 미병합 후보이며 위 PR #27 당시 이력과 구분한다. frame palette, trim offsets, padding/extrude 및 출력 세트 보호를 검증하며 GAP-06이나 다른 Top4 편집 작업의 완료를 뜻하지 않는다.
+
+`TestExportIntegratedLayerTagUnlinkAndUndo`는 RGB/grayscale/indexed에서 그룹 삽입·중복 이름 레이어 이동으로 ID가 다른 대상을 가리키는 경우의 stale 거부, unlink 후 frame 2만 위치 변경, 태그 rename/range 변경 후 PNG·sheet 선택, metadata offsets/duration, 숨김·overwrite 오류 시 texture+JSON/source 보존과 7개 편집의 역순 byte-exact undo를 검사한다. 기존 단위 기능의 검증 이력과 별도의 통합 회귀다.

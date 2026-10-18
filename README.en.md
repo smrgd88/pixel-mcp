@@ -21,13 +21,13 @@ This README describes `develop`. Fork fixes and recovery features are **Unreleas
 
 ## MCP tools
 
-The `develop` baseline registers 58 tools through PR #31 (Unreleased). See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
+The `develop` baseline registers 64 tools including PR #33 (cel unlink), #34 (layer/group), and #32 (tags), all Unreleased. The range export candidate in PR #35 preserves the same tool set. See the [capability inventory](docs/CAPABILITIES.md) for support boundaries and limitations.
 
 ### Canvas and layers
 
-`create_canvas`, `add_layer`, `delete_layer`, `flatten_layers`, `get_sprite_info`
+`create_canvas`, `add_layer`, `delete_layer`, `flatten_layers`, `get_sprite_info`, `set_layer_properties`, `move_layer`, `create_layer_group`
 
-Create, remove, and flatten canvases and layers, and inspect sprite metadata.
+Create, remove, and flatten canvases and layers, and inspect sprite metadata. [Layer/group editing](docs/LAYER_PROPERTIES.md) uses a fresh structure revision for names, visibility, locking, raster opacity/blend, ordering, group creation and reparenting. Requery structural IDs after edits. New tools exclude group opacity/blend, special layers and recursive deletion.
 
 ### Drawing
 
@@ -57,9 +57,11 @@ Transform, resize, crop, and outline sprites.
 
 ### Animation
 
-`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`
+`add_frame`, `delete_frame`, `set_frame_duration`, `create_tag`, `delete_tag`, `duplicate_frame`, `link_cel`, `set_cel_properties`, `unlink_cel`, `get_sprite_tags`, `set_tag_properties`
 
 Manage frames, timing, tags, and Aseprite native linked cels. `link_cel` preserves shared image identity after saving and rejects an already occupied target cel to protect its data.
+
+[Tag inspection and editing](docs/TAG_EDITING.md) reads saved order, names, inclusive ranges, directions, repeats and colors, and edits an existing tag using revision and tag_id. Refresh after range/tag changes. Existing create/delete contracts are unchanged.
 
 ### Inspection and file operations
 

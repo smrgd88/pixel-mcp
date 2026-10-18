@@ -1,8 +1,8 @@
 # pixel-mcp 다음 작업 체크리스트
 
-작성일: 2026-08-31 · 현황 동기화: 2026-10-04
+작성일: 2026-08-31 · 현황 동기화: 2026-10-18
 
-현재 기준: `develop`의 `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 속성 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 편집, PR #33 cel unlink, PR #34 layer/group, PR #32 tag 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -20,7 +20,7 @@
 
 macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검증한다. Windows 네이티브 테스트는 현재 개발 범위에서 제외하며 반복적인 미실행 알림·보류 목록·진행 차단 사유로 보고하지 않는다. Windows 환경 작업이나 명시적인 검증 요청이 있을 때 범위를 다시 정한다. 기존 cross-build 이력과 제품의 플랫폼 지원 계획은 별개다.
 
-## 남은 작업 요약 (2026-10-04)
+## 남은 작업 요약 (2026-10-18)
 
 상세 작업 항목은 아래 기존 체크리스트에 유지하고, 우선순위는 [ROADMAP](ROADMAP.md#다음-작업-순서)을 기준으로 한다.
 
@@ -29,18 +29,36 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 | develop 완료 | 공통 회귀 조합 점검 (PR #27) | 4개 위험 조합 검증·셀프리뷰 완료. 좌표 거부 테스트 보강 완료. [결과](REGRESSION_MATRIX.md) |
 | develop 완료 | RM-FIX-01 그룹 내부 draw_pixels | PR #29 병합. 고유 이름 조회·중복 거부. [계약·검증](DRAW_PIXELS_NESTED_FIX.md) |
 | develop 반영 | GAP-02 읽기 전용 상세 구조/cel 조회 | PR #30 / `eca9e83`, [계약·검증](SPRITE_STRUCTURE.md) |
-| develop 반영 | GAP-02 cel 위치·opacity 편집 | `set_cel_properties` 및 revision guard 구현, [계약·검증](CEL_PROPERTIES.md). PR #31 병합/Unreleased. unlink·GAP-01 후속, GAP-02 전체 완료 아님 |
+| develop 반영 | GAP-02 cel 위치·opacity 편집 | PR #31 / `96d8fa4`, [계약·검증](CEL_PROPERTIES.md). Unreleased. unlink는 PR #33 반영 |
+| develop 반영 | GAP-02 cel unlink | PR #33 / `732958b`, [계약·검증](CEL_UNLINK.md). Unreleased |
+| develop 반영 | GAP-01 레이어 속성·그룹 | PR #34 / `28b6fbf`, 속성·순서·그룹 생성/이동, [계약·검증](LAYER_PROPERTIES.md). Unreleased |
+| develop 반영 | GAP-03 태그 상세 조회·수정 | PR #32 / `7cc9b1d`, `get_sprite_tags` / `set_tag_properties`. [계약·검증](TAG_EDITING.md). Unreleased |
 | develop 완료 | OPS-03 오류 코드·request ID·로그 계약 | PR #25 병합, 기존 성공 payload와 warnings 유지. [계약](ERRORS.md) |
 | develop 완료 | PR #22 팔레트·threshold·DITHER-01/02 수정 | 결정적 palette 추출 포함. 정확한 color2 비율을 강제하는 별도 모드는 범위 밖 |
 | 릴리스 전 운영 | OPS-01, upstream #19, 릴리스 절차 | CI 버전 artifact, upstream 제출 범위 결정, 0.x 호환성·RELEASING 절차 및 main/태그/artifact 배포 검증 |
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
 | 공통 계약 후속 | 성공 payload의 success/details 일괄 표준화 | OPS-03 오류·추적 완료 범위 밖. 별도 호환성 검토 후 범위 결정 |
-| 편집·조회 확장 | GAP-01–04 (R3) | 레이어 속성·그룹, 구조/cel 관리, 태그 조회·편집, 범용 색상 모드 전환. indexed helper 공통화 검증 포함 |
+| 편집·조회 잔여 | GAP-04 및 GAP-01–03 제외 범위 (R3) | 범용 색상 모드 전환·indexed helper 공통화 검증, group opacity/blend·특수 레이어·태그 color/data 등 기존 계약의 잔여. 병합된 Top1–3 구현과 구분 |
 | export 후보 | GAP-05 (R4) | 범위/trim/extrude/padding 및 texture+JSON 보호 구현 후보, 미병합. [계약·검증](EXPORT_OPTIONS.md). GAP-06은 후속 |
 | 장기 확장 | GAP-07–09·11–13 (R5/별도 SPIKE) | tilemap/tileset, 보정 필터, metadata, 선택/brush/grid, GUI·지속 세션. 범위 선정 후 착수 |
 | 보류·검토 후보 | upstream #16, export crash 복구 | #16은 지원 버전 재현 시 재개. 출력 세트의 crash 복구·고아 staging/백업 자동 정리는 후속 설계 대상으로 착수 미확정 |
 
 검증 관찰 잔여: Docker 호스트 bind mount에서 관찰한 `file_changed` 거부의 원인은 미확정이다. 컨테이너 내부 filesystem과 macOS 네이티브 회귀 통과 이력과 구분하며, 파일시스템별 재현 조건 확인 대상으로 남긴다.
+
+## 다음 실행 순서 (2026-10-18)
+
+1. `[BE][FEATURE] 범위 export 및 출력 보호`: PR #35를 최신 develop(`7cc9b1d`)에 통합하고 revision·태그·레이어·cel unlink·출력 세트 교차 회귀와 최종 HEAD CI를 확인한다. **develop 병합은 별도 사용자 승인 단계**이며 이 후보가 배포된 것은 아니다.
+2. `[SHARED][CHORE] plugin 동기화`: 이미 병합된 Top1–3의 pin/번들/스킬 동기화 이행 상태를 확인한다. PR #35 병합 후에는 export 옵션/JSON/보호 계약을 별도로 동기화한다. 아래 태그 재조회 TODO와 각 기능 계약의 plugin 메모를 함께 사용한다. 현재 저장소에서 plugin 변경·새 작업 세션 생성은 하지 않는다.
+3. 후속 범위 선정: GAP-04 범용 색상 모드 전환은 indexed helper와 transparent index 보존 검증을 선행한다. GAP-06 slice/pivot/nine-slice는 별도 export 후속이다. 어느 쪽도 구현 착수·릴리스 일정이 확정된 것으로 표시하지 않는다.
+4. 아래 태그 Notes의 세 TODO와 기존 SAFE/OPS·검증 제한·crash 복구 backlog를 유지한다. 완료된 Top1–3의 병합과 남아 있는 기능군 전체 완료를 구분한다.
+
+## 태그 후속 TODO
+
+PR #32의 [Notes 1](TAG_EDITING.md#최종-셀프리뷰)을 후속 작업으로 추적한다. 아래 항목은 이번 태그 기능의 미구현 결함이나 병합 차단 항목이 아니며, 구현 착수·일정은 별도 결정한다. `tag_id`가 순번이고 `revision`이 내용 hash라는 현재 계약은 유지한다.
+
+- [ ] `[BE][DOCS] plugin 태그 대상 재조회 흐름 반영`: Top1–3 develop 병합 후 예정된 plugin 동기화에서 조회 → `tag_id`+`expected_revision`으로 수정 → 재조회 흐름을 animator skill에 반영한다. 범위 변경 후 이전 순번을 재사용하지 않는 예제와 stale 응답 시 재조회 절차를 확인하면 완료한다. 이 저장소에서 plugin 파일을 수정하지 않는다.
+- [ ] `[SHARED][SPIKE] 비협력 writer 경쟁 보호 검토`: GUI/외부 writer의 ABA 및 최종 원본 검사–rename 사이 변경을 재현하고, 추가 보호의 가능 범위·파일시스템별 제약·비용을 검토한다. 개선안 또는 현행 한계를 유지하는 판단과 근거를 기록하면 SPIKE를 완료한다. 실제 보호 구현은 검토 결과에 따라 별도 작업으로 분리한다.
+- [ ] `[BE][SPIKE] 대규모 태그 조회 응답 비용 측정`: 태그 수와 이름 길이를 늘린 저장 문서로 응답 bytes·실행 시간·메모리를 측정한다. 측정 근거와 허용 기준을 정하고 pagination/응답 상한의 필요 여부를 결정하면 완료한다. 필요 시 기존 필수 입력·성공 응답 호환성 및 페이지 간 revision 일관성을 유지하는 별도 FEATURE로 이어간다.
 
 ## 공통 회귀 점검 결과와 완료 기준
 
@@ -53,7 +71,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 Linux 기본 검증과 변경 관련 macOS 회귀를 적용한다. 지원 하한 재실행과 플랫폼 확대는 위 개발 검증 정책을 따른다. 작업 커밋 `08ef4cb`에서 Linux build·vet·race/coverage·전체 integration과 macOS 관련 4개 조합을 검증했다. [축별 근거·미검증 범위](REGRESSION_MATRIX.md)를 참조한다. 전체 matrix 완료나 배포를 뜻하지 않는다. PR #27 develop 병합은 완료했다.
 
-셀프리뷰: SHARED-P3-001은 루트 레이어에서 좌표 오류 메시지·원본 bytes를 검사하도록 보강했다. RM-FIX-01 그룹 내부 draw_pixels 조회 실패는 별도 BE FIX로 분리했고 PR #29로 develop에 병합했다. R3 첫 구현은 GAP-02 읽기 전용 상세 구조/cel 조회로 확정했으며 PR #30으로 병합한 [조회 계약](SPRITE_STRUCTURE.md)을 따른다. 위치·opacity는 [이번 기능](CEL_PROPERTIES.md), unlink는 후속이다.
+셀프리뷰: SHARED-P3-001은 루트 레이어에서 좌표 오류 메시지·원본 bytes를 검사하도록 보강했다. RM-FIX-01 그룹 내부 draw_pixels 조회 실패는 별도 BE FIX로 분리했고 PR #29로 develop에 병합했다. R3 첫 구현은 GAP-02 읽기 전용 상세 구조/cel 조회로 확정했으며 PR #30으로 병합한 [조회 계약](SPRITE_STRUCTURE.md)을 따른다. 위치·opacity는 [PR #31 develop 반영](CEL_PROPERTIES.md), [unlink](CEL_UNLINK.md)는 PR #33으로 병합했다. 태그 조회·수정도 [PR #32](TAG_EDITING.md)로 develop에 병합했다.
 
 ## 판단 기준
 
@@ -422,7 +440,10 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - 완료: `[SHARED][TEST] 공통 회귀 조합 점검` PR #27 develop 병합. PR #28 Codex README/영어 AGENTS도 병합 완료.
 - 완료: RM-FIX-01 PR #29 develop 병합. [계약·검증](DRAW_PIXELS_NESTED_FIX.md).
 - develop 반영: PR #30 상세 구조/cel 조회 (`eca9e83`), [계약·검증](SPRITE_STRUCTURE.md).
-- develop 반영: PR #31 cel 위치·opacity 편집 및 revision 사전조건, [계약·검증](CEL_PROPERTIES.md). cel unlink·GAP-01 등은 후속이며 GAP-02 전체 완료가 아니다.
+- develop 반영: PR #31 cel 위치·opacity 편집 및 revision 사전조건 (`96d8fa4`), [계약·검증](CEL_PROPERTIES.md). [cel unlink](CEL_UNLINK.md)는 PR #33 / `732958b`로 develop에 반영했다.
+- develop 반영: PR #34 GAP-01 레이어 속성·그룹 생성/이동, [계약·검증](LAYER_PROPERTIES.md). Unreleased.
+- develop 반영: PR #32 GAP-03 태그 상세 조회·수정 (`7cc9b1d`), [계약·검증](TAG_EDITING.md). Unreleased.
+- 다음 병합 후보: PR #35 GAP-05 범위 export·출력 보호. [계약·통합 검증](EXPORT_OPTIONS.md). 아직 미병합.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
