@@ -1,12 +1,12 @@
 # 기능 지원 현황
 
-기준일: 2026-10-18 · 구현 기준: `develop`의 `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`
+기준일: 2026-10-18 · 구현 기준: `develop`의 `99f193ad3a0eefcb8e8b71a3b9e3f69be47ac2d8`
 
 [로드맵](ROADMAP.md) · [실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
 ## 기준과 상태
 
-- develop의 MCP 도구는 **64개**다 (PR #33/#34/#32 포함, Unreleased). PR #35 범위 export 후보는 새 도구를 추가하지 않는다. SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
+- develop의 MCP 도구는 **64개**다 (PR #35까지 병합 반영, Unreleased). PR #35 범위 export는 기존 도구를 확장하며 새 이름을 추가하지 않는다. SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
 - `지원`은 MCP 입력으로 제공됨을 뜻한다. 공식 API 전체 옵션 지원이나 모든 조합의 실행 검증을 뜻하지 않는다.
 - 기능군은 `지원 / 부분 / 미지원 / 현재 구조 밖`, 개발 진행은 `예정 / 진행 / develop 반영 / 태그 포함`으로 구분한다.
 - 최초 태그는 로컬 `v0.1.0`부터 `v0.5.0`까지 코드에 도구가 존재하는지 확인한 결과다. GitHub Release 게시나 배포 artifact 검증을 의미하지 않는다.
@@ -60,8 +60,8 @@ Aseprite 공식 자동화 인터페이스는 [Lua Scripting API](https://www.ase
 | MCP-032 | 변형 | `crop_sprite` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-033 | 변형 | `resize_canvas` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
 | MCP-034 | 변형 | `apply_outline` | v0.1.0 | — | [transform.go](../pkg/tools/transform.go) |
-| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | Unreleased: 명시적 frame 파일 목록·출력 세트 보호 (#18, develop 반영); GAP-05 [범위 후보](EXPORT_OPTIONS.md), 미병합 | [export.go](../pkg/tools/export.go) |
-| MCP-036 | 파일 입출력 | `export_spritesheet` | v0.1.0 | GAP-05 범위/출력 보호 후보 ([계약](EXPORT_OPTIONS.md), 미병합) | [export.go](../pkg/tools/export.go) |
+| MCP-035 | 파일 입출력 | `export_sprite` | v0.1.0 | Unreleased: 명시적 frame 파일 목록·출력 세트 보호 (#18, develop 반영); GAP-05 [범위·출력 보호](EXPORT_OPTIONS.md) (#35, develop 반영 / Unreleased) | [export.go](../pkg/tools/export.go) |
+| MCP-036 | 파일 입출력 | `export_spritesheet` | v0.1.0 | Unreleased: GAP-05 범위/출력 보호 (#35, develop 반영, [계약](EXPORT_OPTIONS.md)) | [export.go](../pkg/tools/export.go) |
 | MCP-037 | 파일 입출력 | `import_image` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-038 | 파일 입출력 | `save_as` | v0.1.0 | — | [export.go](../pkg/tools/export.go) |
 | MCP-039 | 팔레트·shading | `get_palette` | v0.1.0 | — | [palette_tools.go](../pkg/tools/palette_tools.go) |
@@ -101,7 +101,7 @@ GAP ID는 로드맵과 체크리스트에서 공통으로 사용한다. 미지�
 | GAP-02 | [Sprite](https://www.aseprite.org/api/sprite/), [Cel](https://www.aseprite.org/api/cel/): 문서 구조·cel 관리 | 부분: 기본 정보·픽셀 조회와 link 제공. PR #30 상세 계층·cel 조회 develop 반영. PR #31 revision 사전조건과 위치/opacity 편집 develop 반영; [unlink](CEL_UNLINK.md)는 PR #33 develop 반영 ([조회](SPRITE_STRUCTURE.md), [편집](CEL_PROPERTIES.md)) | R3 |
 | GAP-03 | [Tag](https://www.aseprite.org/api/tag/): 애니메이션 태그 | 부분: 기존 생성·삭제 유지. PR #32로 develop에 상세 조회와 revision 기반 이름/범위/방향/repeats 수정, pingpong_reverse 추가. 색상은 조회만, data/properties 편집 없음 ([계약](TAG_EDITING.md)); Unreleased | R3 |
 | GAP-04 | [CLI](https://www.aseprite.org/docs/cli/): 색상 모드 변환 | 부분: 생성 시 모드 선택·감색 시 indexed 변환; 범용 RGB/grayscale/indexed 전환 없음 | R3 |
-| GAP-05 | [CLI](https://www.aseprite.org/docs/cli/): export·sprite sheet | 구현 후보/미병합: 태그·구조 ID·frame 범위, trim 및 sheet extrude/개별 padding, texture+JSON 일반 오류 rollback. [지원 형식·제한·검증](EXPORT_OPTIONS.md) | R4 |
+| GAP-05 | [CLI](https://www.aseprite.org/docs/cli/): export·sprite sheet | develop 반영 (#35) / Unreleased: 태그·구조 ID·frame 범위, trim 및 sheet extrude/개별 padding, texture+JSON 일반 오류 rollback. [지원 형식·제한·검증](EXPORT_OPTIONS.md) | R4 |
 | GAP-06 | [Slice](https://www.aseprite.org/api/slice/): bounds·pivot·nine-slice | 미지원 | R4 |
 | GAP-07 | [Tileset](https://www.aseprite.org/api/tileset/), [Sprite](https://www.aseprite.org/api/sprite/): tilemap·tileset·tile | 미지원 | R5 |
 | GAP-08 | [app.command](https://www.aseprite.org/api/app_command/): 밝기·대비·색상 곡선·convolution·despeckle | 부분: outline은 제공, 나열한 보정 명령은 미지원; batch 옵션 검증 필요 | R5 |

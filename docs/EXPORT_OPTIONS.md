@@ -1,7 +1,7 @@
 # 범위 export 및 출력 보호 (GAP-05)
 
 작업: `[BE][FEATURE] 범위 export 및 출력 보호`, `feature/be-export-options`.
-최초 구현 기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합). 이 브랜치의 구현 후보이며 develop 병합·릴리스·plugin 배포와 구분한다. 초기 독립 구현 당시 도구 추가 없이 **58개** 이름 집합을 유지했다. 현재는 PR #33/#34/#32가 병합된 `origin/develop` `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`을 통합하며 **64개** 등록 이름 집합을 유지한다. 미병합 브랜치를 직접 가져오지 않았다. 아래 초기 검증·리뷰 기록은 당시 이력이다.
+최초 구현 기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합). 현재 상태: PR #35로 2026-10-18 develop `99f193ad3a0eefcb8e8b71a3b9e3f69be47ac2d8`에 병합 완료 / Unreleased. 릴리스·plugin 배포 완료와 구분한다. 초기 독립 구현 당시 도구 추가 없이 **58개** 이름 집합을 유지했다. 병합 전 통합 검증에서는 PR #33/#34/#32가 병합된 `origin/develop` `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`을 통합하며 **64개** 등록 이름 집합을 유지했다. 병합 후에도 도구 수는 64개다. 미병합 브랜치를 직접 가져오지 않았다. 아래 초기 검증·리뷰 기록은 당시 이력이다.
 
 ## 호환성과 옵션
 
@@ -66,14 +66,14 @@ Background/출력 형식의 plugin 안내, indexed PNG 유지 옵션 설계, 크
 
 테스트: `TestExportOptions*`는 실제 MCP/Aseprite 저장·재열기, RGB/grayscale/indexed mask=3와 opaque index 0, native linked/positioned cels, frame palette 변화, 그룹/숨김/중복 이름, tag/range/빈 frame, stale/invalid/aliases/overwrite/폴더/read-only/cancel/source 변화, 독립 PNG 전체 픽셀·JSON bounds/duration/trim/extrude 및 history/snapshot/undo를 검사한다. 순서/번호 및 JSON escape는 deterministic testing/quick 각 1000개 입력으로 검사한다. 기존 `TestExportSequence*`, `TestOutputFiles*`/`TestOutputRollback*`와 server diagnostics/등록 검사를 함께 수행한다. 실제 실행 결과는 아래 최종 기록으로 구분한다.
 
-Plugin 저장소·MCP commit pin·번들 바이너리는 이 작업에서 수정하지 않는다. 이 PR 병합 후 별도 동기화에서:
+Plugin 저장소·MCP commit pin·번들 바이너리는 PR #35에서 수정하지 않았다. 병합된 MCP `99f193a` 기준의 별도 동기화에서:
 
 - 기존 export_sprite/export_spritesheet의 optional 입력 schema와 새 서버 commit을 반영한다. 도구 이름/수 추가는 없다.
 - exporter skill에 `get_sprite_structure → layer_id+revision`, tag/range 배타 규칙, hidden/blank 정책, padding override, overwrite=false, 범위의 원본 번호 규칙을 추가한다.
 - sidecar source_frame_number와 출력 기준 frameTags, include_json=false의 legacy sidecar, texture+JSON rollback 및 recovery 순번을 소비자/스킬에 반영한다.
 - crash 원자성이나 출력 history undo를 주장하지 않는다. GIF 새 선택은 지원하지 않는다.
 
-PR #33/#34/#32 develop 통합 시 공통 문서 충돌을 양쪽 계약과 검증 이력을 보존하며 해소한다. animation/canvas/server 등록은 최신 develop의 세 기능을 유지하며 export 자체의 도구 추가는 없다. PR #35는 아직 develop 미병합이다.
+PR #33/#34/#32 develop 통합 시 공통 문서 충돌을 양쪽 계약과 검증 이력을 보존하며 해소했다. animation/canvas/server 등록은 세 기능을 유지하며 export 자체의 도구 추가는 없다. PR #35도 develop `99f193a`에 병합 완료했다. 아래 실행·리뷰 기록의 미병합 표시는 당시 후보 상태를 뜻한다.
 
 근거: [ExportSpriteSheet API](https://www.aseprite.org/api/command/ExportSpriteSheet/), [Image API](https://www.aseprite.org/api/image/), Aseprite 1.3.18.3 native `cmd_export_sprite_sheet.cpp`, `layer_frame_comboboxes.cpp`, `doc_exporter.cpp`. 공식 API의 존재와 이 후보의 실제 검증 범위를 구분한다.
 
@@ -149,7 +149,7 @@ Notes:
 
 ## 최신 develop 통합 (2026-10-18)
 
-작업: `[BE][CHORE] export 통합 및 다음 작업 최신화`. 시작 HEAD `6f466f8d360a90b170c975332cece12d85e9c12f`에 `origin/develop` `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`을 통합했다. PR #33 cel unlink, #34 layer/group, #32 tags는 develop 병합 완료이며 PR #35 자체는 여전히 미병합/Unreleased다. 원래 develop 워크트리나 다른 작업 브랜치를 수정하지 않았다.
+작업: `[BE][CHORE] export 통합 및 다음 작업 최신화`. 시작 HEAD `6f466f8d360a90b170c975332cece12d85e9c12f`에 `origin/develop` `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7`을 통합했다. PR #33 cel unlink, #34 layer/group, #32 tags는 develop 병합 완료이며 이 통합 검증 당시 PR #35 자체는 미병합/Unreleased였다(이후 병합 상태는 문서 상단 참조). 원래 develop 워크트리나 다른 작업 브랜치를 수정하지 않았다.
 
 - 공통 문서 11개의 충돌을 해소했다. 최신 세 기능의 production/schema/tests는 develop과 byte-identical하게 유지했고, export production 5개 파일은 리뷰 완료본 `6f466f8`과 byte-identical하다. 배경 canvas/불투명 indexed mask, padding 후 두 축 검사, revision/output 보호를 되돌리지 않았다.
 - 등록 이름 합집합은 기존 export 후보 58 + 최신 develop 64 = **64개**다. 실제 server list 전체 이름/개수 검사, CAPABILITIES MCP-001…064의 ID·이름 일치, README 한/영 inventory를 대조했다. 새 등록 도구는 없다.
@@ -168,4 +168,4 @@ Notes:
 
 최종 후보 manifest(보고 추가 전) SHA-256은 `e8fa9823bae847a67f59b0b48770a916f285e81a9d06f7a88fcc1f1c4d04bd3b`다. 최종 후보 선정 이후 runtime/test/계약 변경·인증 무효화 0회이며 이후 추가는 이 검증 보고다. 통합으로 이전 `6f466f8` 후보를 대체했으며 이전 후보의 테스트만으로 승인하지 않았다.
 
-Notes: 배경 유지/일부 PNG의 RGB 출력, 보수적 크기 예산과 crash/외부 writer 한계, 위 미실행 범위는 유지한다. Plugin 동기화와 PR #35의 develop 병합은 별도 후속이다. 로컬 판정은 **PASS_WITH_NOTES**이며 최종 원격 HEAD CI도 확인한 뒤 사용자에게 보고한다.
+당시 Notes: 배경 유지/일부 PNG의 RGB 출력, 보수적 크기 예산과 crash/외부 writer 한계, 위 미실행 범위는 유지했다. 당시 plugin 동기화와 PR #35의 develop 병합은 별도 후속이었다. 로컬 판정은 **PASS_WITH_NOTES**였으며 최종 원격 HEAD CI를 확인한 뒤 보고하는 단계였다. 이후 CI 통과·병합 상태는 문서 상단과 NEXT_STEPS의 현재 상태를 따른다.

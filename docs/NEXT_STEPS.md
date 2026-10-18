@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-10-18
 
-현재 기준: `develop`의 `7cc9b1d5166b2c1ec5e610e8419c3cce2b2f3ec7` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 편집, PR #33 cel unlink, PR #34 layer/group, PR #32 tag 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `99f193ad3a0eefcb8e8b71a3b9e3f69be47ac2d8` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 편집, PR #33 cel unlink, PR #34 layer/group, PR #32 tag, PR #35 export 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -39,7 +39,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 | 클라이언트·플랫폼 | SAFE-01 UI 검증, OPS-02, 테스트 matrix | 실제 Claude/Codex/Gemini UI 수용·표시, native launcher, OS/색상/계층 조합의 공통 회귀. 기존 부분 검증은 전체 matrix 완료로 간주하지 않음 |
 | 공통 계약 후속 | 성공 payload의 success/details 일괄 표준화 | OPS-03 오류·추적 완료 범위 밖. 별도 호환성 검토 후 범위 결정 |
 | 편집·조회 잔여 | GAP-04 및 GAP-01–03 제외 범위 (R3) | 범용 색상 모드 전환·indexed helper 공통화 검증, group opacity/blend·특수 레이어·태그 color/data 등 기존 계약의 잔여. 병합된 Top1–3 구현과 구분 |
-| export 후보 | GAP-05 (R4) | 범위/trim/extrude/padding 및 texture+JSON 보호 구현 후보, 미병합. [계약·검증](EXPORT_OPTIONS.md). GAP-06은 후속 |
+| develop 반영 | GAP-05 (R4) | PR #35 / `99f193a`, 범위/trim/extrude/padding 및 texture+JSON 일반 오류 보호. [계약·검증](EXPORT_OPTIONS.md). Unreleased, GAP-06은 후속 |
 | 장기 확장 | GAP-07–09·11–13 (R5/별도 SPIKE) | tilemap/tileset, 보정 필터, metadata, 선택/brush/grid, GUI·지속 세션. 범위 선정 후 착수 |
 | 보류·검토 후보 | upstream #16, export crash 복구 | #16은 지원 버전 재현 시 재개. 출력 세트의 crash 복구·고아 staging/백업 자동 정리는 후속 설계 대상으로 착수 미확정 |
 
@@ -47,11 +47,12 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 ## 다음 실행 순서 (2026-10-18)
 
-1. `[BE][FEATURE] 범위 export 및 출력 보호`: PR #35를 최신 develop(`7cc9b1d`)에 통합하고 revision·태그·레이어·cel unlink·출력 세트 교차 회귀와 최종 HEAD CI를 확인한다. **develop 병합은 별도 사용자 승인 단계**이며 이 후보가 배포된 것은 아니다.
-2. `[SHARED][CHORE] plugin 동기화`: 이미 병합된 Top1–3의 pin/번들/스킬 동기화 이행 상태를 확인한다. PR #35 병합 후에는 export 옵션/JSON/보호 계약을 별도로 동기화한다. 아래 태그 재조회 TODO와 각 기능 계약의 plugin 메모를 함께 사용한다. 현재 저장소에서 plugin 변경·새 작업 세션 생성은 하지 않는다.
-3. Export Notes 대응은 아래 [export 후속 TODO](#export-후속-todo-pr-35-범위-밖)로 분리한다. 권장 순서는 plugin 사용 흐름 반영 → 크기 예산 개선 → crash 복구 설계이며, indexed 유지 옵션은 사용 요구와 실현 가능성 확인 후 착수 여부를 정한다. 이번 PR에서 구현하지 않는다.
-4. 후속 범위 선정: GAP-04 범용 색상 모드 전환은 indexed helper와 transparent index 보존 검증을 선행한다. GAP-06 slice/pivot/nine-slice는 별도 export 후속이다. 어느 쪽도 구현 착수·릴리스 일정이 확정된 것으로 표시하지 않는다.
-5. 아래 태그 Notes의 세 TODO와 기존 SAFE/OPS·검증 제한·crash 복구 backlog를 유지한다. 완료된 Top1–3의 병합과 남아 있는 기능군 전체 완료를 구분한다.
+PR #35는 2026-10-18에 develop `99f193a`로 병합됐고 최종 PR HEAD의 CI `test`가 통과했다. 이 문서 갱신에서는 코드를 다시 실행하지 않았으며, 병합은 릴리스·plugin 설치본 갱신을 뜻하지 않는다.
+
+1. `[SHARED][CHORE] plugin 동기화`: Top1–4가 모두 포함된 MCP `99f193a`를 기준으로 pin/번들/스킬을 동기화한다. export 옵션/JSON/보호 계약과 아래 태그 재조회 TODO, 각 기능 계약의 plugin 메모를 함께 사용한다. plugin 작업은 별도 저장소에서 진행하며, 이 문서 갱신으로 완료 처리하지 않는다.
+2. Export Notes 대응은 아래 [export 후속 TODO](#export-후속-todo-pr-35-범위-밖)로 분리한다. 권장 순서는 plugin 사용 흐름 반영 → 크기 예산 개선 → crash 복구 설계이며, indexed 유지 옵션은 사용 요구와 실현 가능성 확인 후 착수 여부를 정한다. PR #35의 병합으로 이 후속 항목들이 구현된 것은 아니다.
+3. 후속 범위 선정: GAP-04 범용 색상 모드 전환은 indexed helper와 transparent index 보존 검증을 선행한다. GAP-06 slice/pivot/nine-slice는 별도 export 후속이다. 어느 쪽도 구현 착수·릴리스 일정이 확정된 것으로 표시하지 않는다.
+4. 아래 태그 Notes의 세 TODO와 기존 SAFE/OPS·검증 제한·crash 복구 backlog를 유지한다. 완료된 Top1–4의 병합과 남아 있는 기능군 전체 완료를 구분한다.
 
 ## Export 후속 TODO (PR #35 범위 밖)
 
@@ -453,7 +454,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - develop 반영: PR #31 cel 위치·opacity 편집 및 revision 사전조건 (`96d8fa4`), [계약·검증](CEL_PROPERTIES.md). [cel unlink](CEL_UNLINK.md)는 PR #33 / `732958b`로 develop에 반영했다.
 - develop 반영: PR #34 GAP-01 레이어 속성·그룹 생성/이동, [계약·검증](LAYER_PROPERTIES.md). Unreleased.
 - develop 반영: PR #32 GAP-03 태그 상세 조회·수정 (`7cc9b1d`), [계약·검증](TAG_EDITING.md). Unreleased.
-- 다음 병합 후보: PR #35 GAP-05 범위 export·출력 보호. [계약·통합 검증](EXPORT_OPTIONS.md). 아직 미병합.
+- develop 반영: PR #35 GAP-05 범위 export·출력 보호 (`99f193a`). [계약·통합 검증](EXPORT_OPTIONS.md). Unreleased; plugin 동기화와 export 후속 TODO는 별도다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.
