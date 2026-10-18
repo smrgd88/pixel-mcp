@@ -63,6 +63,15 @@ PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐�
 - [ ] `[BE][FEATURE] export 크기 예산 정밀화`: `feature/be-export-size-budget`에서 구현·로컬 검증·셀프리뷰를 완료한 후보이며 develop 미병합이다. 128×128의 65프레임 strip/packed 과잉 거부 재현, trim/layout 기반 계획, 동일 상한과 overflow·메모리·timeout/cancel·source/output 보호를 검증한다. [계약·실행 기록](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보). 병합 후 plugin의 크기 예산 안내와 runtime pin 갱신은 별도 owner의 후속이다.
 - [ ] `[BE][SPIKE] 출력 세트 crash 복구 설계`: journal·backup의 영속화, publication 중 강제 종료, 재시작 시 미완료 세트 탐지 및 멱등 복구를 설계하고 파일 교체 단계별 fault injection으로 검증한다. 비협력 writer를 덮어쓰지 않는 복구 정책과 고아 staging/backup 보존·정리 기준을 정한다. 세트 전체 원자성이 요구되면 버전별 출력 폴더와 manifest 교체 방식의 경로/소비자 호환성도 검토한다. 복구 가능성과 crash 원자성을 구분한 설계·검증 기준이 나오면 SPIKE를 완료하며, 실제 복구 구현은 별도 FEATURE로 분리한다. 기존 비협력 writer 경쟁 보호 SPIKE와 중복 범위를 조율한다.
 
+## 크기 예산 PR 이후 남은 작업
+
+**아래 네 항목은 미구현이며 후속 작업으로 남아 있다.** PR #37에서 완료한 것은 현재 크기 상한·계산량 제한·구버전 보수 경로·취소·출력 보호에 대한 구현과 관련 검증이다. 그 검증 통과를 아래 기능의 구현 완료로 해석하지 않는다. 이번 문서 갱신은 남은 작업을 등록하는 것이며 구현 착수·일정 확정을 뜻하지 않는다.
+
+- [ ] `[BE][FEATURE] 구버전 Aseprite의 정밀 packed 계산`: 1.3.18.2 미만에서 플랫폼별 정렬 차이를 처리해 현재 보수 상한 때문에 거부되는 정상 sheet를 안전하게 허용한다. 위험한 sheet bitmap을 먼저 할당하지 않는 계획 방법을 설계하고, 실제 native 크기·배치·픽셀/JSON 및 초과 입력 조기 거부를 검증해야 완료다. 현재는 보수 경로와 그 관련 검증만 완료했다.
+- [ ] `[SHARED][SPIKE] Aseprite 프로세스 전체 메모리 제한 설계`: source decode·scratch·native renderer를 포함한 프로세스 전체 메모리의 제한 방법과 플랫폼별 적용 범위·한계를 조사한다. 예산 초과 시 프로세스 종료/정리와 source·출력 세트 보존의 검증 기준을 정한다. 현재의 픽셀·계산량 제한은 전체 RSS 제한이 아니다. 설계 후 제한 구현·실행 검증은 별도 FEATURE로 진행한다.
+- [ ] `[BE][SPIKE] 출력 세트 crash 복구 설계`: [기존 export 후속 TODO](#export-후속-todo-pr-35-범위-밖)를 따른다. Journal/backup, 강제 종료·재시작 복구 설계와 fault injection 검증이 남았고, 실제 복구 구현도 별도 후속이다. 현재 일반 오류 rollback 검증은 crash 복구 검증이 아니다.
+- [ ] `[SHARED][SPIKE] 비협력 writer 경쟁 보호 검토`: [기존 태그 후속 TODO](#태그-후속-todo)를 따른다. ABA 및 최종 검사–rename 사이 외부 변경의 재현, 보호 방법·플랫폼 한계 검토, 채택한 보호의 구현·검증이 남아 있다. 현재 revision 검사와 협력 호출 잠금으로 이 경쟁을 해결했다고 간주하지 않는다.
+
 ## 태그 후속 TODO
 
 PR #32의 [Notes 1](TAG_EDITING.md#최종-셀프리뷰)을 후속 작업으로 추적한다. 아래 항목은 이번 태그 기능의 미구현 결함이나 병합 차단 항목이 아니며, 구현 착수·일정은 별도 결정한다. `tag_id`가 순번이고 `revision`이 내용 hash라는 현재 계약은 유지한다.

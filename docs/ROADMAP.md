@@ -37,6 +37,8 @@ PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐�
 
 ## 별도 잔여·보류
 
+- Export 크기 예산 PR 이후 미구현: 구버전 정밀 packed 계산, Aseprite 프로세스 전체 메모리 제한, 출력 세트 crash 복구, 비협력 writer 경쟁 보호. [남은 작업과 완료 조건](NEXT_STEPS.md#크기-예산-pr-이후-남은-작업)을 따른다. 현재 구현의 검증 완료와 구분하며, 다음 후속인 crash 복구 설계의 순서는 유지한다.
+
 - 릴리스 전: OPS-01 CI 버전 artifact, upstream #19 제출 범위, 릴리스 절차·0.x 호환성 정책 및 배포 검증.
 - 후속 설계: 정확한 color2 비율을 강제하는 별도 모드. 이번 DITHER-01/02는 기존0.5 문양을 유지하는 중간값 조절이며 exact-ratio API는 추가하지 않는다.
 - 호환성·공통 계약: 실제 MCP 클라이언트 UI 검증, OPS-02 native launcher·자동화 matrix, 성공 payload의 success/details 일괄 표준화 검토. OPS-03 오류/request ID/로그 계약은 PR #25로 병합 완료했다.

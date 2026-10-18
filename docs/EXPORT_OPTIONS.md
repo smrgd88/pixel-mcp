@@ -62,6 +62,8 @@ Canvas/결과 한 변 32767 및 64 Mi pixels 상한을 유지한다. 아래 후�
 
 Background/출력 형식의 plugin 안내는 plugin PR #16에서 반영됐다. Indexed PNG 유지 옵션 설계, 현재 후보의 크기 예산 정밀화, 출력 세트 crash 복구 설계는 [NEXT_STEPS의 export 후속 TODO](NEXT_STEPS.md#export-후속-todo-pr-35-범위-밖)에 별도 작업명과 완료 조건으로 등록했다. **PR #35는 이 후속 기능을 구현하지 않는다.** 현재 계약·검증 결과와 후속 작업의 완료 여부를 구분한다.
 
+**명시적인 남은 작업:** 구버전 Aseprite의 정밀 packed 계산, Aseprite 프로세스 전체 메모리 제한, 출력 세트 crash 복구, 비협력 writer 경쟁 보호는 미구현이다. [작업별 후속 범위와 완료 조건](NEXT_STEPS.md#크기-예산-pr-이후-남은-작업)에 등록했다. 현재 구현의 관련 검증은 완료했으며, 이 네 기능을 구현하거나 그 기능의 검증까지 완료한 것은 아니다.
+
 ## 검증과 plugin 후속
 
 테스트: `TestExportOptions*`는 실제 MCP/Aseprite 저장·재열기, RGB/grayscale/indexed mask=3와 opaque index 0, native linked/positioned cels, frame palette 변화, 그룹/숨김/중복 이름, tag/range/빈 frame, stale/invalid/aliases/overwrite/폴더/read-only/cancel/source 변화, 독립 PNG 전체 픽셀·JSON bounds/duration/trim/extrude 및 history/snapshot/undo를 검사한다. 순서/번호 및 JSON escape는 deterministic testing/quick 각 1000개 입력으로 검사한다. 기존 `TestExportSequence*`, `TestOutputFiles*`/`TestOutputRollback*`와 server diagnostics/등록 검사를 함께 수행한다. 실제 실행 결과는 아래 최종 기록으로 구분한다.
