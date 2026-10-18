@@ -35,9 +35,11 @@ These entries describe fork changes after the local `v0.5.0` tag; no new release
 
 ### Added
 
-- Add `set_cel_properties` for revision-guarded sprite-absolute position and opacity edits, with explicit linked-set consent, saved-result verification, file protection and opt-in history/undo. Add `revision` to structure inspection without changing existing required inputs. The tool inventory is now 58 on this feature branch (57 in develop through PR #30). See [contract and verification](docs/CEL_PROPERTIES.md).
+- Add `unlink_cel` to detach one revision-guarded raster cel using the native UnlinkCel command, preserving pixels/metadata and other sharing members, with staged save/reopen verification and opt-in history/undo. Independent cels are rejected without saving. Baseline PR #31 has 58 tools; this unmerged candidate has 59. See [contract and verification](docs/CEL_UNLINK.md).
 
-- Add read-only `get_sprite_structure` with recursive structural layer IDs, bounded layer/frame queries, cel existence/bounds/opacity/z-index and native image-sharing references. Preserve `get_sprite_info`; exclude queries from save/history. See [contract and verification](docs/SPRITE_STRUCTURE.md). Cel position/opacity editing is described above; unlink remains pending.
+- Add `set_cel_properties` for revision-guarded sprite-absolute position and opacity edits, with explicit linked-set consent, saved-result verification, file protection and opt-in history/undo. Add `revision` to structure inspection without changing existing required inputs. Merged into develop in PR #31 (58 tools). See [contract and verification](docs/CEL_PROPERTIES.md).
+
+- Add read-only `get_sprite_structure` with recursive structural layer IDs, bounded layer/frame queries, cel existence/bounds/opacity/z-index and native image-sharing references. Preserve `get_sprite_info`; exclude queries from save/history. See [contract and verification](docs/SPRITE_STRUCTURE.md). Cel position/opacity editing is described above; unlink is the separate unmerged candidate described above.
 
 - Opt-in `enable_history` records successful in-place sprite edits using SAFE-03 snapshots. Add `list_operation_history` and guarded `undo_last_operation`, with pending-transition recovery, before/after hashes, and retry protection through expected operation IDs. See `docs/HISTORY.md`.
 

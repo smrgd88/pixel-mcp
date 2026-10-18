@@ -2,7 +2,7 @@
 
 작업: `[BE][FEATURE] cel 위치 및 불투명도 편집 + 관련 문서 최신화`.
 기준: `origin/develop` `eca9e836c44a5dd0563372d3dd61cb7801cb2a8f` (PR #29 RM-FIX-01 및 PR #30 상세 조회 병합 포함).
-`feature/be-cel-properties`에서 구현한 Unreleased 기능이다. develop 병합·태그·배포와 구분한다. 플러그인 저장소와 bundled binary는 이번 범위 밖이다.
+PR #31로 develop `96d8fa4`에 병합한 Unreleased 기능이다. 태그·배포와 구분한다. 후속 [unlink](CEL_UNLINK.md)는 별도 미병합 후보다. 플러그인 저장소와 bundled binary는 이번 범위 밖이다.
 
 ## 호출 계약
 
@@ -66,7 +66,7 @@ GUI 등 비협력 writer를 파일시스템 CAS처럼 배제하지는 않는다.
 
 [Cel API](https://www.aseprite.org/api/cel/)의 position/opacity, [Layer API](https://www.aseprite.org/api/layer/)의 타입/editability/parent, [Sprite API](https://www.aseprite.org/api/sprite/)의 saveAs 및 [native 파일 규격](https://github.com/aseprite/aseprite/blob/v1.3.18.3/docs/ase-file-specs.md#cel-chunk-0x2005)을 확인했다. 실제 지원 버전 소스의 Cel setter는 SetCelPosition/SetCelOpacity command를 사용한다. 공유 관찰·decoder copy 제한은 [SPRITE_STRUCTURE](SPRITE_STRUCTURE.md)를 따른다.
 
-픽셀 편집·image resize·layer 속성·cel unlink·tag 편집·색상 모드 변환·export 추가는 제외한다. Aseprite가 지원하는 저장 metadata의 보존을 검사하지만 미지의 future native chunk나 모든 extension metadata, ACL/xattr 전체의 byte 보존을 약속하지 않는다. GAP-02는 부분 완료이며 unlink와 GAP-01은 후속이다.
+이 속성 도구의 범위에서 픽셀 편집·image resize·layer 속성·cel unlink·tag 편집·색상 모드 변환·export 추가는 제외한다. unlink는 별도 [계약](CEL_UNLINK.md)을 따른다. Aseprite가 지원하는 저장 metadata의 보존을 검사하지만 미지의 future native chunk나 모든 extension metadata, ACL/xattr 전체의 byte 보존을 약속하지 않는다. GAP-02는 부분 완료이며 unlink와 GAP-01은 후속이다.
 
 ## 검증
 
