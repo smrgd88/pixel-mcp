@@ -58,6 +58,10 @@ Canvas/결과 한 변 32767 및 64 Mi pixels의 보수적 예산을 적용한다
 
 오류 코드는 [ERRORS](ERRORS.md)를 따른다. Go 입력/예산/overwrite 검사는 invalid_arguments, stale source는 file_changed, 기존 frame_number 범위 오류는 invalid_arguments를 유지하고, 새 native tag/layer/range/blank 검사는 lua_error, 파일·cancel·rollback은 기존 typed 분류다. 새 공개 오류 코드를 추가하지 않는다.
 
+## 후속 작업 추적
+
+Background/출력 형식의 plugin 안내, indexed PNG 유지 옵션 설계, 크기 예산 정밀화, 출력 세트 crash 복구 설계는 [NEXT_STEPS의 export 후속 TODO](NEXT_STEPS.md#export-후속-todo-pr-35-범위-밖)에 별도 작업명과 완료 조건으로 등록했다. **PR #35는 이 후속 기능을 구현하지 않는다.** 현재 계약·검증 결과와 후속 작업의 완료 여부를 구분한다.
+
 ## 검증과 plugin 후속
 
 테스트: `TestExportOptions*`는 실제 MCP/Aseprite 저장·재열기, RGB/grayscale/indexed mask=3와 opaque index 0, native linked/positioned cels, frame palette 변화, 그룹/숨김/중복 이름, tag/range/빈 frame, stale/invalid/aliases/overwrite/폴더/read-only/cancel/source 변화, 독립 PNG 전체 픽셀·JSON bounds/duration/trim/extrude 및 history/snapshot/undo를 검사한다. 순서/번호 및 JSON escape는 deterministic testing/quick 각 1000개 입력으로 검사한다. 기존 `TestExportSequence*`, `TestOutputFiles*`/`TestOutputRollback*`와 server diagnostics/등록 검사를 함께 수행한다. 실제 실행 결과는 아래 최종 기록으로 구분한다.

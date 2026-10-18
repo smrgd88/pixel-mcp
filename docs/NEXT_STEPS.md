@@ -49,8 +49,18 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 1. `[BE][FEATURE] 범위 export 및 출력 보호`: PR #35를 최신 develop(`7cc9b1d`)에 통합하고 revision·태그·레이어·cel unlink·출력 세트 교차 회귀와 최종 HEAD CI를 확인한다. **develop 병합은 별도 사용자 승인 단계**이며 이 후보가 배포된 것은 아니다.
 2. `[SHARED][CHORE] plugin 동기화`: 이미 병합된 Top1–3의 pin/번들/스킬 동기화 이행 상태를 확인한다. PR #35 병합 후에는 export 옵션/JSON/보호 계약을 별도로 동기화한다. 아래 태그 재조회 TODO와 각 기능 계약의 plugin 메모를 함께 사용한다. 현재 저장소에서 plugin 변경·새 작업 세션 생성은 하지 않는다.
-3. 후속 범위 선정: GAP-04 범용 색상 모드 전환은 indexed helper와 transparent index 보존 검증을 선행한다. GAP-06 slice/pivot/nine-slice는 별도 export 후속이다. 어느 쪽도 구현 착수·릴리스 일정이 확정된 것으로 표시하지 않는다.
-4. 아래 태그 Notes의 세 TODO와 기존 SAFE/OPS·검증 제한·crash 복구 backlog를 유지한다. 완료된 Top1–3의 병합과 남아 있는 기능군 전체 완료를 구분한다.
+3. Export Notes 대응은 아래 [export 후속 TODO](#export-후속-todo-pr-35-범위-밖)로 분리한다. 권장 순서는 plugin 사용 흐름 반영 → 크기 예산 개선 → crash 복구 설계이며, indexed 유지 옵션은 사용 요구와 실현 가능성 확인 후 착수 여부를 정한다. 이번 PR에서 구현하지 않는다.
+4. 후속 범위 선정: GAP-04 범용 색상 모드 전환은 indexed helper와 transparent index 보존 검증을 선행한다. GAP-06 slice/pivot/nine-slice는 별도 export 후속이다. 어느 쪽도 구현 착수·릴리스 일정이 확정된 것으로 표시하지 않는다.
+5. 아래 태그 Notes의 세 TODO와 기존 SAFE/OPS·검증 제한·crash 복구 backlog를 유지한다. 완료된 Top1–3의 병합과 남아 있는 기능군 전체 완료를 구분한다.
+
+## Export 후속 TODO (PR #35 범위 밖)
+
+아래 항목은 PR #35의 현재 사용 계약·제한에 대한 **별도 후속 작업**이다. 이번 PR에는 추적 항목만 추가하며, 후속 기능의 구현·검증·배포 완료나 착수 승인을 뜻하지 않는다. 현재 background 보존·일부 RGB 출력·보수적 크기 예산·일반 오류 rollback 계약은 [EXPORT_OPTIONS](EXPORT_OPTIONS.md)를 따른다.
+
+- [ ] `[BE][DOCS] plugin background 및 출력 형식 사용 흐름 반영`: PR #35 병합 후 exporter skill에 보이는 native background의 canvas 유지, background를 제외한 `layer_id` 선택과 trim, 단일 팔레트 indexed background의 RGB 출력, 저장 원본 보존을 명시한다. 두 선택 예제와 출력 형식 안내를 새 MCP pin/번들 기준으로 확인하면 완료한다. 이 PR에서 plugin 저장소를 수정하지 않는다.
+- [ ] `[BE][SPIKE] indexed PNG 유지 옵션 설계`: palette/index 보존이 필요한 사용 요구를 확인하고 색 보존과 index identity 보존을 구분한다. background의 불투명 mask index, 투명 padding, 256색 예산, 프레임별 palette와 native link 조합을 검토한다. 손실 없는 지원 조건·불가능한 조합의 명시적 거부·기존 기본 동작 호환성 및 실제 픽셀/인덱스 회귀 계획을 문서화하면 SPIKE를 완료한다. 자동 감색으로 대신하지 않으며 옵션 구현은 별도 FEATURE로 분리한다.
+- [ ] `[BE][FEATURE] export 크기 예산 정밀화`: 현재 strip 기반 보수적 상한 때문에 실제로 들어갈 sheet가 거부되는 사례를 수집하고, 실제 trim bounds와 layout을 반영하는 계획 계산을 설계·구현한다. 기존 한 변/총 픽셀 상한과 overflow·메모리 보호를 유지하면서 정상 packing 사례와 초과 입력의 조기 거부, timeout/cancel·source/output 보존을 검증하면 완료한다. 그 전에는 frame 범위를 나눠 export하는 사용 안내를 유지한다.
+- [ ] `[BE][SPIKE] 출력 세트 crash 복구 설계`: journal·backup의 영속화, publication 중 강제 종료, 재시작 시 미완료 세트 탐지 및 멱등 복구를 설계하고 파일 교체 단계별 fault injection으로 검증한다. 비협력 writer를 덮어쓰지 않는 복구 정책과 고아 staging/backup 보존·정리 기준을 정한다. 세트 전체 원자성이 요구되면 버전별 출력 폴더와 manifest 교체 방식의 경로/소비자 호환성도 검토한다. 복구 가능성과 crash 원자성을 구분한 설계·검증 기준이 나오면 SPIKE를 완료하며, 실제 복구 구현은 별도 FEATURE로 분리한다. 기존 비협력 writer 경쟁 보호 SPIKE와 중복 범위를 조율한다.
 
 ## 태그 후속 TODO
 
