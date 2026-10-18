@@ -94,3 +94,7 @@ SAFE-03의 네 snapshot 도구는 저장소와 source 잠금을 함께 예약하
 ## GAP-05 export 후보
 
 범위 export와 sheet texture+JSON은 기존 WithOutputFiles 보호를 재사용한다. source는 계획 전후/출력 발행 전에 SHA-256을 확인한다. sheet recovery 순번은 texture=1, JSON=2이며 include_json=false의 legacy sidecar도 포함한다. 개별 교체·일반 오류 rollback이며 세트 crash 원자성은 아니다. [선택·overwrite·검증과 제한](EXPORT_OPTIONS.md).
+
+## 출력 세트 crash 복구 SPIKE (아직 runtime 미구현)
+
+[설계안과 실험 근거](EXPORT_CRASH_RECOVERY.md)는 실제 publisher의 SIGKILL 후 혼합 세트·남은 backup·잠금 해제를 확인하고 journal/recovery/cleanup 정책을 검토한다. 새 영속 journal이나 복구 API는 추가하지 않는다. 기존 고아 stage를 시간/PID만 보고 삭제하거나 자동 재시도로 덮어쓰지 않는 현재 한계를 유지한다. 이 문서의 PR #14/#18 당시 sheet 제외 범위는 과거 계약이며, texture+JSON의 현재 일반 오류 보호는 PR #35 [export 계약](EXPORT_OPTIONS.md)을 따른다. SPIKE 완료를 실제 crash 복구 또는 전원 장애 보장으로 해석하지 않는다.

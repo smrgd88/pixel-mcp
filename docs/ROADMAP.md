@@ -1,6 +1,6 @@
 # 기능 로드맵
 
-기준일: 2026-10-18 · 코드 기준: `develop`의 `99f193ad3a0eefcb8e8b71a3b9e3f69be47ac2d8`
+기준일: 2026-10-18 · 코드 기준: `develop`의 `fcb83861df08b4ee897f162d9a175bd9d149ed96` (PR #37)
 
 [기능 지원 현황](CAPABILITIES.md) · [상세 실행 체크리스트](NEXT_STEPS.md) · [변경 이력](../CHANGELOG.md)
 
@@ -29,7 +29,7 @@ develop에는 PR #35까지 64개 MCP 도구가 등록되어 있다 (Unreleased).
 | develop 반영 | GAP-03 태그 상세 조회·수정 | PR #32 / `7cc9b1d`, [계약·검증](TAG_EDITING.md). Unreleased |
 | develop 반영 | GAP-05 범위 export·출력 보호 | PR #35 / `99f193a`, [계약·검증](EXPORT_OPTIONS.md). Unreleased |
 
-PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐다. Plugin Top1–4 동기화도 [PR #16](https://github.com/smrgd88/pixel-plugin/pull/16) / `f5228e3`로 develop 반영됐다(runtime pin MCP `99f193a`, 64 tools). 현재 MCP 작업은 [export 크기 예산 정밀화 후보](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보)이며 develop 미병합이다. 다음 후속은 출력 세트 crash 복구 설계다. Indexed PNG 유지 옵션은 요구·실현 가능성 SPIKE 후 판단하고 GAP-04/GAP-06 범위 선정도 유지한다. [다음 실행 순서](NEXT_STEPS.md#다음-실행-순서-2026-10-18)에서 각 완료 근거와 기존 태그 TODO를 추적한다. 릴리스·개인 설치본 교체 및 이번 후보의 plugin pin 갱신은 완료 처리하지 않는다.
+PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐다. Plugin Top1–4 동기화도 [PR #16](https://github.com/smrgd88/pixel-plugin/pull/16) / `f5228e3`로 develop 반영됐다(runtime pin MCP `99f193a`, 64 tools). export 크기 예산 정밀화도 PR #37 / develop `fcb8386`로 병합 완료했다. 이 브랜치에서는 [출력 세트 crash 복구 SPIKE](EXPORT_CRASH_RECOVERY.md)의 설계·현행 SIGKILL 실험·판단 모델을 검토했다. 실제 journal/복구/자동 정리는 별도 FEATURE로 남으며 plugin 새 pin/번들 동기화는 별도 owner 작업이다. Indexed PNG 유지 옵션은 요구·실현 가능성 SPIKE 후 판단하고 GAP-04/GAP-06 범위 선정도 유지한다. [다음 실행 순서](NEXT_STEPS.md#다음-실행-순서-2026-10-18)에서 각 완료 근거와 기존 태그 TODO를 추적한다. 릴리스·개인 설치본 교체 및 이번 후보의 plugin pin 갱신은 완료 처리하지 않는다.
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 
@@ -37,7 +37,7 @@ PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐�
 
 ## 별도 잔여·보류
 
-- Export 크기 예산 PR 이후 미구현: 구버전 정밀 packed 계산, Aseprite 프로세스 전체 메모리 제한, 출력 세트 crash 복구, 비협력 writer 경쟁 보호. [남은 작업과 완료 조건](NEXT_STEPS.md#크기-예산-pr-이후-남은-작업)을 따른다. 현재 구현의 검증 완료와 구분하며, 다음 후속인 crash 복구 설계의 순서는 유지한다.
+- Export 크기 예산 PR 이후 미구현: 구버전 정밀 packed 계산, Aseprite 프로세스 전체 메모리 제한, 출력 세트 crash 복구, 비협력 writer 경쟁 보호. [남은 작업과 완료 조건](NEXT_STEPS.md#크기-예산-pr-이후-남은-작업)을 따른다. 이번 SPIKE의 설계안·현행 kill 실험·판단 모델과 실제 복구 FEATURE 구현을 구분한다.
 
 - 릴리스 전: OPS-01 CI 버전 artifact, upstream #19 제출 범위, 릴리스 절차·0.x 호환성 정책 및 배포 검증.
 - 후속 설계: 정확한 color2 비율을 강제하는 별도 모드. 이번 DITHER-01/02는 기존0.5 문양을 유지하는 중간값 조절이며 exact-ratio API는 추가하지 않는다.

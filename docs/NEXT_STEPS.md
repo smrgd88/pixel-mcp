@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-10-18
 
-현재 기준: `develop`의 문서 갱신 `42bab1833a15c9bb6bd50990d4e6102af3d8fa1b` (PR #36), runtime 기능 기준 `99f193ad3a0eefcb8e8b71a3b9e3f69be47ac2d8` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 편집, PR #33 cel unlink, PR #34 layer/group, PR #32 tag, PR #35 export 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 `fcb83861df08b4ee897f162d9a175bd9d149ed96` (PR #37, PR #36 문서 갱신 포함) (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 편집, PR #33 cel unlink, PR #34 layer/group, PR #32 tag, PR #35 export 및 PR #37 크기 예산 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -41,7 +41,7 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 | 편집·조회 잔여 | GAP-04 및 GAP-01–03 제외 범위 (R3) | 범용 색상 모드 전환·indexed helper 공통화 검증, group opacity/blend·특수 레이어·태그 color/data 등 기존 계약의 잔여. 병합된 Top1–3 구현과 구분 |
 | develop 반영 | GAP-05 (R4) | PR #35 / `99f193a`, 범위/trim/extrude/padding 및 texture+JSON 일반 오류 보호. [계약·검증](EXPORT_OPTIONS.md). Unreleased, GAP-06은 후속 |
 | 장기 확장 | GAP-07–09·11–13 (R5/별도 SPIKE) | tilemap/tileset, 보정 필터, metadata, 선택/brush/grid, GUI·지속 세션. 범위 선정 후 착수 |
-| 보류·검토 후보 | upstream #16, export crash 복구 | #16은 지원 버전 재현 시 재개. 출력 세트의 crash 복구·고아 staging/백업 자동 정리는 후속 설계 대상으로 착수 미확정 |
+| 보류·검토 후보 | upstream #16, export crash 복구 | #16은 지원 버전 재현 시 재개. 출력 세트 crash 복구 설계는 이 브랜치의 [SPIKE](EXPORT_CRASH_RECOVERY.md)에서 검토했으며 runtime 복구·자동 정리는 미구현 |
 
 검증 관찰 잔여: Docker 호스트 bind mount에서 관찰한 `file_changed` 거부의 원인은 미확정이다. 컨테이너 내부 filesystem과 macOS 네이티브 회귀 통과 이력과 구분하며, 파일시스템별 재현 조건 확인 대상으로 남긴다.
 
@@ -49,9 +49,9 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐다. [plugin PR #16](https://github.com/smrgd88/pixel-plugin/pull/16)도 후보 `4814d47`에서 develop `f5228e3`로 병합됐다. Plugin의 runtime pin은 **MCP `99f193a` / 64 tools**이며 MCP 문서 commit `42bab18`과 구분한다. 릴리스·marketplace 게시·개인 설치본 교체 완료를 뜻하지 않는다.
 
-1. Plugin Top1–4 pin/번들/스킬 동기화는 PR #16 범위에서 완료했다. exporter의 background/출력 형식·selection/JSON/rollback과 animator의 수정 후 재조회 안내를 반영했다. 근거는 [고정된 검증 기록](https://github.com/smrgd88/pixel-plugin/blob/f5228e3/docs/TOP4_SYNC_VALIDATION.md)과 아래 TODO다. 별도 plugin owner가 진행하는 현황 문서 갱신은 이 MCP 작업과 분리한다.
-2. `[BE][FEATURE] export 크기 예산 정밀화`: 현재 작업 브랜치의 구현 후보다. 선택된 frame의 실제 trim bounds와 native layout 규칙, packed 중복, padding/extrude를 계산하고 상한·계산량 제한 및 출력 대조를 적용한다. [새 계약과 검증](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보)을 따른다. 기존 MCP pin에는 아직 포함되지 않았다.
-3. 다음 후속은 출력 세트 crash 복구 설계다. Indexed PNG 유지 옵션은 요구·실현 가능성 SPIKE 후 판단한다. GAP-04 범용 색상 모드 전환과 GAP-06 slice/pivot/nine-slice의 범위·일정은 미확정이다.
+1. Plugin Top1–4 pin/번들/스킬 동기화는 PR #16 범위에서 완료했다. exporter의 background/출력 형식·selection/JSON/rollback과 animator의 수정 후 재조회 안내를 반영했다. 근거는 [고정된 검증 기록](https://github.com/smrgd88/pixel-plugin/blob/f5228e3/docs/TOP4_SYNC_VALIDATION.md)과 아래 TODO다. plugin 현황 문서도 PR #17 / `e856582`로 병합됐다. PR #37의 새 runtime pin 동기화는 별도 plugin owner 작업이며 아직 완료로 표시하지 않는다.
+2. `[BE][FEATURE] export 크기 예산 정밀화`는 PR #37 / develop `fcb8386`로 병합 완료했다. 실제 trim/layout 기반 계획과 제한·검증은 [계약](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보)을 따른다. 이 변경의 plugin pin/번들/사용 안내 동기화는 별도 진행하며, 기존 plugin pin `99f193a`에 소급 포함하지 않는다.
+3. 출력 세트 crash 복구는 이 브랜치에서 [설계·현행 kill 실험·판단 모델 검토](EXPORT_CRASH_RECOVERY.md)를 수행했다. 실제 journal/recovery/cleanup은 별도 FEATURE로 구현·검증해야 하며 아직 서버 기능이 아니다. Indexed PNG 유지 옵션은 요구·실현 가능성 SPIKE 후 판단한다. GAP-04/GAP-06 범위·일정은 미확정이다.
 4. 아래 태그 Notes의 TODO, SAFE/OPS 및 파일시스템별 관찰·검증 제한은 유지한다. 이 작업은 plugin 파일·번들·개인 설치본을 수정하지 않는다.
 
 ## Export 후속 TODO (PR #35 범위 밖)
@@ -60,8 +60,8 @@ PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐�
 
 - [x] `[BE][DOCS] plugin background 및 출력 형식 사용 흐름 반영`: plugin PR #16 / `f5228e3`에 exporter skill과 [출력 계약](https://github.com/smrgd88/pixel-plugin/blob/f5228e3/docs/MCP_EXPORT_OPTIONS.md), tag/range·layer 선택 예제, background 제외 trim·일부 indexed background RGB 출력·원본 보존 안내가 반영됐다. 해당 pin의 native background/pixel/JSON 검증은 TOP4_SYNC_VALIDATION 기록을 따른다. 개인 설치본 교체는 별도다.
 - [ ] `[BE][SPIKE] indexed PNG 유지 옵션 설계`: palette/index 보존이 필요한 사용 요구를 확인하고 색 보존과 index identity 보존을 구분한다. background의 불투명 mask index, 투명 padding, 256색 예산, 프레임별 palette와 native link 조합을 검토한다. 손실 없는 지원 조건·불가능한 조합의 명시적 거부·기존 기본 동작 호환성 및 실제 픽셀/인덱스 회귀 계획을 문서화하면 SPIKE를 완료한다. 자동 감색으로 대신하지 않으며 옵션 구현은 별도 FEATURE로 분리한다.
-- [ ] `[BE][FEATURE] export 크기 예산 정밀화`: `feature/be-export-size-budget`에서 구현·로컬 검증·셀프리뷰를 완료한 후보이며 develop 미병합이다. 128×128의 65프레임 strip/packed 과잉 거부 재현, trim/layout 기반 계획, 동일 상한과 overflow·메모리·timeout/cancel·source/output 보호를 검증한다. [계약·실행 기록](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보). 병합 후 plugin의 크기 예산 안내와 runtime pin 갱신은 별도 owner의 후속이다.
-- [ ] `[BE][SPIKE] 출력 세트 crash 복구 설계`: journal·backup의 영속화, publication 중 강제 종료, 재시작 시 미완료 세트 탐지 및 멱등 복구를 설계하고 파일 교체 단계별 fault injection으로 검증한다. 비협력 writer를 덮어쓰지 않는 복구 정책과 고아 staging/backup 보존·정리 기준을 정한다. 세트 전체 원자성이 요구되면 버전별 출력 폴더와 manifest 교체 방식의 경로/소비자 호환성도 검토한다. 복구 가능성과 crash 원자성을 구분한 설계·검증 기준이 나오면 SPIKE를 완료하며, 실제 복구 구현은 별도 FEATURE로 분리한다. 기존 비협력 writer 경쟁 보호 SPIKE와 중복 범위를 조율한다.
+- [x] `[BE][FEATURE] export 크기 예산 정밀화`: PR #37 / develop `fcb8386` 병합 완료. trim/layout 계획과 같은 상한·계산량·메모리·timeout/cancel·source/output 보호를 구현했다. [계약·실행 기록](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보). plugin pin/번들 갱신은 별도 진행이다.
+- [x] `[BE][SPIKE] 출력 세트 crash 복구 설계`: 이 브랜치에서 [설계안](EXPORT_CRASH_RECOVERY.md)과 실제 publisher SIGKILL 8개 경계 조합, 복구 판단/재진입 모델을 검토했다. 미commit이면 이전 세트 복원, commit이면 새 세트 유지, 외부 변경이면 중단·보존하는 정책과 journal/backup/cleanup 순서 및 후속 FEATURE 수용 기준을 정했다. 실제 영속 복구·전원 장애·복구 도중 강제 종료 테스트는 구현 후속이며 이번에 완료하지 않았다. SPIKE 결과는 아직 develop 미병합이다.
 
 ## 크기 예산 PR 이후 남은 작업
 
@@ -69,7 +69,7 @@ PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐�
 
 - [ ] `[BE][FEATURE] 구버전 Aseprite의 정밀 packed 계산`: 1.3.18.2 미만에서 플랫폼별 정렬 차이를 처리해 현재 보수 상한 때문에 거부되는 정상 sheet를 안전하게 허용한다. 위험한 sheet bitmap을 먼저 할당하지 않는 계획 방법을 설계하고, 실제 native 크기·배치·픽셀/JSON 및 초과 입력 조기 거부를 검증해야 완료다. 현재는 보수 경로와 그 관련 검증만 완료했다.
 - [ ] `[SHARED][SPIKE] Aseprite 프로세스 전체 메모리 제한 설계`: source decode·scratch·native renderer를 포함한 프로세스 전체 메모리의 제한 방법과 플랫폼별 적용 범위·한계를 조사한다. 예산 초과 시 프로세스 종료/정리와 source·출력 세트 보존의 검증 기준을 정한다. 현재의 픽셀·계산량 제한은 전체 RSS 제한이 아니다. 설계 후 제한 구현·실행 검증은 별도 FEATURE로 진행한다.
-- [ ] `[BE][SPIKE] 출력 세트 crash 복구 설계`: [기존 export 후속 TODO](#export-후속-todo-pr-35-범위-밖)를 따른다. Journal/backup, 강제 종료·재시작 복구 설계와 fault injection 검증이 남았고, 실제 복구 구현도 별도 후속이다. 현재 일반 오류 rollback 검증은 crash 복구 검증이 아니다.
+- [ ] `[BE][FEATURE] 출력 세트 journal 및 명시적 복구 구현`: [이 브랜치의 설계안과 단계별 수용 기준](EXPORT_CRASH_RECOVERY.md#구현-후속과-완료-조건)을 따른다. 영속 journal·발견 index·publisher 연결·재시작 적용·실제 복구 도중 kill/재진입·충돌 보존·cleanup 검증이 필요하다. 현재 일반 오류 rollback과 이번 pure decision 모델은 runtime 복구 구현이 아니다.
 - [ ] `[SHARED][SPIKE] 비협력 writer 경쟁 보호 검토`: [기존 태그 후속 TODO](#태그-후속-todo)를 따른다. ABA 및 최종 검사–rename 사이 외부 변경의 재현, 보호 방법·플랫폼 한계 검토, 채택한 보호의 구현·검증이 남아 있다. 현재 revision 검사와 협력 호출 잠금으로 이 경쟁을 해결했다고 간주하지 않는다.
 
 ## 태그 후속 TODO
