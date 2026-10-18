@@ -52,7 +52,7 @@ source는 저장하지 않는다. native linked image, frame별 palette, 계층�
 4. Sheet texture는 native decoder로 재열고 PNG/JPG/GIF는 Go decoder의 크기와 대조한다. JSON의 frame 수·duration·texture bounds·sourceSize·trim offsets·meta.size를 검사한 뒤에만 발행한다. 출력별 확장자는 요청한 형식과 맞아야 한다.
 5. 오류/취소 시 이미 발행된 출력은 역순 복구한다. 복구 실패의 `file_rollback_failed/error.recovery`는 PR #18 및 OPS-03과 동일하며 sheet 순번 1은 texture, 2는 JSON이다.
 
-Canvas/결과 한 변 32767 및 64 Mi pixels의 보수적 예산을 적용한다. trim 전 canvas와 padding/extrusion/border를 포함한 각 frame의 두 축 및 strip 크기를 사전 검사한다. rows/columns/packed는 가능한 가로·세로 strip extents의 둘레 사각형으로 예산을 검사하므로 실제 packing하면 들어갈 큰 요청도 거부할 수 있다. 더 작은 범위로 나눠 export한다. timeout은 30초 기본을 유지한다.
+Canvas/결과 한 변 32767 및 64 Mi pixels 상한을 유지한다. 아래 후보는 선택된 frame의 실제 trim bounds와 native 배치를 계산한다. Packed의 정밀 배치는 1.3.18.2 이상에 적용하며, 이전 지원 버전은 아래 보수 경로를 유지한다. 계산량 제한에 걸리는 복잡한 packed 입력은 frame 범위를 나눠 export한다. timeout은 30초 기본을 유지한다.
 
 일반 오류 rollback은 **세트 전체의 crash 원자성**이 아니다. 협력하는 호출은 경로 잠금을 통해 완성된 세트를 관찰하지만 외부 reader는 교체 도중 일부 새 파일을 볼 수 있다. 비협력 writer의 ABA/최종 검사 이후 경쟁, 강제 종료·전원 장애 자동 복구 및 고아 staging 정리는 후속이다. Source history는 출력 세트 undo가 아니다. GAP-06 slice/pivot/nine-slice 및 편집 도구는 이번 범위 밖이며 기존 native slice metadata를 확장/재해석하지 않는다.
 
@@ -60,22 +60,46 @@ Canvas/결과 한 변 32767 및 64 Mi pixels의 보수적 예산을 적용한다
 
 ## 후속 작업 추적
 
-Background/출력 형식의 plugin 안내, indexed PNG 유지 옵션 설계, 크기 예산 정밀화, 출력 세트 crash 복구 설계는 [NEXT_STEPS의 export 후속 TODO](NEXT_STEPS.md#export-후속-todo-pr-35-범위-밖)에 별도 작업명과 완료 조건으로 등록했다. **PR #35는 이 후속 기능을 구현하지 않는다.** 현재 계약·검증 결과와 후속 작업의 완료 여부를 구분한다.
+Background/출력 형식의 plugin 안내는 plugin PR #16에서 반영됐다. Indexed PNG 유지 옵션 설계, 현재 후보의 크기 예산 정밀화, 출력 세트 crash 복구 설계는 [NEXT_STEPS의 export 후속 TODO](NEXT_STEPS.md#export-후속-todo-pr-35-범위-밖)에 별도 작업명과 완료 조건으로 등록했다. **PR #35는 이 후속 기능을 구현하지 않는다.** 현재 계약·검증 결과와 후속 작업의 완료 여부를 구분한다.
+
+**명시적인 남은 작업:** 구버전 Aseprite의 정밀 packed 계산, Aseprite 프로세스 전체 메모리 제한, 출력 세트 crash 복구, 비협력 writer 경쟁 보호는 미구현이다. [작업별 후속 범위와 완료 조건](NEXT_STEPS.md#크기-예산-pr-이후-남은-작업)에 등록했다. 현재 구현의 관련 검증은 완료했으며, 이 네 기능을 구현하거나 그 기능의 검증까지 완료한 것은 아니다.
 
 ## 검증과 plugin 후속
 
 테스트: `TestExportOptions*`는 실제 MCP/Aseprite 저장·재열기, RGB/grayscale/indexed mask=3와 opaque index 0, native linked/positioned cels, frame palette 변화, 그룹/숨김/중복 이름, tag/range/빈 frame, stale/invalid/aliases/overwrite/폴더/read-only/cancel/source 변화, 독립 PNG 전체 픽셀·JSON bounds/duration/trim/extrude 및 history/snapshot/undo를 검사한다. 순서/번호 및 JSON escape는 deterministic testing/quick 각 1000개 입력으로 검사한다. 기존 `TestExportSequence*`, `TestOutputFiles*`/`TestOutputRollback*`와 server diagnostics/등록 검사를 함께 수행한다. 실제 실행 결과는 아래 최종 기록으로 구분한다.
 
-Plugin 저장소·MCP commit pin·번들 바이너리는 PR #35에서 수정하지 않았다. 병합된 MCP `99f193a` 기준의 별도 동기화에서:
+Plugin 저장소·MCP pin·번들은 PR #35에서 수정하지 않았다. 이후 [plugin PR #16](https://github.com/smrgd88/pixel-plugin/pull/16)이 develop `f5228e3`로 병합돼 아래 항목을 MCP `99f193a` / 64 tools 기준으로 반영했다. MCP 문서 PR #36의 `42bab18`은 runtime pin이 아니다. 개인 설치본 교체·릴리스와 구분한다. 아래 목록은 PR #16의 반영 범위다:
 
-- 기존 export_sprite/export_spritesheet의 optional 입력 schema와 새 서버 commit을 반영한다. 도구 이름/수 추가는 없다.
-- exporter skill에 `get_sprite_structure → layer_id+revision`, tag/range 배타 규칙, hidden/blank 정책, padding override, overwrite=false, 범위의 원본 번호 규칙을 추가한다.
-- sidecar source_frame_number와 출력 기준 frameTags, include_json=false의 legacy sidecar, texture+JSON rollback 및 recovery 순번을 소비자/스킬에 반영한다.
+- 기존 export_sprite/export_spritesheet의 optional 입력 schema와 서버 commit을 반영했다. 도구 이름/수 추가는 없다.
+- exporter skill에 `get_sprite_structure → layer_id+revision`, tag/range 배타 규칙, hidden/blank 정책, padding override, overwrite=false, 범위의 원본 번호 규칙을 추가했다.
+- sidecar source_frame_number와 출력 기준 frameTags, include_json=false의 legacy sidecar, texture+JSON rollback 및 recovery 순번을 소비자/스킬에 반영했다.
 - crash 원자성이나 출력 history undo를 주장하지 않는다. GIF 새 선택은 지원하지 않는다.
 
 PR #33/#34/#32 develop 통합 시 공통 문서 충돌을 양쪽 계약과 검증 이력을 보존하며 해소했다. animation/canvas/server 등록은 세 기능을 유지하며 export 자체의 도구 추가는 없다. PR #35도 develop `99f193a`에 병합 완료했다. 아래 실행·리뷰 기록의 미병합 표시는 당시 후보 상태를 뜻한다.
 
 근거: [ExportSpriteSheet API](https://www.aseprite.org/api/command/ExportSpriteSheet/), [Image API](https://www.aseprite.org/api/image/), Aseprite 1.3.18.3 native `cmd_export_sprite_sheet.cpp`, `layer_frame_comboboxes.cpp`, `doc_exporter.cpp`. 공식 API의 존재와 이 후보의 실제 검증 범위를 구분한다.
+
+## 크기 예산 정밀화 구현 후보
+
+작업: `[BE][FEATURE] export 크기 예산 정밀화 및 MCP 문서 현황 갱신`, 기준 `origin/develop@42bab1833a15c9bb6bd50990d4e6102af3d8fa1b`. 현재 작업 브랜치 후보이며 develop 미병합/Unreleased다. Plugin 저장소·설치본·번들을 수정하지 않는다.
+
+원인과 작은 재현: 128×128의 서로 다른 65프레임은 rows에서 8320×128, columns에서 128×8320이다. 기존 검사는 두 strip extents를 곱한 8320×8320을 사용해 64 Mi pixels를 초과한다고 거부했다. 같은 fixture의 정상 packed도 거부했다. 또한 32767×1 canvas의 1px 내용 두 프레임은 trim 후 2px sheet가 되지만 기존 검사는 원래 canvas strip으로 거부했다. 상한을 올리거나 제거하지 않는다.
+
+계획과 실행:
+
+1. 기존 source 잠금과 revision 검사 안에서 tag/range/layer/group/visibility를 적용한다. 한 변 32767, canvas 64 Mi pixels, frame endpoint 1–65535를 **곱셈·차 연산 전에** 검사한다.
+2. Sheet bitmap 대신 한 프레임 크기의 scratch image로 native source color mode의 렌더·trim bounds를 측정한다. 빈 trim frame은 1×1, 보이는 native background는 canvas 유지, 단일 팔레트 indexed background는 메모리 RGB 준비를 공유한다. 다중 palette 문서는 변환하지 않는다. Lua userdata가 native 이미지 메모리를 오래 잡지 않도록 매 프레임 수집한다. 비-trim strip은 scratch render가 필요 없다. 실제 출력 전의 빈 선택 검사는 별도의 RGB canvas 버퍼 하나를 재사용하고 검사 직후 해제·수집한다. 앞쪽 빈 프레임 수에 비례해 canvas 이미지가 누적되지 않게 하며, 모두 빈 선택의 거부 정책은 유지한다.
+3. Native `DocExporter`와 LAF `PackingRects`의 배치 규칙을 따른다. horizontal/vertical은 strip, rows/columns도 현재 public 옵션처럼 행·열 수/고정 크기를 지정하지 않으면 각각 같은 strip이다. 1.3.18.2 이상에서 Packed는 source-mode 렌더가 같은 sample을 합치며(네이티브는 `mergeDuplicates=false`에도 적용), 면적 내림차순의 안정 정렬과 첫 빈 위치 배치, 가로/세로 후보 크기 교대 증가를 사용한다. 회전은 하지 않는다. Border/shape/inner와 extrusion을 포함해 계산하며 JSON bounds는 inner를 포함하고 extrusion rim을 제외한다. 임의의 grid 알고리즘으로 native와 같다고 가정하지 않는다.
+4. 한 변·최종 bounding rectangle 64 Mi pixels 외에 packed의 고유 sample 면적 64 Mi pixels, geometry work 8,000,000회, 계획 계산 30초 및 요청 context deadline/cancel을 적용한다. Native signed-int candidate area의 overflow도 차단한다. 이는 프로세스 전체 RSS 제한이 아니다: source decode와 native renderer의 내부 임시 메모리는 별도이며 scratch/고유 sample 저장은 유한하게 제한한다. 복잡한 packing은 결과가 작아도 계획 예산으로 거부될 수 있다.
+5. Native 출력 직전 다시 측정해 sample bounds·중복 관계를 비교한다. 계획 후 source가 바뀌어 더 큰 native 할당을 유발하지 않게 한다. 실제 texture 재열기/독립 decoder 크기와 JSON 각 frame placement·trim·duration·sourceSize를 계획과 대조하고 revision을 재검사한 후 기존 texture+JSON staging/rollback으로 발행한다. 불일치는 발행하지 않으며 source는 저장하지 않는다.
+
+**지원 하한의 packed 제한:** 1.3.17.2 소스의 LAF는 `std::sort`, 1.3.18.2는 `std::stable_sort`를 사용한다. 같은 면적의 서로 다른 모양은 표준 라이브러리에 따라 순서와 최종 크기가 달라질 수 있다. 따라서 **1.3.18.2 미만의 supported runtime에서는 packed만** 실제 trim/중복을 반영한 가로·세로 strip envelope를 먼저 제한하고 native 배치를 그대로 실행한다. 이 경로는 결과 크기를 envelope 이하로 검사하고 각 frame의 크기·trim·duration/source를 대조하지만 XY 배치를 최신 버전과 동일하다고 강제하지 않는다. 예전 지원 요청을 보존하며 일부 정상 packing의 과잉 거부는 남는다. 65×128² packed 사례의 정밀 허용을 이 버전들까지 완료했다고 주장하지 않는다. 나머지 네 layout의 trim 기반 정밀화는 동일하게 적용한다. 정밀화를 구버전 packed까지 확장하려면 bitmap 생성 전 native placement API 또는 별도의 표준 라이브러리 차이를 다루는 설계가 필요하다.
+
+공식 [ExportSpriteSheet API](https://aseprite.org/api/command/ExportSpriteSheet)와 [v1.3.18.2 DocExporter](https://github.com/aseprite/aseprite/blob/v1.3.18.2/src/app/doc_exporter.cpp), 해당 tag의 [LAF PackingRects](https://github.com/aseprite/laf/blob/68259e1904fab548529e78583af71869fca1cb53/gfx/packing_rects.cpp)를 대조했다. Linux의 1.3.18.3-dev 소스도 같은 규칙이다. 지원 하한의 [LAF 소스](https://github.com/aseprite/laf/blob/aee8822156619444c08718322ff5d1b18aab2a5b/gfx/packing_rects.cpp)와 정렬 차이도 대조했다. JSON-only native export 역시 bitmap을 먼저 할당하므로 preflight로 사용하지 않는다. `Image.drawSprite`의 process-local compose_groups 설정은 native 기본 false로 측정하는 동안만 적용하고 성공/실패 모두 원래 값으로 복원한다. 사용자 설정 파일을 변경하지 않는다.
+
+`TestExportBudget*`는 과거 거부 재현, 실제 native exporter를 별도 oracle로 삼은 3모드×5layout×trim on/off의 출력 크기/JSON·픽셀·빈 frame·서로 다른 크기, wide-canvas trim의 4형식×5layout, 렌더 직전 변경 거부를 검사한다. 별도 occupancy-grid oracle의 결정적 500개 입력으로 최적화된 packing 탐색을 대조한다. 상한/64-bit overflow/과도 frame/padding/cancel은 큰 bitmap 없이 계획 단위에서 검증한다. 기존 background·palette·native link·선택/hidden/group/tag·overwrite/alias·취소/commit failure·history 회귀도 함께 실행한다. 실행 결과와 셀프리뷰는 아래 최신 검증 기록에 남긴다.
+
+제한: 구버전 packed의 보수 경로가 남으며 native 배치 구현에 종속된 계획이다. 이후 Aseprite의 알고리즘 변경은 새 differential 검증과 계획 갱신이 필요하다. 출력 대조는 불일치의 발행을 막지만 미래 버전의 다른 내부 할당 전략까지 증명하지 않는다. 기존 crash 원자성/비협력 writer 경쟁 한계와 모든 format×blend 조합 미검증을 유지한다. Plugin 후속은 새 MCP pin 채택 시 크기 예산/계산량 제한·rows/columns/packed 설명을 갱신하는 것이며 이번 작업에서 번들을 재빌드하지 않는다.
 
 ## 2026-10-04 실행 결과와 셀프리뷰
 
@@ -169,3 +193,70 @@ Notes:
 최종 후보 manifest(보고 추가 전) SHA-256은 `e8fa9823bae847a67f59b0b48770a916f285e81a9d06f7a88fcc1f1c4d04bd3b`다. 최종 후보 선정 이후 runtime/test/계약 변경·인증 무효화 0회이며 이후 추가는 이 검증 보고다. 통합으로 이전 `6f466f8` 후보를 대체했으며 이전 후보의 테스트만으로 승인하지 않았다.
 
 당시 Notes: 배경 유지/일부 PNG의 RGB 출력, 보수적 크기 예산과 crash/외부 writer 한계, 위 미실행 범위는 유지했다. 당시 plugin 동기화와 PR #35의 develop 병합은 별도 후속이었다. 로컬 판정은 **PASS_WITH_NOTES**였으며 최종 원격 HEAD CI를 확인한 뒤 보고하는 단계였다. 이후 CI 통과·병합 상태는 문서 상단과 NEXT_STEPS의 현재 상태를 따른다.
+
+## 크기 예산 최종 검증과 셀프리뷰 (2026-10-18)
+
+기준/initial HEAD/merge-base: `42bab1833a15c9bb6bd50990d4e6102af3d8fa1b`. 작업 경로 `/Users/keumheesung/orca/workspaces/pixel-mcp/be-feature-export-size-budget`, 브랜치 `feature/be-export-size-budget`. 아래 결과는 이 후보의 로컬 검증이며 develop 병합·릴리스·plugin 설치본 갱신을 뜻하지 않는다.
+
+- Linux amd64 / 전용 `pixel-export-budget` 컨테이너 / Go 1.25.14 / Aseprite `1.3.18.3-dev`, API 41: 최종 build·vet·health, `go test -p 1 -count=1 -race -cover ./...` 통과. Statement coverage는 aseprite 81.3%, tools 64.6%, server 90.7%다. 전체 조합 완성률이 아니다.
+- 최종 Linux 관련 integration/race: `go test -p 1 -count=1 -race -tags=integration ./pkg/aseprite ./pkg/tools ./pkg/server -run 'TestExport|TestOutputFiles|TestOutputRollback|TestFileProtection|TestToolDiagnostics|TestSnapshotToolsRegistered|TestRegressionMatrix' -v` 통과. aseprite 1.476초, tools 120.892초, server 4.592초. 실제 PNG/native metadata oracle, source bytes/readonly/alias, selection·background·palette/link, cancellation·commit/rollback/recovery, 등록 64개와 diagnostics를 포함한다.
+- macOS arm64 / Go 1.25.0 / Aseprite `1.3.18.2-arm64`, API 41: 최종 build·vet·health 및 같은 관련 필터의 integration(비-race) 통과. tools 106.151초, server 3.320초. 첫 core 실행에서 기존 테스트 3개가 `/var`와 `/private/var` 문자열 차이로 실패했다. source/core 코드는 바꾸지 않고 `TMPDIR=/private/tmp/pixel-export-budget/mac-temp`로 실패 3개와 같은 core 필터를 재실행해 통과했다(최종 aseprite 0.983초). 최초 실패 로그도 보존했다.
+- 지원 하한은 정렬 차이 발견으로 필요한 범위만 추가 실행했다. 별도 `pixel-export-budget-min` / Go 1.25.14 / Aseprite `1.3.17.2`에서 24개 equal-area frame의 수정 전 `spritesheet allocation plan mismatch`를 실제 재현했다. 수정 후 `-tags=integration ./pkg/tools -run 'TestExportBudget|TestExportOptionsBackground' -v`가 39.015초에 통과했다. 하한 전체 suite 반복은 아니다.
+- 큰 실제 bitmap을 만들지 않은 계획 경계/overflow/65535 endpoint/padding/면적·계산량·cancel 검사와 occupancy-grid oracle의 결정적 500개 입력을 통과했다. 새 native oracle는 3모드×5layout×trim on/off, mixed/empty/different-size samples와 padding/extrude를 대조했다. Wide-canvas trim은 4형식×5layout을 검사했다. 구버전 packed는 크기를 보수 envelope 이하로, 최신 버전은 정확한 크기와 XY placement로 검증한다.
+- 전용 config/temp와 timeout=30, GOMAXPROCS=2/-p 1을 사용했고 native workload는 순차 실행했다. 로그와 source archive/manifest는 `/tmp/pixel-export-budget/`에 있다(`red.log`, `native-budget2.log`, `repair1.log`, `min-red.log`, `min-green.log`, `linux-final.log`, `macos-final.log`, `macos-core-final.log`). 초기 oracle의 bound-context fixture 오류도 수정 후 재검증했다. 기본 사용자 설정·원본 develop·다른 워크트리·plugin을 수정하지 않았다.
+- gofmt·diff 공백·변경 문서 상대 링크 검사, 실제 등록 이름 집합/64개 CAPABILITIES inventory 대조 통과. 최종 Linux/하한 로그에 FAIL/SKIP 없음; macOS는 위 경로 fixture 실패를 canonical temp 재검사로 해소했다.
+- 로컬 전체 integration과 macOS 전체/race, 모든 format×blend×mode 조합 전수검사, 지원 하한 전체 suite는 실행하지 않았다. 변경 영향 범위와 하한 정렬 회귀에 집중했다. 원격 PR의 최종 HEAD CI 전체 suite 결과는 push 후 별도로 확인한다.
+
+`convergent-code-review` backend lens, review-and-repair. 범위는 12개 파일(Go 7, 문서 5)의 base-to-candidate diff다.
+
+| ID | 우선순위·최종 상태 | 원인·수정·검증 |
+| --- | --- | --- |
+| BE-BUDGET-001 | P2 · VERIFIED | 새 렌더 직전 guard가 Lua exception을 내면 공개 코드가 `file_changed` 대신 `lua_error`가 된다. 구조화된 `plan_changed` 결과를 Go에서 typed `file_changed`로 변환한다. 실제 source 수정 후 native 출력 파일 미생성 및 공개 분류를 검증했다(`repair1.log`, 최종 관련 검사). 성공 응답은 변경하지 않았다. |
+| BE-BUDGET-002 | P1 · VERIFIED | 첫 fresh-discovery에서 하한의 `std::sort`와 최신 `std::stable_sort` 차이를 확인했다. 최신 placement를 하한에 강제하면 기존 정상 packed export가 실패한다. 24개 같은 면적·다른 모양 native red를 재현하고, 1.3.18.2 미만 packed의 trim/중복 기반 보수 envelope를 복원했다. 하한 green과 최신 Linux/macOS oracle를 대조했으며 하한의 잔여 과잉 거부를 명시했다. |
+
+초기 discovery 1회, repair cycle 2회, repair-diff 2회, closure 2회, 전체 fresh-discovery 2회, 총 review pass 7회. 초기 P2 1건; 첫 repair/closure에서 신규 finding 0, 첫 fresh에서 P1 1건; 두 번째 repair/closure/fresh 신규 finding 0. Repair가 만든 finding·재개방 0, VERIFIED 2, OPEN/ACCEPTED/OUT_OF_SCOPE 0. 차단 P1은 initial/cycle 1의 0 → fresh 1의 1 → cycle 2/최종 closure/fresh의 0으로 수렴했다. 첫 후보 인증은 하한 finding으로 1회 무효화했다. 두 번째 cycle 뒤 실제 위험 감소와 미해결 차단 항목 없음을 확인하고 mutation을 종료했다. 전체 소요 시간은 별도 측정하지 않았다.
+
+Reviewed: 계획·Lua 측정/재검사·native export·메타데이터 대조·회귀·현재 계약과 현황 문서. Inspected for context: Client/capabilities, file-protection/output-files/revision/history 및 기존 export/구조/서버 diagnostics/등록, 공식 native renderer/exporter/packing 구현. Changed during repair: plan Lua, allocator/runtime 분기, sheet 결과 decoder/metadata 검사, 회귀와 해당 계약. Excluded: plugin 변경, 공통 저장 core 재설계, crash 복구, indexed index 유지 옵션, GAP-04/GAP-06, 병합·태그·배포.
+
+최종 후보(이 보고 추가 전) manifest SHA-256: `cf92dae671d2fc8ff2bd36d3d00a2ee6ddfac3c839918e6a831a5642c44ae7c4`. 마지막 관련 mutation 이후 closure/fresh와 최종 검증 동안 candidate 변경 없음. 이후 추가는 실행·리뷰 보고와 완료 상태 기록뿐이다.
+
+Notes:
+
+1. 1.3.18.2 미만 packed에는 보수 envelope와 일부 정상 요청의 거부가 남는다. 그 버전까지 exact packing을 완료한 것은 아니다.
+2. 최신 packed도 native 알고리즘 변경 시 재검증이 필요하고, 복잡한 입력은 계획 계산량 제한으로 거부될 수 있다. Source decode를 포함한 전체 process RSS 상한을 제공하지 않는다.
+3. 일반 오류 rollback과 crash 원자성의 차이, 비협력 writer 경쟁 및 위 전수검사 미실행 범위는 유지한다. Crash 복구·indexed/GAP 검토와 plugin 새 pin/번들 갱신은 후속이다.
+
+로컬 최종 판정: **PASS_WITH_NOTES**. 최종 PR HEAD CI 확인과 develop 병합 승인은 별도 단계다.
+
+## 재리뷰 P1 수정 — 빈 프레임 검사 이미지 수명
+
+작업: `[BE][FIX] export 빈 프레임 검사 메모리 누적 수정`. 수정 시작 HEAD는 `488ef295ce22bf09fa94580d3aa309db2810661f`, PR 전체 기준은 `42bab1833a15c9bb6bd50990d4e6102af3d8fa1b`다. 같은 `feature/be-export-size-budget` 워크트리에서 수정했다. 이전 read-only 재리뷰는 아래 P1 때문에 BLOCKED였으며, 이 기록은 수정 후 판정이다.
+
+| ID | 우선순위·최종 상태 | 원인·수정·검증 |
+| --- | --- | --- |
+| BE-REVIEW-001 | P1 · VERIFIED | 새 계획이 허용하는 많은 leading-empty frame에서 기존 빈 선택 검사 루프가 매번 RGB canvas Image를 만들었다. Lua는 native pixel 저장소 크기를 GC 부채로 계산하지 않아 이미지가 누적됐다. RGB 버퍼 하나를 루프 밖에서 만들고 프레임마다 clear/render하여 재사용한 뒤, native export 전에 참조를 해제하고 수집한다. 모두 빈 선택의 기존 오류와 mixed-empty 프레임의 순서·duration·픽셀·JSON, 원본/출력 보호를 유지했다. |
+
+`TestExportBudgetScratchRetention`을 먼저 추가해 수정 전 RGB/grayscale/indexed × 8/80프레임 × 마지막만 내용 있음/모두 빈 선택의 12개 경우에서 실패를 확인했다. 실제 Aseprite Image 생성만 감싸는 weak reference 관찰로 native canvas 이미지의 동시 잔존 수를 제한한다. GC를 중지하거나 큰 OOM fixture를 만들지 않는다. 수정 후 12개 모두 통과했고, 픽셀/trim offset/source frame/duration, source bytes·stat, 실패 시 기존 texture+JSON 보존과 staging 정리도 검증했다.
+
+동일한 512×512/80프레임 재현의 **계측 없는 생성 Lua**에서 native 최대 RSS는 수정 전 143,360,000 bytes(약 137MiB), 수정 후 57,606,144 bytes(약 55MiB)였다. 양쪽 모두 2×1 sheet를 출력했다. 이는 해당 macOS fixture의 관측값이며 전체 프로세스 메모리 상한을 보장하는 수치가 아니다. 재빌드한 실제 MCP 서버에서도 frame_count=80, 2×1 metadata, 원본 SHA-256 보존을 확인했다.
+
+최종 검증은 native workload를 순차 실행했다. 전용 config/temp, timeout=30 및 GOMAXPROCS=2/-p 1을 유지했다.
+
+- Linux amd64 / Go 1.25.14 / Aseprite 1.3.18.3-dev: build·vet·health 및 `go test -p 1 -count=1 -race -cover -tags=integration ./pkg/aseprite ./pkg/tools ./pkg/server -run 'TestExport|TestOutputFiles|TestOutputRollback|TestFileProtection|TestToolDiagnostics|TestSnapshotToolsRegistered' -v` 통과. aseprite 1.422초, tools 96.139초, server 4.576초. Coverage는 이 필터 범위이며 전체 suite coverage와 구분한다.
+- 지원 하한 Aseprite 1.3.17.2 / 별도 Linux 컨테이너: 새 12개 조합 집중 integration 통과(tools 8.450초). 하한 전체 suite를 반복하지 않았다.
+- macOS arm64 / Go 1.25.0 / Aseprite 1.3.18.2-arm64: build·vet·health, 동일 관련 필터의 integration(비-race) 통과. aseprite 1.049초, tools 95.733초, server 3.094초. Canonical TMPDIR를 사용했다.
+- 최종 관련 로그에 FAIL/SKIP 없음. gofmt·diff 공백 및 문서 링크 검사 통과. 로그/재현은 `/tmp/pixel-export-budget-review/`의 `scratch-red.log`, `scratch-green.log`, `linux-repair.log`, `min-repair.log`, `mac-repair.log`, `mcp-fixed-probe.log`와 `80/fixed-plain-time.log`에 있다.
+- 로컬 전체 suite/race·전 조합 matrix는 이 좁은 수정에서 반복하지 않았다. 최종 PR HEAD의 원격 전체 CI는 push 후 별도로 확인한다. 이전 HEAD CI 통과를 수정 HEAD 검증으로 대신하지 않는다.
+
+`convergent-code-review` review-and-repair: 초기 지적 재확인 1회, repair cycle 1회, repair-diff 1회, closure 1회, PR 전체 fresh-discovery 1회, 총 review pass 4회. 초기 P1 1 → repair/closure/fresh 0. VERIFIED 1, 신규/재개방/repair 유발 finding 및 미해결 finding 0. 새 차단 항목이 없고 실제 이미지 누적 감소와 기존 계약 보존을 확인해 mutation을 종료했다. 전체 소요 시간은 별도 측정하지 않았다.
+
+Reviewed: base-to-candidate 13개 파일(Go 8, 문서 5), 계획/렌더/출력 보호 연결 및 모든 변경 회귀·계약. Context: Client/capabilities, revision/lock/staging/rollback, native Image/renderer 및 기존 export·diagnostics/등록. Changed during repair: sheet Lua generator, 새 retention 회귀, 본 계약·CHANGELOG. Excluded: plugin, 저장 core 재설계, 네 가지 미구현 후속 기능, 병합·태그·릴리스.
+
+최종 후보(이 보고 추가 전) manifest SHA-256은 `88eb82aa1ec66d9b3768066186e2f22f959ed63e8c2a59f81719a256459e5236`이다. 후보 선정 후 관련 mutation·인증 무효화 0회이며 검증 동안 내용이 유지됐다. 이후 추가는 이 검증·리뷰 기록뿐이다.
+
+Notes:
+
+1. 구버전 정밀 packed, 전체 프로세스 메모리 제한, crash 복구, 비협력 writer 경쟁 보호는 [남은 작업](NEXT_STEPS.md#크기-예산-pr-이후-남은-작업) 그대로다. 이번 수정은 현재 제어하는 scratch 이미지 수명 문제를 해결했다.
+2. Native 알고리즘 변경 시 재검증, 복잡한 packing의 계산량 제한, 위 전수검사 미실행 범위는 유지한다.
+
+수정 후 로컬 판정: **PASS_WITH_NOTES**. BE-REVIEW-001로 인한 이전 BLOCKED를 대체하며, develop/main 병합은 수행하지 않는다.

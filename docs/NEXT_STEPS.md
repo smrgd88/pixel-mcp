@@ -2,7 +2,7 @@
 
 작성일: 2026-08-31 · 현황 동기화: 2026-10-18
 
-현재 기준: `develop`의 `99f193ad3a0eefcb8e8b71a3b9e3f69be47ac2d8` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 편집, PR #33 cel unlink, PR #34 layer/group, PR #32 tag, PR #35 export 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
+현재 기준: `develop`의 문서 갱신 `42bab1833a15c9bb6bd50990d4e6102af3d8fa1b` (PR #36), runtime 기능 기준 `99f193ad3a0eefcb8e8b71a3b9e3f69be47ac2d8` (PR #29 RM-FIX-01, PR #30 상세 조회, PR #31 cel 편집, PR #33 cel unlink, PR #34 layer/group, PR #32 tag, PR #35 export 병합 반영). BUG-01~05와 SAFE-02/03/04 완료. OPS-03 오류 코드·request ID·로그 계약은 PR #25로 병합 완료했다. 공통 회귀 조합 점검은 PR #27로, RM-FIX-01은 PR #29로 develop에 병합 완료했다. [결과와 잔여](REGRESSION_MATRIX.md)를 따른다. 병합된 수정은 Unreleased이며 배포 완료와 구분한다.
 
 [기능 지원 현황](CAPABILITIES.md) · [로드맵과 실행 순서](ROADMAP.md) · [변경 이력](../CHANGELOG.md)
 
@@ -47,27 +47,36 @@ macOS 개발 중에는 Linux CI와 필요한 macOS·지원 하한 회귀를 검�
 
 ## 다음 실행 순서 (2026-10-18)
 
-PR #35는 2026-10-18에 develop `99f193a`로 병합됐고 최종 PR HEAD의 CI `test`가 통과했다. 이 문서 갱신에서는 코드를 다시 실행하지 않았으며, 병합은 릴리스·plugin 설치본 갱신을 뜻하지 않는다.
+PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐다. [plugin PR #16](https://github.com/smrgd88/pixel-plugin/pull/16)도 후보 `4814d47`에서 develop `f5228e3`로 병합됐다. Plugin의 runtime pin은 **MCP `99f193a` / 64 tools**이며 MCP 문서 commit `42bab18`과 구분한다. 릴리스·marketplace 게시·개인 설치본 교체 완료를 뜻하지 않는다.
 
-1. `[SHARED][CHORE] plugin 동기화`: Top1–4가 모두 포함된 MCP `99f193a`를 기준으로 pin/번들/스킬을 동기화한다. export 옵션/JSON/보호 계약과 아래 태그 재조회 TODO, 각 기능 계약의 plugin 메모를 함께 사용한다. plugin 작업은 별도 저장소에서 진행하며, 이 문서 갱신으로 완료 처리하지 않는다.
-2. Export Notes 대응은 아래 [export 후속 TODO](#export-후속-todo-pr-35-범위-밖)로 분리한다. 권장 순서는 plugin 사용 흐름 반영 → 크기 예산 개선 → crash 복구 설계이며, indexed 유지 옵션은 사용 요구와 실현 가능성 확인 후 착수 여부를 정한다. PR #35의 병합으로 이 후속 항목들이 구현된 것은 아니다.
-3. 후속 범위 선정: GAP-04 범용 색상 모드 전환은 indexed helper와 transparent index 보존 검증을 선행한다. GAP-06 slice/pivot/nine-slice는 별도 export 후속이다. 어느 쪽도 구현 착수·릴리스 일정이 확정된 것으로 표시하지 않는다.
-4. 아래 태그 Notes의 세 TODO와 기존 SAFE/OPS·검증 제한·crash 복구 backlog를 유지한다. 완료된 Top1–4의 병합과 남아 있는 기능군 전체 완료를 구분한다.
+1. Plugin Top1–4 pin/번들/스킬 동기화는 PR #16 범위에서 완료했다. exporter의 background/출력 형식·selection/JSON/rollback과 animator의 수정 후 재조회 안내를 반영했다. 근거는 [고정된 검증 기록](https://github.com/smrgd88/pixel-plugin/blob/f5228e3/docs/TOP4_SYNC_VALIDATION.md)과 아래 TODO다. 별도 plugin owner가 진행하는 현황 문서 갱신은 이 MCP 작업과 분리한다.
+2. `[BE][FEATURE] export 크기 예산 정밀화`: 현재 작업 브랜치의 구현 후보다. 선택된 frame의 실제 trim bounds와 native layout 규칙, packed 중복, padding/extrude를 계산하고 상한·계산량 제한 및 출력 대조를 적용한다. [새 계약과 검증](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보)을 따른다. 기존 MCP pin에는 아직 포함되지 않았다.
+3. 다음 후속은 출력 세트 crash 복구 설계다. Indexed PNG 유지 옵션은 요구·실현 가능성 SPIKE 후 판단한다. GAP-04 범용 색상 모드 전환과 GAP-06 slice/pivot/nine-slice의 범위·일정은 미확정이다.
+4. 아래 태그 Notes의 TODO, SAFE/OPS 및 파일시스템별 관찰·검증 제한은 유지한다. 이 작업은 plugin 파일·번들·개인 설치본을 수정하지 않는다.
 
 ## Export 후속 TODO (PR #35 범위 밖)
 
-아래 항목은 PR #35의 현재 사용 계약·제한에 대한 **별도 후속 작업**이다. 이번 PR에는 추적 항목만 추가하며, 후속 기능의 구현·검증·배포 완료나 착수 승인을 뜻하지 않는다. 현재 background 보존·일부 RGB 출력·보수적 크기 예산·일반 오류 rollback 계약은 [EXPORT_OPTIONS](EXPORT_OPTIONS.md)를 따른다.
+아래 항목은 PR #35의 현재 사용 계약·제한에 대한 **별도 후속 작업**이다. PR #35 당시에는 추적만 추가했다. 이후 완료 여부는 각 항목의 근거로 구분하며 배포 완료를 뜻하지 않는다. 현재 background 보존·일부 RGB 출력·크기 예산·일반 오류 rollback 계약은 [EXPORT_OPTIONS](EXPORT_OPTIONS.md)를 따른다.
 
-- [ ] `[BE][DOCS] plugin background 및 출력 형식 사용 흐름 반영`: PR #35 병합 후 exporter skill에 보이는 native background의 canvas 유지, background를 제외한 `layer_id` 선택과 trim, 단일 팔레트 indexed background의 RGB 출력, 저장 원본 보존을 명시한다. 두 선택 예제와 출력 형식 안내를 새 MCP pin/번들 기준으로 확인하면 완료한다. 이 PR에서 plugin 저장소를 수정하지 않는다.
+- [x] `[BE][DOCS] plugin background 및 출력 형식 사용 흐름 반영`: plugin PR #16 / `f5228e3`에 exporter skill과 [출력 계약](https://github.com/smrgd88/pixel-plugin/blob/f5228e3/docs/MCP_EXPORT_OPTIONS.md), tag/range·layer 선택 예제, background 제외 trim·일부 indexed background RGB 출력·원본 보존 안내가 반영됐다. 해당 pin의 native background/pixel/JSON 검증은 TOP4_SYNC_VALIDATION 기록을 따른다. 개인 설치본 교체는 별도다.
 - [ ] `[BE][SPIKE] indexed PNG 유지 옵션 설계`: palette/index 보존이 필요한 사용 요구를 확인하고 색 보존과 index identity 보존을 구분한다. background의 불투명 mask index, 투명 padding, 256색 예산, 프레임별 palette와 native link 조합을 검토한다. 손실 없는 지원 조건·불가능한 조합의 명시적 거부·기존 기본 동작 호환성 및 실제 픽셀/인덱스 회귀 계획을 문서화하면 SPIKE를 완료한다. 자동 감색으로 대신하지 않으며 옵션 구현은 별도 FEATURE로 분리한다.
-- [ ] `[BE][FEATURE] export 크기 예산 정밀화`: 현재 strip 기반 보수적 상한 때문에 실제로 들어갈 sheet가 거부되는 사례를 수집하고, 실제 trim bounds와 layout을 반영하는 계획 계산을 설계·구현한다. 기존 한 변/총 픽셀 상한과 overflow·메모리 보호를 유지하면서 정상 packing 사례와 초과 입력의 조기 거부, timeout/cancel·source/output 보존을 검증하면 완료한다. 그 전에는 frame 범위를 나눠 export하는 사용 안내를 유지한다.
+- [ ] `[BE][FEATURE] export 크기 예산 정밀화`: `feature/be-export-size-budget`에서 구현·로컬 검증·셀프리뷰를 완료한 후보이며 develop 미병합이다. 128×128의 65프레임 strip/packed 과잉 거부 재현, trim/layout 기반 계획, 동일 상한과 overflow·메모리·timeout/cancel·source/output 보호를 검증한다. [계약·실행 기록](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보). 병합 후 plugin의 크기 예산 안내와 runtime pin 갱신은 별도 owner의 후속이다.
 - [ ] `[BE][SPIKE] 출력 세트 crash 복구 설계`: journal·backup의 영속화, publication 중 강제 종료, 재시작 시 미완료 세트 탐지 및 멱등 복구를 설계하고 파일 교체 단계별 fault injection으로 검증한다. 비협력 writer를 덮어쓰지 않는 복구 정책과 고아 staging/backup 보존·정리 기준을 정한다. 세트 전체 원자성이 요구되면 버전별 출력 폴더와 manifest 교체 방식의 경로/소비자 호환성도 검토한다. 복구 가능성과 crash 원자성을 구분한 설계·검증 기준이 나오면 SPIKE를 완료하며, 실제 복구 구현은 별도 FEATURE로 분리한다. 기존 비협력 writer 경쟁 보호 SPIKE와 중복 범위를 조율한다.
+
+## 크기 예산 PR 이후 남은 작업
+
+**아래 네 항목은 미구현이며 후속 작업으로 남아 있다.** PR #37에서 완료한 것은 현재 크기 상한·계산량 제한·구버전 보수 경로·취소·출력 보호에 대한 구현과 관련 검증이다. 그 검증 통과를 아래 기능의 구현 완료로 해석하지 않는다. 이번 문서 갱신은 남은 작업을 등록하는 것이며 구현 착수·일정 확정을 뜻하지 않는다.
+
+- [ ] `[BE][FEATURE] 구버전 Aseprite의 정밀 packed 계산`: 1.3.18.2 미만에서 플랫폼별 정렬 차이를 처리해 현재 보수 상한 때문에 거부되는 정상 sheet를 안전하게 허용한다. 위험한 sheet bitmap을 먼저 할당하지 않는 계획 방법을 설계하고, 실제 native 크기·배치·픽셀/JSON 및 초과 입력 조기 거부를 검증해야 완료다. 현재는 보수 경로와 그 관련 검증만 완료했다.
+- [ ] `[SHARED][SPIKE] Aseprite 프로세스 전체 메모리 제한 설계`: source decode·scratch·native renderer를 포함한 프로세스 전체 메모리의 제한 방법과 플랫폼별 적용 범위·한계를 조사한다. 예산 초과 시 프로세스 종료/정리와 source·출력 세트 보존의 검증 기준을 정한다. 현재의 픽셀·계산량 제한은 전체 RSS 제한이 아니다. 설계 후 제한 구현·실행 검증은 별도 FEATURE로 진행한다.
+- [ ] `[BE][SPIKE] 출력 세트 crash 복구 설계`: [기존 export 후속 TODO](#export-후속-todo-pr-35-범위-밖)를 따른다. Journal/backup, 강제 종료·재시작 복구 설계와 fault injection 검증이 남았고, 실제 복구 구현도 별도 후속이다. 현재 일반 오류 rollback 검증은 crash 복구 검증이 아니다.
+- [ ] `[SHARED][SPIKE] 비협력 writer 경쟁 보호 검토`: [기존 태그 후속 TODO](#태그-후속-todo)를 따른다. ABA 및 최종 검사–rename 사이 외부 변경의 재현, 보호 방법·플랫폼 한계 검토, 채택한 보호의 구현·검증이 남아 있다. 현재 revision 검사와 협력 호출 잠금으로 이 경쟁을 해결했다고 간주하지 않는다.
 
 ## 태그 후속 TODO
 
 PR #32의 [Notes 1](TAG_EDITING.md#최종-셀프리뷰)을 후속 작업으로 추적한다. 아래 항목은 이번 태그 기능의 미구현 결함이나 병합 차단 항목이 아니며, 구현 착수·일정은 별도 결정한다. `tag_id`가 순번이고 `revision`이 내용 hash라는 현재 계약은 유지한다.
 
-- [ ] `[BE][DOCS] plugin 태그 대상 재조회 흐름 반영`: Top1–3 develop 병합 후 예정된 plugin 동기화에서 조회 → `tag_id`+`expected_revision`으로 수정 → 재조회 흐름을 animator skill에 반영한다. 범위 변경 후 이전 순번을 재사용하지 않는 예제와 stale 응답 시 재조회 절차를 확인하면 완료한다. 이 저장소에서 plugin 파일을 수정하지 않는다.
+- [x] `[BE][DOCS] plugin 태그 대상 재조회 흐름 반영`: plugin PR #16 / `f5228e3`의 [animator skill](https://github.com/smrgd88/pixel-plugin/blob/f5228e3/skills/pixel-art-animator/SKILL.md)과 structure editing 계약에 조회 → `tag_id`+`expected_revision` 수정 → 재조회, 범위 변경 뒤 이전 순번 재사용 금지 및 stale 재조회가 반영됐다. Top4 workflow 검증 근거는 위 고정된 검증 기록을 따른다. 이 저장소에서는 plugin 파일을 수정하지 않는다.
 - [ ] `[SHARED][SPIKE] 비협력 writer 경쟁 보호 검토`: GUI/외부 writer의 ABA 및 최종 원본 검사–rename 사이 변경을 재현하고, 추가 보호의 가능 범위·파일시스템별 제약·비용을 검토한다. 개선안 또는 현행 한계를 유지하는 판단과 근거를 기록하면 SPIKE를 완료한다. 실제 보호 구현은 검토 결과에 따라 별도 작업으로 분리한다.
 - [ ] `[BE][SPIKE] 대규모 태그 조회 응답 비용 측정`: 태그 수와 이름 길이를 늘린 저장 문서로 응답 bytes·실행 시간·메모리를 측정한다. 측정 근거와 허용 기준을 정하고 pagination/응답 상한의 필요 여부를 결정하면 완료한다. 필요 시 기존 필수 입력·성공 응답 호환성 및 페이지 간 revision 일관성을 유지하는 별도 FEATURE로 이어간다.
 
@@ -454,7 +463,7 @@ GAP-10: PR #13으로 develop `897c2f1`에 병합했으며 [실행 환경 검사 
 - develop 반영: PR #31 cel 위치·opacity 편집 및 revision 사전조건 (`96d8fa4`), [계약·검증](CEL_PROPERTIES.md). [cel unlink](CEL_UNLINK.md)는 PR #33 / `732958b`로 develop에 반영했다.
 - develop 반영: PR #34 GAP-01 레이어 속성·그룹 생성/이동, [계약·검증](LAYER_PROPERTIES.md). Unreleased.
 - develop 반영: PR #32 GAP-03 태그 상세 조회·수정 (`7cc9b1d`), [계약·검증](TAG_EDITING.md). Unreleased.
-- develop 반영: PR #35 GAP-05 범위 export·출력 보호 (`99f193a`). [계약·통합 검증](EXPORT_OPTIONS.md). Unreleased; plugin 동기화와 export 후속 TODO는 별도다.
+- develop 반영: PR #35 GAP-05 범위 export·출력 보호 (`99f193a`). [계약·통합 검증](EXPORT_OPTIONS.md). Unreleased; plugin PR #16 동기화는 완료했고 크기 예산 후보·crash 복구 등 후속은 위 현재 상태와 구분한다.
 - 전체 파일 접근 선언 리팩터링은 확정된 선행 작업이 아니다. 버그 수정/dry-run에 필요한 범위만 정리한다.
 - 다음 릴리스 전 운영 잔여: CI 버전 artifact(OPS-01), upstream #19 제출 범위 결정.
 - 신규 편집·조회·export·slice·tilemap 후보는 [CAPABILITIES의 GAP 목록](CAPABILITIES.md#공식-기능군-대비-차이)과 ROADMAP R3–R5에서 추적한다.

@@ -65,7 +65,8 @@ func exportSpritesheet(ctx context.Context, c *aseprite.Client, g *aseprite.LuaG
 			if err != nil {
 				return err
 			}
-			if err = validateExportDimensions(plan, layout, pads[0], pads[1], pads[2], in.Extrude); err != nil {
+			allocation, err := measureSheet(ctx, c, g, in.SpritePath, plan, selection, layout, pads[0], pads[1], pads[2], in.Trim, in.Extrude)
+			if err != nil {
 				return err
 			}
 			if err = checkExportOverwrite(paths, in.Overwrite); err != nil {
@@ -75,19 +76,19 @@ func exportSpritesheet(ctx context.Context, c *aseprite.Client, g *aseprite.LuaG
 				if strings.ToLower(filepath.Ext(staged[0])) != ext || strings.ToLower(filepath.Ext(staged[1])) != ".json" {
 					return diagnostics.Errorf("invalid_arguments", "canonical output extensions must match the planned texture and JSON")
 				}
-				raw, err := c.ExecuteLua(ctx, g.ExportSelectedSheet(staged[0], staged[1], layout, pads[0], pads[1], pads[2], in.Trim, in.Extrude, selection), in.SpritePath)
+				raw, err := c.ExecuteLua(ctx, g.ExportPlannedSheet(staged[0], staged[1], layout, pads[0], pads[1], pads[2], in.Trim, in.Extrude, selection, allocation.Samples), in.SpritePath)
 				if err != nil {
 					return fmt.Errorf("failed to export spritesheet: %w", err)
 				}
-				var size struct {
-					Width  int `json:"width"`
-					Height int `json:"height"`
-				}
-				if err = parseJSON(raw, &size); err != nil {
+				size, err := decodeExportSheetResult(raw)
+				if err != nil {
 					return err
 				}
 				if size.Width < 1 || size.Height < 1 || size.Width > 32767 || size.Height > 32767 || int64(size.Width)*int64(size.Height) > 64*1024*1024 {
 					return fmt.Errorf("invalid spritesheet dimensions")
+				}
+				if (!allocation.Conservative && (size.Width != allocation.Width || size.Height != allocation.Height)) || size.Width > allocation.Width || size.Height > allocation.Height {
+					return fmt.Errorf("spritesheet allocation plan mismatch")
 				}
 				// Native reopening covers BMP as well. Independently decode other formats.
 				if ext != ".bmp" {
@@ -104,7 +105,7 @@ func exportSpritesheet(ctx context.Context, c *aseprite.Client, g *aseprite.LuaG
 						return fmt.Errorf("texture dimensions mismatch")
 					}
 				}
-				if err = validateSheetMetadata(staged[1], filepath.Base(paths[0]), plan, size.Width, size.Height); err != nil {
+				if err = validateSheetMetadata(staged[1], filepath.Base(paths[0]), plan, size.Width, size.Height, allocation); err != nil {
 					return err
 				}
 				return verifyExportRevision(ctx, in.SpritePath, plan.Revision)
@@ -124,7 +125,7 @@ func exportSpritesheet(ctx context.Context, c *aseprite.Client, g *aseprite.LuaG
 // validateSheetMetadata preserves native fields while checking the ordered frame
 // set against the plan. Metadata filenames must refer to published artifacts,
 // never private staging paths. Original source numbers are additive metadata.
-func validateSheetMetadata(path, texture string, p exportPlan, width, height int) error {
+func validateSheetMetadata(path, texture string, p exportPlan, width, height int, allocations ...sheetAllocation) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -163,6 +164,12 @@ func validateSheetMetadata(path, texture string, p exportPlan, width, height int
 		if bounds.X < 0 || bounds.Y < 0 || bounds.W < 1 || bounds.H < 1 || bounds.W > width || bounds.H > height || bounds.X > width-bounds.W || bounds.Y > height-bounds.H {
 			return fmt.Errorf("frame outside spritesheet texture")
 		}
+		if len(allocations) > 0 {
+			a := allocations[0]
+			if i >= len(a.Frames) || bounds.W != a.Frames[i].W || bounds.H != a.Frames[i].H || (!a.Conservative && (exportRect{bounds.X, bounds.Y, bounds.W, bounds.H}) != a.Frames[i]) {
+				return fmt.Errorf("spritesheet placement plan mismatch")
+			}
+		}
 		var duration int
 		if err = json.Unmarshal(row["duration"], &duration); err != nil {
 			return err
@@ -183,6 +190,12 @@ func validateSheetMetadata(path, texture string, p exportPlan, width, height int
 		}
 		if offset.X < 0 || offset.Y < 0 || offset.W < 0 || offset.H < 0 || offset.W > p.Width || offset.H > p.Height || offset.X > p.Width-offset.W || offset.Y > p.Height-offset.H {
 			return fmt.Errorf("invalid spritesheet trim bounds")
+		}
+		if len(allocations) > 0 {
+			a := allocations[0].Samples[i]
+			if offset.X != a.X || offset.Y != a.Y || offset.W != a.W || offset.H != a.H {
+				return fmt.Errorf("spritesheet trim plan mismatch")
+			}
 		}
 		row["source_frame_number"], _ = json.Marshal(p.First + i)
 		frames[name], err = json.Marshal(row)
@@ -277,4 +290,24 @@ func escapeNativeJSONControls(data []byte) []byte {
 		}
 	}
 	return out
+}
+
+// A structured pre-render rejection preserves the public source-change code;
+// Lua exception text is intentionally never used for error classification.
+func decodeExportSheetResult(raw string) (struct{ Width, Height int }, error) {
+	var result struct {
+		Width       int  `json:"width"`
+		Height      int  `json:"height"`
+		PlanChanged bool `json:"plan_changed"`
+	}
+	size := struct{ Width, Height int }{}
+	if err := parseJSON(raw, &result); err != nil {
+		return size, err
+	}
+	if result.PlanChanged {
+		return size, diagnostics.Errorf("file_changed", "source geometry changed after export planning")
+	}
+	size.Width = result.Width
+	size.Height = result.Height
+	return size, nil
 }

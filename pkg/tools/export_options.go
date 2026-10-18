@@ -103,40 +103,21 @@ func verifyExportRevision(ctx context.Context, path, expected string) error {
 	return nil
 }
 
-// Conservative allocation guards run before native rendering/packing. A packed
-// sheet must also fit the worst-case strip; trim cannot bypass the memory bound.
+// Canvas validation precedes any scratch render. Check endpoints before
+// subtraction and dimensions before multiplication to reject integer overflow.
 func validateExportDimensions(p exportPlan, layout string, border, shape, inner int, extrude bool) error {
-	const maxSide int64 = 32767
-	const maxPixels int64 = 64 * 1024 * 1024
-	w, h, n := int64(p.Width), int64(p.Height), int64(p.Last-p.First+1)
-	if n < 1 || n > 65535 || w < 1 || h < 1 || w > maxSide || h > maxSide || w*h > maxPixels {
+	if p.First < 1 || p.Last < p.First || p.Last > 65535 || p.Width < 1 || p.Height < 1 || p.Width > exportMaxSide || p.Height > exportMaxSide || int64(p.Width)*int64(p.Height) > exportMaxPixels {
 		return diagnostics.Errorf("invalid_arguments", "export canvas exceeds dimension budget")
 	}
 	if layout == "" {
 		return nil
 	}
-	rim := int64(0)
-	if extrude {
-		rim = 2
+	samples := make([]aseprite.ExportSample, p.Last-p.First+1)
+	for i := range samples {
+		samples[i] = aseprite.ExportSample{W: p.Width, H: p.Height, Same: i + 1}
 	}
-	cw, ch := w+2*int64(inner)+rim, h+2*int64(inner)+rim
-	spanW, spanH := n*cw+(n-1)*int64(shape)+2*int64(border), n*ch+(n-1)*int64(shape)+2*int64(border)
-	if cw+2*int64(border) > maxSide || ch+2*int64(border) > maxSide || cw*ch*n > maxPixels || ((layout != "vertical") && spanW > maxSide) || ((layout != "horizontal") && spanH > maxSide) {
-		return diagnostics.Errorf("invalid_arguments", "spritesheet exceeds conservative dimension budget")
-	}
-	// A native grid/packing result fits within these conservative strip extents.
-	// Use the enclosing rectangle for non-strip layouts, including unused space.
-	area := spanW * spanH
-	if layout == "horizontal" {
-		area = spanW * (ch + 2*int64(border))
-	}
-	if layout == "vertical" {
-		area = (cw + 2*int64(border)) * spanH
-	}
-	if area > maxPixels {
-		return diagnostics.Errorf("invalid_arguments", "spritesheet exceeds pixel budget")
-	}
-	return nil
+	_, err := allocateSheet(context.Background(), p, samples, layout, border, shape, inner, extrude)
+	return err
 }
 
 func checkExportOverwrite(paths []string, overwrite *bool) error {

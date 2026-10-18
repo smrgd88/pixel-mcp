@@ -104,23 +104,25 @@ func (g *LuaGenerator) ExportSelectedSheet(texture, metadata, layout string, bor
 -- even where a background renders that index opaquely. Convert only this
 -- in-memory document. Multiple palettes already make the native exporter use
 -- RGB; do not convert those because unique linked images can span palettes.
-if s.colorMode==ColorMode.INDEXED and #s.palettes==1 and s.backgroundLayer and s.backgroundLayer.isVisible then
- app.transaction(function() app.command.ChangePixelFormat{ui=false,format="rgb"} end)
- if s.colorMode~=ColorMode.RGB then error("Failed to prepare background export") end
-end
+%s
 local frames={}
 for i=first,last do table.insert(frames,s.frames[i]) end
 app.range.frames=frames
 if %t then
  local nonempty=false
+ -- Reuse one canvas buffer: Lua only accounts for the Image userdata, not
+ -- its native pixels, so per-frame allocation can accumulate before GC.
+ local im=Image(s.width,s.height,ColorMode.RGB)
  for i=first,last do
-  local im=Image(s.width,s.height,ColorMode.RGB);im:drawSprite(s,i)
+  im:clear();im:drawSprite(s,i)
   if not im:shrinkBounds().isEmpty then nonempty=true;break end
  end
+ im=nil;collectgarbage("collect")
  if not nonempty then error("Export selection is empty") end
 end
 app.command.ExportSpriteSheet{
  ui=false,recent=false,askOverwrite=false,
+ columns=0,rows=0,width=0,height=0,bestFit=false,powerOfTwoSize=false,splitGrid=false,fromTilesets=false,
  type="%s",textureFilename="%s",dataFilename="%s",dataFormat="json",
  tag="**selected-frames**",layer="",splitLayers=false,splitTags=false,
  borderPadding=%d,shapePadding=%d,innerPadding=%d,
@@ -134,5 +136,5 @@ app.command.ExportSpriteSheet{
 local im=Image{fromFile="%s"}
 if not im then error("Failed to reopen exported texture") end
 print(json.encode({width=im.width,height=im.height}))
-`, o.Selected || trim, EscapeString(layout), EscapeString(texture), EscapeString(metadata), border, shape, inner, trim, extrude, EscapeString(texture))
+`, prepareSheetLua, o.Selected || trim, EscapeString(layout), EscapeString(texture), EscapeString(metadata), border, shape, inner, trim, extrude, EscapeString(texture))
 }
