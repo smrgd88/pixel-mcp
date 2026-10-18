@@ -86,3 +86,7 @@ SAFE-03의 네 snapshot 도구는 저장소와 source 잠금을 함께 예약하
 ## Layer revision 사전조건
 
 `set_layer_properties`, `move_layer`, `create_layer_group`도 기존 source/history lock·staging·bound revision·원본 변경 감지·atomic publish를 사용한다. 실패/취소는 원본을 발행하지 않는다. [계약과 검증](LAYER_PROPERTIES.md).
+
+## 태그 revision 사전조건
+
+`get_sprite_tags`는 읽기 잠금 안에서 조회 전후 bytes 해시를 비교하며 save/history를 수행하지 않는다. `set_tag_properties`는 동일한 공통 staging/history 경로에서 bound 복사본과 `expected_revision`을 비교하고 저장·재열기를 확인한 뒤 발행한다. 태그 순번은 범위 변경으로도 바뀔 수 있으므로 revision 없이 재사용하지 않는다. [태그 계약](TAG_EDITING.md)과 기존 비협력 writer/ABA/최종 검사 이후 경쟁 한계를 따른다.

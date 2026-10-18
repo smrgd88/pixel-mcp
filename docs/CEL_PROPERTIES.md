@@ -66,7 +66,7 @@ GUI 등 비협력 writer를 파일시스템 CAS처럼 배제하지는 않는다.
 
 [Cel API](https://www.aseprite.org/api/cel/)의 position/opacity, [Layer API](https://www.aseprite.org/api/layer/)의 타입/editability/parent, [Sprite API](https://www.aseprite.org/api/sprite/)의 saveAs 및 [native 파일 규격](https://github.com/aseprite/aseprite/blob/v1.3.18.3/docs/ase-file-specs.md#cel-chunk-0x2005)을 확인했다. 실제 지원 버전 소스의 Cel setter는 SetCelPosition/SetCelOpacity command를 사용한다. 공유 관찰·decoder copy 제한은 [SPRITE_STRUCTURE](SPRITE_STRUCTURE.md)를 따른다.
 
-이 속성 도구의 범위에서 픽셀 편집·image resize·layer 속성·cel unlink·tag 편집·색상 모드 변환·export 추가는 제외한다. unlink는 별도 [계약](CEL_UNLINK.md)을 따른다. Aseprite가 지원하는 저장 metadata의 보존을 검사하지만 미지의 future native chunk나 모든 extension metadata, ACL/xattr 전체의 byte 보존을 약속하지 않는다. unlink는 PR #33으로 develop에 반영했고 GAP-01은 [별도 후보](LAYER_PROPERTIES.md)다.
+이 속성 도구의 범위에서 픽셀 편집·image resize·layer 속성·cel unlink·tag 편집·색상 모드 변환·export 추가는 제외한다. unlink는 별도 [계약](CEL_UNLINK.md)을 따른다. Aseprite가 지원하는 저장 metadata의 보존을 검사하지만 미지의 future native chunk나 모든 extension metadata, ACL/xattr 전체의 byte 보존을 약속하지 않는다. unlink는 PR #33으로 develop에 반영했고 GAP-01 [레이어·그룹 편집](LAYER_PROPERTIES.md)은 PR #34로 develop에 반영했다.
 
 ## 검증 (PR #31 병합 전 당시 기록)
 

@@ -90,7 +90,7 @@ func wrapWithFileProtection[I, O any](tool string, timeout time.Duration, handle
 			}
 			readOnly := false
 			switch tool {
-			case "get_sprite_structure", "get_sprite_info", "get_pixels", "get_palette", "analyze_palette_harmonies", "analyze_reference", "export_sprite", "export_spritesheet", "save_as", "downsample_image":
+			case "get_sprite_tags", "get_sprite_structure", "get_sprite_info", "get_pixels", "get_palette", "analyze_palette_harmonies", "analyze_reference", "export_sprite", "export_spritesheet", "save_as", "downsample_image":
 				readOnly = true
 			}
 			if aa, ok := any(input).(SuggestAntialiasingInput); ok && !aa.AutoApply {
@@ -178,7 +178,7 @@ func validateSheetOutputs(source string, outputs []string) error {
 // single-file edits are eligible; outputs/new files have different undo semantics.
 func historyEdit(tool string, input any) bool {
 	switch tool {
-	case "get_sprite_structure", "get_sprite_info", "get_pixels", "get_palette", "analyze_palette_harmonies", "analyze_reference", "export_sprite", "export_spritesheet", "save_as", "downsample_image":
+	case "get_sprite_tags", "get_sprite_structure", "get_sprite_info", "get_pixels", "get_palette", "analyze_palette_harmonies", "analyze_reference", "export_sprite", "export_spritesheet", "save_as", "downsample_image":
 		return false
 	}
 	if aa, ok := input.(SuggestAntialiasingInput); ok && !aa.AutoApply {

@@ -63,7 +63,7 @@
 
 RGB/grayscale/indexed의 group/raster를 검증한다. tilemap은 kind로 구분하나 편집·tileset/pixel 해석은 제공하지 않으며 이 작업의 검증 범위 밖이다. tilemap image 크기는 tile 단위일 수 있으므로 raster pixel 크기로 해석하지 않는다. reference layer의 확대 bounds가 아닌 native image 크기와 위치를 보고한다.
 
-선택·GUI 상태에 의존하지 않는 batch 조회이며 save/transaction/edit/history 기록을 수행하지 않는다. 파일 접근용 잠금·임시 Lua script는 공통 실행 기반의 부수 파일이다. 이 조회 도구는 편집하지 않는다. 후속 [cel 위치·opacity 편집](CEL_PROPERTIES.md)을 구현했으며 [unlink](CEL_UNLINK.md)는 PR #33으로 develop에 반영했다. layer 편집은 [별도 후보](LAYER_PROPERTIES.md)이며 태그 수정, 색상 모드 변환, R4 export 추가는 이 조회 범위 밖이다. GAP-02 전체 완료가 아니다.
+선택·GUI 상태에 의존하지 않는 batch 조회이며 save/transaction/edit/history 기록을 수행하지 않는다. 파일 접근용 잠금·임시 Lua script는 공통 실행 기반의 부수 파일이다. 이 조회 도구는 편집하지 않는다. 후속 [cel 위치·opacity 편집](CEL_PROPERTIES.md)을 구현했으며 [unlink](CEL_UNLINK.md)는 PR #33으로 develop에 반영했다. [layer 편집](LAYER_PROPERTIES.md)은 PR #34로 develop에 반영했다. [태그 상세 조회·수정](TAG_EDITING.md)은 이번 브랜치에서 구현했다(미병합). 색상 모드 변환과 R4 export 추가는 이 조회 범위 밖이다. GAP-02 전체 완료가 아니다.
 
 ## 검증과 셀프리뷰 (PR #30 병합 전 당시 기록)
 

@@ -2,8 +2,8 @@
 
 작업: `[BE][FEATURE] 레이어 속성 및 그룹 편집` · `feature/be-layer-properties`.
 기준: `origin/develop` `96d8fa4a4f93a8b895eb1c924b1c9fa74f51d732` (PR #29/#30/#31 병합 포함).
-현재 통합 기준은 `origin/develop` `732958bd6cd6fdf38b59d82170bd258a815751fd` (PR #33 cel unlink 포함, 2026-10-18)이다.
-현재 후보는 Unreleased이며 develop/main 병합·태그·배포는 수행하지 않는다. 타 Top4 작업과 plugin 저장소는 이 범위에 포함하지 않는다.
+구현 당시 통합 기준은 `origin/develop` `732958bd6cd6fdf38b59d82170bd258a815751fd` (PR #33 cel unlink 포함, 2026-10-18)이다.
+현재 상태: PR #34로 develop `28b6fbfbeb6dfb1892a44cb50bb1b5d4fa7d4efc`에 병합 완료 / Unreleased. 아래 검증·리뷰 기록은 당시 이력이며 main/태그/배포 완료와 구분한다. plugin 저장소는 이 범위에 포함하지 않는다.
 
 ## 호출 계약
 
@@ -70,7 +70,7 @@ MCP 형식 오류는 schema/RPC, Go 값 검사는 `invalid_arguments`, stale은 
 
 ## Plugin 반영과 병합 충돌
 
-현재 후보는 기준 develop 59개에 도구 3개를 더해 62개다. develop에 병합된 cel unlink는 포함하고, 다른 미병합 Top4 도구는 포함하지 않는다. 다른 PR 병합 후 숫자를 합산하지 말고 실제 등록 이름 집합을 다시 계산해야 한다.
+PR #34 병합 당시 기준 develop 59개에 도구 3개를 더해 62개가 됐다. 현재 통합 후보의 도구 수는 [CAPABILITIES](CAPABILITIES.md)를 따른다. 해당 레이어 구현에는 당시 develop에 병합된 cel unlink만 함께 통합했으며, 태그/export는 별도 작업 계약을 따른다. 다른 PR 병합 후 숫자를 합산하지 말고 실제 등록 이름 집합을 다시 계산해야 한다.
 
 - Top1~3 develop 병합 후 MCP commit pin/번들/스킬 동기화에 세 도구와 optional structure `blend_mode`, `LayerEditOutput` 계약을 포함한다. Top4 export 이후 별도 plugin 동기화 계획은 유지한다.
 - `pixel-art-creator`에 조회→revision→속성/그룹 편집→구조 재조회 흐름, 잠금 해제 단독 호출, final sibling index, group opacity/blend 및 destructive 삭제 제외를 반영한다. 새 mutation을 기존 이름 기반 add/delete/flatten으로 대체하지 않도록 설명한다.
