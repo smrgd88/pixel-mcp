@@ -29,7 +29,7 @@ develop에는 PR #35까지 64개 MCP 도구가 등록되어 있다 (Unreleased).
 | develop 반영 | GAP-03 태그 상세 조회·수정 | PR #32 / `7cc9b1d`, [계약·검증](TAG_EDITING.md). Unreleased |
 | develop 반영 | GAP-05 범위 export·출력 보호 | PR #35 / `99f193a`, [계약·검증](EXPORT_OPTIONS.md). Unreleased |
 
-PR #35는 develop에 병합 완료했다. 다음 단계는 Top1–4가 포함된 MCP `99f193a` 기준의 plugin 동기화다. 이후 plugin 사용 흐름 반영 결과 확인 → export 크기 예산 개선 → 출력 세트 crash 복구 설계를 별도 작업으로 진행한다. Indexed PNG 유지 옵션은 요구·실현 가능성 SPIKE 후 판단한다. 이 네 항목은 [export 후속 TODO](NEXT_STEPS.md#export-후속-todo-pr-35-범위-밖)이며 PR #35 구현 범위에 포함하지 않는다. GAP-04/GAP-06의 별도 범위 선정도 유지한다. [다음 실행 순서](NEXT_STEPS.md#다음-실행-순서-2026-10-18)와 기존 태그 후속 TODO를 유지한다.
+PR #35는 develop `99f193a`, MCP 현황 문서 PR #36은 `42bab18`로 병합됐다. Plugin Top1–4 동기화도 [PR #16](https://github.com/smrgd88/pixel-plugin/pull/16) / `f5228e3`로 develop 반영됐다(runtime pin MCP `99f193a`, 64 tools). 현재 MCP 작업은 [export 크기 예산 정밀화 후보](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보)이며 develop 미병합이다. 다음 후속은 출력 세트 crash 복구 설계다. Indexed PNG 유지 옵션은 요구·실현 가능성 SPIKE 후 판단하고 GAP-04/GAP-06 범위 선정도 유지한다. [다음 실행 순서](NEXT_STEPS.md#다음-실행-순서-2026-10-18)에서 각 완료 근거와 기존 태그 TODO를 추적한다. 릴리스·개인 설치본 교체 및 이번 후보의 plugin pin 갱신은 완료 처리하지 않는다.
 
 파일 접근 선언 구조의 전체 리팩터링은 제안 상태이며 별도 선행 작업으로 확정하지 않는다. 필요 부분은 해당 수정/기능 작업에 포함할 수 있다. BE 수정은 원인별 branch/PR로 분리하는 것을 권장하며 플러그인 작업은 포함하지 않는다.
 

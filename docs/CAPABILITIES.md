@@ -7,6 +7,8 @@
 ## 기준과 상태
 
 - develop의 MCP 도구는 **64개**다 (PR #35까지 병합 반영, Unreleased). PR #35 범위 export는 기존 도구를 확장하며 새 이름을 추가하지 않는다. SAFE-04도 PR #24로 병합했다. 서버의 `registerTools()`와 각 `Register*Tools()`의 실제 등록 이름을 대조했다.
+- MCP 현황 문서 PR #36은 `42bab18`로 develop 반영됐다. Plugin Top4 [PR #16](https://github.com/smrgd88/pixel-plugin/pull/16)은 plugin develop `f5228e3`로 병합됐으며 runtime pin은 MCP `99f193a` / 64 tools다. 문서 commit·runtime pin·릴리스/개인 설치 상태를 구분한다.
+- 이 작업 브랜치의 [export 크기 예산 정밀화](EXPORT_OPTIONS.md#크기-예산-정밀화-구현-후보)는 선택·trim·native placement/중복에 따른 계획과 상한/계산량 보호를 추가한다. Packed 정밀 배치는 1.3.18.2 이상이며 이전 지원 버전은 trim 기반 보수 경로를 유지한다. 새 도구·schema·성공 응답 변경 없이 64개를 유지하며 아직 develop·plugin pin에는 포함되지 않았다.
 - `지원`은 MCP 입력으로 제공됨을 뜻한다. 공식 API 전체 옵션 지원이나 모든 조합의 실행 검증을 뜻하지 않는다.
 - 기능군은 `지원 / 부분 / 미지원 / 현재 구조 밖`, 개발 진행은 `예정 / 진행 / develop 반영 / 태그 포함`으로 구분한다.
 - 최초 태그는 로컬 `v0.1.0`부터 `v0.5.0`까지 코드에 도구가 존재하는지 확인한 결과다. GitHub Release 게시나 배포 artifact 검증을 의미하지 않는다.
